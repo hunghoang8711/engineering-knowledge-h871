@@ -230,6 +230,7 @@ saveRecord("knowledge-form","knowledge_entries",() => ({
   confidence: document.querySelector("#knowledge-confidence").value,
   review_status: "pending"
 }),"Knowledge entry saved as pending review.");
+updateWriteAccess();
 
 form?.addEventListener("submit", async (event) => {
   event.preventDefault();
