@@ -21,7 +21,6 @@
         <a class="nav-item" href="#search" data-tab="search">Global Search</a>
         <a class="nav-item" href="#projects" data-tab="projects">Projects</a>
         <a class="nav-item" href="#customers" data-tab="customers">Customers</a>
-        <a class="nav-item" href="#documents" data-tab="documents">Documents</a>
         <a class="nav-item" href="#knowledge" data-tab="knowledge">Knowledge Library</a>
         <a class="nav-item" href="#intake" data-tab="intake">Review Queue</a>
       </nav>
@@ -38,7 +37,7 @@
           <h1>Engineering Knowledge Hub</h1>
           <p class="subtitle">A structured workspace for projects, technical files, calculations and lessons learned.</p>
         </div>
-        <div class="account-area"><button class="user-chip" id="account-toggle" type="button" aria-haspopup="true" aria-expanded="false"><span class="avatar" id="account-avatar">H</span><span id="user-status">Sign in</span><span class="account-caret">▾</span></button><div class="account-menu" id="account-menu" hidden><div class="account-menu-head"><strong id="account-name">Guest</strong><span id="account-email">Not signed in</span><span class="account-role" id="account-role">Public view</span></div><button type="button" data-account-action="profile">Profile overview</button><button type="button" data-account-action="documents">My uploaded documents</button><button type="button" data-account-action="settings">Profile settings</button><button type="button" data-account-action="logout" id="menu-logout" hidden>Sign out</button><button type="button" data-account-action="signin" id="menu-signin">Sign in</button></div></div>
+        <div class="header-actions"><button class="add-menu-trigger" id="add-menu-trigger" type="button" aria-haspopup="true" aria-expanded="false" title="Create new">＋</button><div class="add-menu" id="add-menu" hidden><button type="button" data-create="project">＋ New project</button><button type="button" data-create="customer">＋ New customer</button><button type="button" data-create="knowledge">＋ Knowledge entry</button></div><div class="account-area"><button class="user-chip" id="account-toggle" type="button" aria-haspopup="true" aria-expanded="false"><span class="avatar" id="account-avatar">H</span><span id="user-status">Sign in</span><span class="account-caret">▾</span></button><div class="account-menu" id="account-menu" hidden><div class="account-menu-head"><strong id="account-name">Guest</strong><span id="account-email">Not signed in</span><span class="account-role" id="account-role">Public view</span></div><button type="button" data-account-action="profile">Profile overview</button><button type="button" data-account-action="documents">My uploaded documents</button><button type="button" data-account-action="settings">Profile settings</button><button type="button" data-account-action="logout" id="menu-logout" hidden>Sign out</button><button type="button" data-account-action="signin" id="menu-signin">Sign in</button></div></div></div>
       </header>
 
       <section class="auth-panel" id="auth-panel" aria-label="Sign in">
@@ -87,16 +86,22 @@
             <label for="project-name">Project name *</label><input id="project-name" maxlength="200" required placeholder="Automation equipment name" />
             <label for="project-description">Summary</label><textarea id="project-description" rows="3" maxlength="2000" placeholder="Scope, process, key requirements"></textarea>
             <label for="project-status">Status</label><select id="project-status"><option value="active">Active</option><option value="on_hold">On hold</option><option value="completed">Completed</option><option value="archived">Archived</option></select>
-            <button type="submit">Save project</button><p class="form-feedback" id="project-feedback" role="status"></p>
+            <label for="project-customers">Customers linked to this project</label><select id="project-customers" multiple size="3"></select><p class="form-note">Use Ctrl-click to select multiple customers.</p>
+            <label for="project-files">Attach documents (PDF, Word, Excel, PowerPoint)</label><input id="project-files" type="file" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.docm,.xlsm,.pptm" />
+            <label for="project-file-notes">Notes for these files</label><textarea id="project-file-notes" rows="2" maxlength="2000" placeholder="Optional note applied to selected files"></textarea>
+            <button type="submit">Create project</button><p class="form-feedback" id="project-feedback" role="status"></p>
           </form>
           <form class="record-form" id="customer-form">
             <h3>New customer</h3>
-            <label for="customer-name">Customer name *</label><input id="customer-name" maxlength="200" required placeholder="Customer / company" />
-            <label for="customer-industry">Industry</label><input id="customer-industry" maxlength="120" placeholder="e.g. Electronics manufacturing" />
-            <label for="customer-notes">Notes</label><textarea id="customer-notes" rows="3" maxlength="2000" placeholder="Approved non-confidential notes"></textarea>
+            <label for="customer-name">Customer name *</label><input id="customer-name" maxlength="200" required placeholder="Customer / company" list="customer-suggestions" autocomplete="off" /><datalist id="customer-suggestions"></datalist><p class="form-note" id="customer-match-hint" aria-live="polite"></p>
+            <label for="customer-type">Customer type</label><select id="customer-type"><option value="end_user">End user</option><option value="intermediary">Intermediary partner</option></select>
+            <div id="end-user-field" hidden><label for="customer-end-user">End user company *</label><input id="customer-end-user" maxlength="200" placeholder="Enter end user company name" list="end-user-suggestions" /><datalist id="end-user-suggestions"></datalist></div>
+            <label for="customer-description">Description</label><textarea id="customer-description" rows="3" maxlength="2000" placeholder="Short company description"></textarea>
+            <label for="customer-industry">Industry (optional)</label><input id="customer-industry" maxlength="120" placeholder="e.g. Electronics manufacturing" />
+            <label for="customer-notes">Notes</label><textarea id="customer-notes" rows="2" maxlength="2000" placeholder="Approved non-confidential notes"></textarea>
             <button type="submit">Save customer</button><p class="form-feedback" id="customer-feedback" role="status"></p>
           </form>
-          <form class="record-form" id="document-form">
+          <form class="record-form" id="document-form" hidden>
             <h3>Register document metadata</h3>
             <label for="document-title">Document title *</label><input id="document-title" maxlength="240" required placeholder="Drawing / specification / report title" />
             <label for="document-filename">Original filename</label><input id="document-filename" maxlength="255" placeholder="e.g. assembly_revA.pdf" />
