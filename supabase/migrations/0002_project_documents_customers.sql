@@ -8,7 +8,9 @@ alter table public.customers
 
 alter table public.documents
   add column if not exists notes text,
-  add column if not exists updated_by uuid references auth.users(id) on delete set null;
+  add column if not exists updated_by uuid references auth.users(id) on delete set null,
+  add column if not exists created_by_name text,
+  add column if not exists updated_by_name text;
 
 create table if not exists public.project_customers (
   project_id uuid not null references public.projects(id) on delete cascade,
