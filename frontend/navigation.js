@@ -36,6 +36,7 @@
     if(tab==="overview")window.scrollTo({top:0,behavior:"smooth"});
   }
   document.querySelectorAll("[data-tab]").forEach(a=>a.addEventListener("click",e=>{e.preventDefault();activate(a.dataset.tab);history.replaceState(null,"",a.getAttribute("href"));}));
+  document.querySelectorAll("[data-account-action]").forEach(b=>b.addEventListener("click",()=>{const action=b.dataset.accountAction;if(action==="documents")activate("documents");if(action==="profile")activate("profile");if(action==="settings")activate("settings");}));
   $("#module-search")?.addEventListener("input",()=>draw(active));
   $("#module-search-clear")?.addEventListener("click",()=>{$("#module-search").value="";draw(active);});
   // Keep the existing create forms and their original Supabase submit handlers.
