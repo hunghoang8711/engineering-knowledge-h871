@@ -10,6 +10,7 @@
 1. In the new project's **SQL Editor**, open a new query.
 2. Copy and run `supabase/migrations/0001_initial_schema.sql`.
 3. Check that the tables appear under **Table Editor** and that RLS is enabled.
+4. To enable project-linked uploads and customer relationships, run `supabase/migrations/0002_project_documents_customers.sql` in the **same dedicated H871 project**. This adds customer type/end-user fields, project-customer links, document notes/audit fields, and the private `h871-project-documents` Storage bucket. The frontend upload limit is 50 MB per file and only PDF, Word, Excel, and PowerPoint formats are accepted.
 
 ## Create the first admin role
 1. In **Authentication → Users**, sign up/create your own test user first.
