@@ -22,9 +22,15 @@ on conflict (user_id) do update set role = excluded.role;
 ```
 Only do this in the new H871 project. Add other staff as `editor` or `viewer` later.
 
-## Connect the frontend (next step)
-In **Project Settings → API** (or **Connect**), obtain the Project URL and the publishable/anon key. These are intended for a browser app only when RLS is correctly configured. Never put the database password, service_role key, secret API key, or other privileged secret in frontend code or GitHub.
-The current UI is a static prototype and is not yet connected to Supabase. Wait until the schema and access rules have been reviewed before wiring in the client.
+## Connect the frontend
+1. Open **Project Settings → API** (or **Connect**) in the new H871 project.
+2. Copy the **Project URL** and the **publishable key** (or legacy `anon` key).
+3. In GitHub, open `frontend/supabase-config.js` and choose Edit.
+4. Replace `https://YOUR_PROJECT_REF.supabase.co` with the Project URL, and replace `YOUR_SUPABASE_PUBLISHABLE_OR_ANON_KEY` with the publishable/anon key. Commit the change. These values are designed to be exposed to browser clients; RLS remains essential.
+5. Never put the database password, `service_role` key, secret API key, or any privileged secret in frontend code or GitHub.
+6. Wait for GitHub Actions to deploy, then open the Pages website and create/sign in to your own test account. If email confirmation is enabled, confirm the email before signing in.
+7. In **Authentication → Users**, copy your test user UUID. In SQL Editor, grant the first admin role by running the SQL in the section above, replacing the placeholder with the UUID. Sign out and sign back in to refresh the role in the frontend.
+8. Do not enable unrestricted public sign-up for a production workspace. Once the admin account is created, consider disabling public sign-ups in Supabase Auth settings and add users through an approved invitation process.
 
 ## Data protection
 - Do not upload company drawings, customer files, extracted confidential text, or real production records to this repository.
