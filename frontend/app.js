@@ -15,6 +15,7 @@ const searchButton = form?.querySelector('button[type="submit"]');
 
 let client = null;
 let currentRole = null;
+let currentUser = null;
 
 function isConfigured() {
   return typeof config.url === "string" &&
@@ -87,7 +88,17 @@ async function loadUserState() {
     return;
   }
   const signedIn = Boolean(session?.user);
-  if (userStatus) userStatus.textContent = signedIn ? session.user.email : "Not signed in";
+  currentUser = session?.user || null;
+  const authPanel = document.querySelector("#auth-panel");
+  if (authPanel) authPanel.hidden = signedIn;
+  const displayName = signedIn ? (localStorage.getItem("h871_profile_display_name") || session.user.email.split("@")[0]) : "Sign in";
+  if (userStatus) userStatus.textContent = displayName;
+  const avatar = document.querySelector("#account-avatar"); if (avatar) avatar.textContent = signedIn ? displayName.charAt(0).toUpperCase() : "H";
+  const setText = (id,value) => { const el=document.getElementById(id); if(el) el.textContent=value; };
+  setText("account-name", signedIn ? displayName : "Guest"); setText("account-email", signedIn ? session.user.email : "Not signed in");
+  setText("account-role", signedIn ? (currentRole || "Role not assigned") : "Public view");
+  const out=document.querySelector("#menu-logout"), inn=document.querySelector("#menu-signin"); if(out)out.hidden=!signedIn;if(inn)inn.hidden=signedIn;
+  syncProfileDisplay(displayName, signedIn ? session.user.email : "Not signed in", currentRole || (signedIn ? "Role not assigned" : "Public view"));
   if (signOutButton) signOutButton.hidden = !signedIn;
   if (signUpButton) signUpButton.hidden = signedIn;
   if (searchButton) searchButton.disabled = !signedIn;
@@ -268,3 +279,10 @@ form?.addEventListener("submit", async (event) => {
     if (searchButton) searchButton.disabled = false;
   }
 });
+
+function syncProfileDisplay(name,email,role){const values={"profile-display-name":name,"profile-display-email":email,"profile-display-role":role,"profile-avatar":(name||"H").charAt(0).toUpperCase()};Object.entries(values).forEach(([id,v])=>{const el=document.getElementById(id);if(el)el.textContent=v;});const f=document.querySelector("#profile-name");if(f&&currentUser&&!f.value)f.value=localStorage.getItem("h871_profile_display_name")||"";}
+
+document.querySelector("#account-toggle")?.addEventListener("click",()=>{const menu=document.querySelector("#account-menu");const open=menu.hidden;menu.hidden=!open;document.querySelector("#account-toggle").setAttribute("aria-expanded",String(open));});
+document.addEventListener("click",e=>{if(!e.target.closest(".account-area")){const menu=document.querySelector("#account-menu");if(menu)menu.hidden=true;}});
+document.querySelectorAll("[data-account-action]").forEach(b=>b.addEventListener("click",async()=>{const action=b.dataset.accountAction;document.querySelector("#account-menu").hidden=true;if(action==="signin"){document.querySelector("#auth-panel").hidden=false;document.querySelector("#auth-panel").scrollIntoView({behavior:"smooth"});}if(action==="logout"&&client){const {error}=await client.auth.signOut();if(error)setAuthMessage(error.message,true);else{await loadUserState();window.scrollTo({top:0,behavior:"smooth"});}}if(action==="profile"||action==="settings"){document.querySelector("#profile-workspace").hidden=false;document.querySelector("#module-workspace").hidden=true;document.querySelectorAll(".main-content > section,.main-content > .workspace-editor,.main-content > .metric-grid,.main-content > .lower-grid,.main-content > .section-heading").forEach(el=>el.hidden=true);document.querySelector("#profile-title").textContent=action==="settings"?"Profile settings":"Profile overview";}}));
+document.querySelector("#profile-form")?.addEventListener("submit",e=>{e.preventDefault();const name=document.querySelector("#profile-name").value.trim();const msg=document.querySelector("#profile-feedback");if(!name){msg.textContent="Enter a display name.";return;}localStorage.setItem("h871_profile_display_name",name);syncProfileDisplay(name,currentUser?.email||"",currentRole||"Role not assigned");document.querySelector("#user-status").textContent=name;document.querySelector("#account-name").textContent=name;document.querySelector("#account-avatar").textContent=name.charAt(0).toUpperCase();msg.textContent="Display name saved in this browser.";});
