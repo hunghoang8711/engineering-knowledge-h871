@@ -58,7 +58,7 @@
  function customerMatch(inputId, hintId){
   const raw=$(inputId).value.trim().toLowerCase();const hint=$(hintId);if(!hint)return;
   if(!raw){hint.textContent="";return;}
-  const match=customers.find(c=>c.name.trim().toLowerCase()===raw);
+  const match=customers.find(c=>[c.name,c.end_user_name].filter(Boolean).some(n=>n.trim().toLowerCase()===raw));
   hint.textContent=match?"A customer with this name already exists. Select the existing record from the Customers tab instead.":"Existing names will be suggested as you type.";
   hint.classList.toggle("error",!!match);
  }
@@ -159,9 +159,9 @@
   $("#customer-form")?.addEventListener("submit",async e=>{
    e.preventDefault();if(!canWrite())return feedback("customer","Read-only access.",true);
    const name=$("#customer-name").value.trim(),type=$("#customer-type").value,endUser=$("#customer-end-user").value.trim();
-   if(customers.some(c=>c.name.trim().toLowerCase()===name.toLowerCase()))return feedback("customer","This customer name already exists. Choose the existing customer instead.",true);
+   if(customers.some(c=>[c.name,c.end_user_name].filter(Boolean).some(n=>n.trim().toLowerCase()===name.toLowerCase())))return feedback("customer","This name already exists as a customer or end user. Choose the existing record instead.",true);
    if(type==="intermediary"&&!endUser)return feedback("customer","Enter the end user company.",true);
-   if(type==="intermediary"&&customers.some(c=>c.name.trim().toLowerCase()===endUser.toLowerCase())){const ok=confirm("The end-user name already exists as a customer. Continue and link by name?");if(!ok)return;}
+   if(type==="intermediary"&&customers.some(c=>[c.name,c.end_user_name].filter(Boolean).some(n=>n.trim().toLowerCase()===endUser.toLowerCase()))){const ok=confirm("This end-user name already exists in the customer records. Continue using the existing name?");if(!ok)return;}
    const btn=e.currentTarget.querySelector('button[type="submit"]');btn.disabled=true;feedback("customer","Saving customer…");
    try{const {error}=await client.from("customers").insert({name,customer_type:type,end_user_name:type==="intermediary"?endUser:null,description:$("#customer-description").value.trim()||null,industry:$("#customer-industry").value.trim()||null,notes:$("#customer-notes").value.trim()||null,created_by:user.id});if(error)throw error;e.currentTarget.reset();updateCustomerForm();feedback("customer","Customer saved.");await loadCustomers();renderRows("customers",customers);}catch(err){feedback("customer","Could not save customer: "+err.message,true);}finally{btn.disabled=false;}
   });
