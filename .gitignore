@@ -1,0 +1,42 @@
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+*.secret
+config.local.yaml
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# Node/build
+node_modules/
+dist/
+build/
+
+# Local data and source documents
+data/
+incoming/
+processed/
+*.pdf
+*.xlsx
+*.xls
+*.docx
+*.dwg
+*.dxf
+*.step
+*.stp
+*.iges
+*.igs
+*.zip
+*.7z
+*.rar
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
