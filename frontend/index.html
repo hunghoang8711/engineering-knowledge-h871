@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#111827" />
+  <meta name="description" content="H871 Engineering Knowledge Hub for automation engineering projects, documents, calculations, and lessons learned." />
+  <title>Engineering Knowledge Hub | H871</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand-mark">H871</div>
+      <div class="brand-copy">
+        <strong>Engineering Hub</strong>
+        <span>Knowledge Workspace</span>
+      </div>
+      <nav aria-label="Main navigation">
+        <a class="nav-item active" href="#overview">Overview</a>
+        <a class="nav-item" href="#search">Global Search</a>
+        <a class="nav-item" href="#projects">Projects</a>
+        <a class="nav-item" href="#customers">Customers</a>
+        <a class="nav-item" href="#documents">Documents</a>
+        <a class="nav-item" href="#knowledge">Knowledge Library</a>
+        <a class="nav-item" href="#intake">Review Queue</a>
+      </nav>
+      <div class="sidebar-foot">
+        <span class="status-dot"></span>
+        <span>Local preview · Not connected</span>
+      </div>
+    </aside>
+
+    <main class="main-content" id="overview">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">ENGINEERING INTELLIGENCE / H871</p>
+          <h1>Engineering Knowledge Hub</h1>
+          <p class="subtitle">A structured workspace for projects, technical files, calculations and lessons learned.</p>
+        </div>
+        <div class="user-chip"><span class="avatar">H</span><span>Workspace Admin</span></div>
+      </header>
+
+      <section class="notice" aria-label="Setup status">
+        <div class="notice-icon">i</div>
+        <div>
+          <strong>Initial workspace preview</strong>
+          <p>This is a UI starter only. Authentication, database and document indexing have not been connected. Do not enter confidential information here yet.</p>
+        </div>
+      </section>
+
+      <section class="search-panel" id="search">
+        <div>
+          <p class="eyebrow">KNOWLEDGE RETRIEVAL</p>
+          <h2>Find engineering knowledge</h2>
+          <p>Search across projects, customer profiles, documents and verified lessons learned.</p>
+        </div>
+        <form id="search-form" role="search">
+          <label class="sr-only" for="global-search">Search engineering knowledge</label>
+          <input id="global-search" type="search" placeholder="Try: robot cycle time, substrate, M3 drilling..." autocomplete="off" />
+          <button type="submit">Search</button>
+        </form>
+        <p class="search-hint" id="search-message">Search will be enabled after the data source is connected.</p>
+      </section>
+
+      <section class="section-heading">
+        <div>
+          <p class="eyebrow">WORKSPACE MAP</p>
+          <h2>Knowledge at a glance</h2>
+        </div>
+        <span class="pill">MVP · Phase 1</span>
+      </section>
+
+      <section class="metric-grid" aria-label="Workspace modules">
+        <article class="metric-card" id="projects"><div class="card-icon blue">PR</div><span class="card-label">Project Explorer</span><strong>Projects</strong><p>Equipment, requirements, status and project-linked files.</p><span class="card-state">Planned module</span></article>
+        <article class="metric-card" id="customers"><div class="card-icon violet">CL</div><span class="card-label">Customer Intelligence</span><strong>Customers</strong><p>Customer profiles, standards, preferences and history.</p><span class="card-state">Planned module</span></article>
+        <article class="metric-card" id="documents"><div class="card-icon amber">DOC</div><span class="card-label">Technical Library</span><strong>Documents</strong><p>PDF, Excel, Word, versions, source paths and metadata.</p><span class="card-state">Planned module</span></article>
+        <article class="metric-card" id="knowledge"><div class="card-icon green">KN</div><span class="card-label">Engineering Memory</span><strong>Knowledge Library</strong><p>Calculations, troubleshooting, design rules and lessons learned.</p><span class="card-state">Planned module</span></article>
+      </section>
+
+      <section class="lower-grid">
+        <article class="panel">
+          <div class="panel-heading"><div><p class="eyebrow">NEXT ACTIONS</p><h2>Implementation checklist</h2></div><span class="panel-icon">↗</span></div>
+          <ol class="check-list">
+            <li><span>01</span><div><strong>Confirm repository privacy</strong><p>Decide whether this repository may remain public.</p></div></li>
+            <li><span>02</span><div><strong>Create a separate database</strong><p>Keep this project isolated from all existing websites.</p></div></li>
+            <li><span>03</span><div><strong>Build schema and access rules</strong><p>Validate role permissions before importing real data.</p></div></li>
+            <li><span>04</span><div><strong>Test a small document batch</strong><p>Start with 20–30 representative files.</p></div></li>
+          </ol>
+        </article>
+        <article class="panel" id="intake">
+          <div class="panel-heading"><div><p class="eyebrow">DATA INTAKE</p><h2>Review queue</h2></div><span class="queue-count">0</span></div>
+          <div class="empty-state"><div class="empty-symbol">✓</div><strong>No records imported</strong><p>When ingestion is built, extracted content and AI suggestions will appear here for verification before entering the knowledge base.</p></div>
+        </article>
+      </section>
+
+      <footer>H871 Engineering Knowledge Hub <span>·</span> Prototype only <span>·</span> Keep confidential source files outside GitHub</footer>
+    </main>
+  </div>
+  <script src="./app.js"></script>
+</body>
+</html>
