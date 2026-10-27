@@ -112,6 +112,7 @@ async function loadUserState() {
   setSearchMessage(currentRole
     ? "Search across projects, customers, documents and approved knowledge entries."
     : "Your account has no assigned role yet. Records remain inaccessible until an administrator assigns one.", !currentRole);
+  updateWriteAccess();
 }
 
 if (!isConfigured() || !window.supabase?.createClient) {
