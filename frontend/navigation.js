@@ -67,7 +67,7 @@
    const ext=file.name.split(".").pop().toLowerCase();
    if(!officeExt.includes(ext))throw new Error("Unsupported file type: "+file.name+". Only PDF, Word, Excel and PowerPoint files are allowed.");
    if(file.size>50*1024*1024)throw new Error(file.name+" exceeds the 50 MB limit.");
-   const path=projectId+"/"+crypto.randomUUID()+"_"+file.name.replace(/[\\/]/g,"_");
+   // Use an ASCII-only object key: keep the original filename in document metadata, not in the Storage path.\n   const safeExt=ext.replace(/[^a-z0-9]/g,"")||"bin";\n   const path=projectId+"/"+crypto.randomUUID()+"."+safeExt;
    const {error:storageError}=await client.storage.from("h871-project-documents").upload(path,file,{upsert:false,contentType:file.type||undefined});
    if(storageError)throw storageError;
    const {error:rowError}=await client.from("documents").insert({
