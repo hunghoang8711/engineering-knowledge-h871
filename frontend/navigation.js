@@ -52,6 +52,7 @@
     });
   }
   window.addEventListener("load",sync);
+  if(window.H871_SUPABASE_CONFIG&&window.supabase?.createClient){const authClient=window.supabase.createClient(window.H871_SUPABASE_CONFIG.url,window.H871_SUPABASE_CONFIG.anonKey);authClient.auth.onAuthStateChange(()=>window.setTimeout(sync,0));}
   document.addEventListener("visibilitychange",()=>{if(!document.hidden&&defs[active])sync();});
   activate("overview");
 })();
