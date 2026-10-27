@@ -116,7 +116,7 @@ async function loadUserState() {
 
 if (!isConfigured() || !window.supabase?.createClient) {
   connectionStatus && (connectionStatus.textContent = "Supabase not configured");
-  setAuthMessage("Open frontend/supabase-config.js in GitHub and set the H871 Project URL and publishable/anon key.", true);
+  setAuthMessage(!isConfigured() ? "Supabase configuration is missing or still contains placeholders. Check frontend/supabase-config.js." : "The Supabase JavaScript library did not load. Refresh the page or check whether your network/browser blocks the CDN.", true);
   setSearchMessage("Search is disabled until the dedicated H871 Supabase project is configured.");
   if (searchButton) searchButton.disabled = true;
 } else {
