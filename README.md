@@ -12,7 +12,7 @@ A free-first engineering knowledge base for automation machine design: projects,
 
 ## Current stage
 
-Repository bootstrap only. No database is connected and no existing project has been changed.
+The initial authentication and role-based workspace is active. Project-centric document and customer management is being added; run the second Supabase migration before using project uploads and customer relationships.
 
 ## Planned architecture
 
@@ -39,7 +39,7 @@ The design avoids paid services as a requirement, but free-tier limits and servi
 - Global Search
 - Projects
 - Customers
-- Documents and versions
+- Project-linked documents and versions (PDF, Word, Excel, PowerPoint)
 - Engineering knowledge and lessons learned
 - Calculations and assumptions
 - Intake/review queue
