@@ -166,6 +166,70 @@ signOutButton?.addEventListener("click", async () => {
   await loadUserState();
 });
 
+const writeAccessLabel = document.querySelector("#write-access-label");
+const writeForms = ["project-form","customer-form","document-form","knowledge-form"]
+  .map(id => document.querySelector("#" + id)).filter(Boolean);
+
+function updateWriteAccess() {
+  const canWrite = ["admin","editor"].includes(currentRole);
+  if (writeAccessLabel) writeAccessLabel.textContent = !currentRole ? "Sign in required" : canWrite ? "Write access · " + currentRole : "Read only · viewer";
+  for (const recordForm of writeForms) {
+    for (const control of recordForm.querySelectorAll("input,textarea,select,button")) control.disabled = !canWrite;
+  }
+}
+function feedback(formId, text, isError = false) {
+  const el = document.querySelector("#" + formId + "-feedback");
+  if (el) { el.textContent = text; el.classList.toggle("error", isError); }
+}
+async function saveRecord(formId, table, makeRecord, successText) {
+  const recordForm = document.querySelector("#" + formId);
+  recordForm?.addEventListener("submit", async event => {
+    event.preventDefault();
+    if (!client) return feedback(formId, "Supabase is not configured.", true);
+    if (!["admin","editor"].includes(currentRole)) return feedback(formId, "Your account has read-only access.", true);
+    const { data: { session } } = await client.auth.getSession();
+    if (!session?.user) return feedback(formId, "Please sign in again.", true);
+    const submit = recordForm.querySelector('button[type="submit"]');
+    submit.disabled = true;
+    feedback(formId, "Saving…");
+    try {
+      const { error } = await client.from(table).insert({ ...makeRecord(), created_by: session.user.id });
+      if (error) throw error;
+      recordForm.reset();
+      feedback(formId, successText);
+    } catch (error) {
+      feedback(formId, "Save failed: " + error.message, true);
+    } finally { updateWriteAccess(); }
+  });
+}
+saveRecord("project-form","projects",() => ({
+  code: document.querySelector("#project-code").value.trim() || null,
+  name: document.querySelector("#project-name").value.trim(),
+  description: document.querySelector("#project-description").value.trim() || null,
+  status: document.querySelector("#project-status").value
+}),"Project saved.");
+saveRecord("customer-form","customers",() => ({
+  name: document.querySelector("#customer-name").value.trim(),
+  industry: document.querySelector("#customer-industry").value.trim() || null,
+  notes: document.querySelector("#customer-notes").value.trim() || null
+}),"Customer saved.");
+saveRecord("document-form","documents",() => ({
+  title: document.querySelector("#document-title").value.trim(),
+  original_filename: document.querySelector("#document-filename").value.trim() || null,
+  file_type: document.querySelector("#document-type").value || null,
+  relative_path: document.querySelector("#document-path").value.trim() || null,
+  summary: document.querySelector("#document-summary").value.trim() || null,
+  source_kind: "local_file",
+  status: "pending_review"
+}),"Document metadata registered for review. No file was uploaded.");
+saveRecord("knowledge-form","knowledge_entries",() => ({
+  title: document.querySelector("#knowledge-title").value.trim(),
+  category: document.querySelector("#knowledge-category").value || null,
+  content: document.querySelector("#knowledge-content").value.trim(),
+  confidence: document.querySelector("#knowledge-confidence").value,
+  review_status: "pending"
+}),"Knowledge entry saved as pending review.");
+
 form?.addEventListener("submit", async (event) => {
   event.preventDefault();
   const query = input?.value?.trim();
