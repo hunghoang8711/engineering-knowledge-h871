@@ -17,13 +17,13 @@
         <span>Knowledge Workspace</span>
       </div>
       <nav aria-label="Main navigation">
-        <a class="nav-item active" href="#overview">Overview</a>
-        <a class="nav-item" href="#search">Global Search</a>
-        <a class="nav-item" href="#projects">Projects</a>
-        <a class="nav-item" href="#customers">Customers</a>
-        <a class="nav-item" href="#documents">Documents</a>
-        <a class="nav-item" href="#knowledge">Knowledge Library</a>
-        <a class="nav-item" href="#intake">Review Queue</a>
+        <a class="nav-item active" href="#overview" data-tab="overview">Overview</a>
+        <a class="nav-item" href="#search" data-tab="search">Global Search</a>
+        <a class="nav-item" href="#projects" data-tab="projects">Projects</a>
+        <a class="nav-item" href="#customers" data-tab="customers">Customers</a>
+        <a class="nav-item" href="#documents" data-tab="documents">Documents</a>
+        <a class="nav-item" href="#knowledge" data-tab="knowledge">Knowledge Library</a>
+        <a class="nav-item" href="#intake" data-tab="intake">Review Queue</a>
       </nav>
       <div class="sidebar-foot">
         <span class="status-dot"></span>
@@ -38,10 +38,10 @@
           <h1>Engineering Knowledge Hub</h1>
           <p class="subtitle">A structured workspace for projects, technical files, calculations and lessons learned.</p>
         </div>
-        <div class="user-chip"><span class="avatar">H</span><span id="user-status">Not signed in</span></div>
+        <div class="account-area"><button class="user-chip" id="account-toggle" type="button" aria-haspopup="true" aria-expanded="false"><span class="avatar" id="account-avatar">H</span><span id="user-status">Sign in</span><span class="account-caret">▾</span></button><div class="account-menu" id="account-menu" hidden><div class="account-menu-head"><strong id="account-name">Guest</strong><span id="account-email">Not signed in</span><span class="account-role" id="account-role">Public view</span></div><button type="button" data-account-action="profile">Profile overview</button><button type="button" data-account-action="documents">My uploaded documents</button><button type="button" data-account-action="settings">Profile settings</button><button type="button" data-account-action="logout" id="menu-logout" hidden>Sign out</button><button type="button" data-account-action="signin" id="menu-signin">Sign in</button></div></div>
       </header>
 
-      <section class="auth-panel" aria-label="Sign in">
+      <section class="auth-panel" id="auth-panel" aria-label="Sign in">
         <div class="auth-copy"><p class="eyebrow">SECURE WORKSPACE</p><h2>Sign in to H871</h2><p>Use your account in the dedicated H871 Supabase project. New users have no access until an administrator assigns a role.</p></div>
         <form id="auth-form">
           <label for="auth-email">Email</label><input id="auth-email" type="email" autocomplete="username" required placeholder="you@company.com" />
@@ -125,10 +125,10 @@
       </section>
 
       <section class="metric-grid" aria-label="Workspace modules">
-        <article class="metric-card" id="projects"><div class="card-icon blue">PR</div><span class="card-label">Project Explorer</span><strong>Projects</strong><p>Equipment, requirements, status and project-linked files.</p><span class="card-state">Supabase-backed</span></article>
-        <article class="metric-card" id="customers"><div class="card-icon violet">CL</div><span class="card-label">Customer Intelligence</span><strong>Customers</strong><p>Customer profiles, standards, preferences and history.</p><span class="card-state">Planned module</span></article>
-        <article class="metric-card" id="documents"><div class="card-icon amber">DOC</div><span class="card-label">Technical Library</span><strong>Documents</strong><p>PDF, Excel, Word, versions, source paths and metadata.</p><span class="card-state">Planned module</span></article>
-        <article class="metric-card" id="knowledge"><div class="card-icon green">KN</div><span class="card-label">Engineering Memory</span><strong>Knowledge Library</strong><p>Calculations, troubleshooting, design rules and lessons learned.</p><span class="card-state">Planned module</span></article>
+        <article class="metric-card" id="projects-card"><div class="card-icon blue">PR</div><span class="card-label">Project Explorer</span><strong>Projects</strong><p>Equipment, requirements, status and project-linked files.</p><span class="card-state">Supabase-backed</span></article>
+        <article class="metric-card" id="customers-card"><div class="card-icon violet">CL</div><span class="card-label">Customer Intelligence</span><strong>Customers</strong><p>Customer profiles, standards, preferences and history.</p><span class="card-state">Planned module</span></article>
+        <article class="metric-card" id="documents-card"><div class="card-icon amber">DOC</div><span class="card-label">Technical Library</span><strong>Documents</strong><p>PDF, Excel, Word, versions, source paths and metadata.</p><span class="card-state">Planned module</span></article>
+        <article class="metric-card" id="knowledge-card"><div class="card-icon green">KN</div><span class="card-label">Engineering Memory</span><strong>Knowledge Library</strong><p>Calculations, troubleshooting, design rules and lessons learned.</p><span class="card-state">Planned module</span></article>
       </section>
 
       <section class="lower-grid">
@@ -147,7 +147,7 @@
         </article>
       </section>
 
-      <footer>H871 Engineering Knowledge Hub <span>·</span> Supabase-connected MVP <span>·</span> Keep confidential source files outside GitHub</footer>
+      <section class="module-workspace" id="module-workspace" hidden><div class="module-heading"><div><p class="eyebrow" id="module-eyebrow">WORKSPACE</p><h2 id="module-title">Projects</h2><p id="module-description">Browse and search workspace records.</p></div><span class="pill" id="module-count">0 records</span></div><div class="module-toolbar"><label class="sr-only" for="module-search">Search this module</label><input id="module-search" type="search" placeholder="Search this list…" autocomplete="off"><button id="module-search-clear" type="button">Clear</button></div><p class="search-hint" id="module-message">Sign in to view records.</p><div class="module-records" id="module-records" aria-live="polite"></div></section><section class="profile-workspace" id="profile-workspace" hidden><div class="module-heading"><div><p class="eyebrow">ACCOUNT</p><h2 id="profile-title">Profile overview</h2><p id="profile-description">Your H871 workspace account.</p></div></div><div class="profile-card"><div class="profile-avatar" id="profile-avatar">H</div><div><strong id="profile-display-name">Guest</strong><p id="profile-display-email">Not signed in</p><span id="profile-display-role" class="pill">Public view</span></div></div><form id="profile-form" class="record-form profile-form"><h3>Profile settings</h3><label for="profile-name">Display name</label><input id="profile-name" maxlength="120" placeholder="Your display name"><p class="form-note">This setting is stored in this browser for now. Cloud profile syncing can be added later without changing workspace permissions.</p><button type="submit">Save profile settings</button><p class="form-feedback" id="profile-feedback" role="status"></p></form></section><footer>H871 Engineering Knowledge Hub <span>·</span> Supabase-connected MVP <span>·</span> Keep confidential source files outside GitHub</footer>
     </main>
   </div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
