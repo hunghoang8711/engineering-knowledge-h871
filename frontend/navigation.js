@@ -16,6 +16,7 @@
  function hideOverview(hide){document.querySelectorAll(".main-content > section,.main-content > footer").forEach(el=>{if(!["module-workspace","profile-workspace"].includes(el.id))el.hidden=hide;});}
  function activate(tab){
   active=tab;selectedProject=null;
+  $("#module-records").hidden=false;$("#module-search").parentElement.hidden=false;$("#module-message").hidden=false;$("#module-detail")?.remove();
   document.querySelectorAll("[data-tab]").forEach(a=>a.classList.toggle("active",a.dataset.tab===tab));
   const module=!!defs[tab],profile=tab==="profile"||tab==="settings",overview=!module&&!profile;
   hideOverview(!overview);$("#module-workspace").hidden=!module;$("#profile-workspace").hidden=!profile;
@@ -71,7 +72,7 @@
    if(storageError)throw storageError;
    const {error:rowError}=await client.from("documents").insert({
     project_id:projectId,title:file.name,original_filename:file.name,file_type:ext.toUpperCase(),relative_path:path,
-    notes:notes||null,source_kind:"local_file",status:"pending_review",created_by:user.id,updated_by:user.id
+    notes:notes||null,source_kind:"local_file",status:"pending_review",created_by:user.id,updated_by:user.id,created_by_name:user.email||"H871 user",updated_by_name:user.email||"H871 user"
    });
    if(rowError){await client.storage.from("h871-project-documents").remove([path]);throw rowError;}
    uploaded.push(file.name);
@@ -135,9 +136,9 @@
   detail.append(fileSection);window.scrollTo({top:0,behavior:"smooth"});
  }
  function fileCard(d){
-  const card=make("article","document-card");const ext=(d.file_type||"FILE").toUpperCase();const info=make("div","document-main");info.append(make("span","file-type-badge",ext),make("strong","",d.original_filename||d.title),make("p","document-note",d.notes||"No note for this file."),make("p","document-meta","Updated "+new Date(d.updated_at||d.created_at).toLocaleString()+" · "+(d.updated_by===user?.id?"updated by you":d.updated_by?"updated by user "+d.updated_by.slice(0,8):"uploader "+(d.created_by===user?.id?"you":String(d.created_by||"unknown").slice(0,8)))+" · "+(d.status||"pending_review")));card.append(info);
+  const card=make("article","document-card");const ext=(d.file_type||"FILE").toUpperCase();const info=make("div","document-main");info.append(make("span","file-type-badge",ext),make("strong","",d.original_filename||d.title),make("p","document-note",d.notes||"No note for this file."),make("p","document-meta","Updated "+new Date(d.updated_at||d.created_at).toLocaleString()+" · "+(d.updated_by===user?.id?"updated by you":d.updated_by?"updated by "+(d.updated_by_name||d.updated_by.slice(0,8)):"uploaded by "+(d.created_by===user?.id?"you":(d.created_by_name||String(d.created_by||"unknown").slice(0,8))))+" · "+(d.status||"pending_review")));card.append(info);
   const open=make("button","download-file","Open / download");open.type="button";open.addEventListener("click",async()=>{const {data,error}=await client.storage.from("h871-project-documents").createSignedUrl(d.relative_path,60);if(error){say(error.message,true);return;}window.open(data.signedUrl,"_blank","noopener");});card.append(open);
-  if(canWrite()){const noteBtn=make("button","edit-note","Edit note");noteBtn.type="button";noteBtn.addEventListener("click",()=>{const form=make("form","edit-file-note");const area=make("textarea");area.value=d.notes||"";area.rows=2;const save=make("button","","Save note");save.type="submit";form.append(area,save);noteBtn.replaceWith(form);form.addEventListener("submit",async e=>{e.preventDefault();const {error}=await client.from("documents").update({notes:area.value.trim()||null,updated_by:user.id}).eq("id",d.id);if(error){say(error.message,true);return;}await loadModule("projects");await openProject(selectedProject.id);});});card.append(noteBtn);}
+  if(canWrite()){const noteBtn=make("button","edit-note","Edit note");noteBtn.type="button";noteBtn.addEventListener("click",()=>{const form=make("form","edit-file-note");const area=make("textarea");area.value=d.notes||"";area.rows=2;const save=make("button","","Save note");save.type="submit";form.append(area,save);noteBtn.replaceWith(form);form.addEventListener("submit",async e=>{e.preventDefault();const {error}=await client.from("documents").update({notes:area.value.trim()||null,updated_by:user.id,updated_by_name:user.email||"H871 user"}).eq("id",d.id);if(error){say(error.message,true);return;}await loadModule("projects");await openProject(selectedProject.id);});});card.append(noteBtn);}
   return card;
  }
  function wireForms(){
