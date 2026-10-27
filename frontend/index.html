@@ -74,6 +74,48 @@
         <div id="search-results" class="search-results" aria-live="polite"></div>
       </section>
 
+      <section class="workspace-editor" id="manage-records">
+        <div class="section-heading">
+          <div><p class="eyebrow">DATA MANAGEMENT</p><h2>Create workspace records</h2></div>
+          <span class="pill" id="write-access-label">Checking permissions…</span>
+        </div>
+        <p class="form-note">Create structured records first. For confidential drawings and source files, store only approved metadata and a relative path; do not upload them to this public GitHub repository.</p>
+        <div class="editor-grid">
+          <form class="record-form" id="project-form">
+            <h3>New project</h3>
+            <label for="project-code">Project code</label><input id="project-code" maxlength="80" placeholder="e.g. AUTO-2026-001" />
+            <label for="project-name">Project name *</label><input id="project-name" maxlength="200" required placeholder="Automation equipment name" />
+            <label for="project-description">Summary</label><textarea id="project-description" rows="3" maxlength="2000" placeholder="Scope, process, key requirements"></textarea>
+            <label for="project-status">Status</label><select id="project-status"><option value="active">Active</option><option value="on_hold">On hold</option><option value="completed">Completed</option><option value="archived">Archived</option></select>
+            <button type="submit">Save project</button><p class="form-feedback" id="project-feedback" role="status"></p>
+          </form>
+          <form class="record-form" id="customer-form">
+            <h3>New customer</h3>
+            <label for="customer-name">Customer name *</label><input id="customer-name" maxlength="200" required placeholder="Customer / company" />
+            <label for="customer-industry">Industry</label><input id="customer-industry" maxlength="120" placeholder="e.g. Electronics manufacturing" />
+            <label for="customer-notes">Notes</label><textarea id="customer-notes" rows="3" maxlength="2000" placeholder="Approved non-confidential notes"></textarea>
+            <button type="submit">Save customer</button><p class="form-feedback" id="customer-feedback" role="status"></p>
+          </form>
+          <form class="record-form" id="document-form">
+            <h3>Register document metadata</h3>
+            <label for="document-title">Document title *</label><input id="document-title" maxlength="240" required placeholder="Drawing / specification / report title" />
+            <label for="document-filename">Original filename</label><input id="document-filename" maxlength="255" placeholder="e.g. assembly_revA.pdf" />
+            <label for="document-type">File type</label><select id="document-type"><option value="">Select type</option><option>PDF</option><option>DWG</option><option>DXF</option><option>STEP</option><option>STP</option><option>XLSX</option><option>XLS</option><option>DOCX</option><option>DOC</option><option>TXT</option><option>Other</option></select>
+            <label for="document-path">Approved relative path</label><input id="document-path" maxlength="1000" placeholder="e.g. Projects/AUTO-001/Design/assembly.pdf" />
+            <label for="document-summary">Summary (non-confidential)</label><textarea id="document-summary" rows="3" maxlength="3000" placeholder="Short description; avoid sensitive content"></textarea>
+            <button type="submit">Register document</button><p class="form-feedback" id="document-feedback" role="status"></p>
+          </form>
+          <form class="record-form" id="knowledge-form">
+            <h3>New knowledge entry</h3>
+            <label for="knowledge-title">Title *</label><input id="knowledge-title" maxlength="240" required placeholder="e.g. Robot cycle-time calculation" />
+            <label for="knowledge-category">Category</label><select id="knowledge-category"><option value="">Select category</option><option>Design rule</option><option>Calculation</option><option>Troubleshooting</option><option>Component selection</option><option>Commissioning</option><option>Lesson learned</option><option>Standard</option></select>
+            <label for="knowledge-content">Knowledge / method *</label><textarea id="knowledge-content" rows="5" maxlength="10000" required placeholder="Record method, assumptions, units, and limitations"></textarea>
+            <label for="knowledge-confidence">Confidence</label><select id="knowledge-confidence"><option value="unreviewed">Unreviewed</option><option value="verified">Verified</option><option value="needs_check">Needs check</option><option value="conflicting">Conflicting information</option></select>
+            <button type="submit">Save for review</button><p class="form-feedback" id="knowledge-feedback" role="status"></p>
+          </form>
+        </div>
+      </section>
+
       <section class="section-heading">
         <div>
           <p class="eyebrow">WORKSPACE MAP</p>
