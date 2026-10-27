@@ -214,26 +214,6 @@ async function saveRecord(formId, table, makeRecord, successText) {
     } finally { updateWriteAccess(); }
   });
 }
-saveRecord("project-form","projects",() => ({
-  code: document.querySelector("#project-code").value.trim() || null,
-  name: document.querySelector("#project-name").value.trim(),
-  description: document.querySelector("#project-description").value.trim() || null,
-  status: document.querySelector("#project-status").value
-}),"Project saved.");
-saveRecord("customer-form","customers",() => ({
-  name: document.querySelector("#customer-name").value.trim(),
-  industry: document.querySelector("#customer-industry").value.trim() || null,
-  notes: document.querySelector("#customer-notes").value.trim() || null
-}),"Customer saved.");
-saveRecord("document-form","documents",() => ({
-  title: document.querySelector("#document-title").value.trim(),
-  original_filename: document.querySelector("#document-filename").value.trim() || null,
-  file_type: document.querySelector("#document-type").value || null,
-  relative_path: document.querySelector("#document-path").value.trim() || null,
-  summary: document.querySelector("#document-summary").value.trim() || null,
-  source_kind: "local_file",
-  status: "pending_review"
-}),"Document metadata registered for review. No file was uploaded.");
 saveRecord("knowledge-form","knowledge_entries",() => ({
   title: document.querySelector("#knowledge-title").value.trim(),
   category: document.querySelector("#knowledge-category").value || null,
