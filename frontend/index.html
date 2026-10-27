@@ -27,7 +27,7 @@
       </nav>
       <div class="sidebar-foot">
         <span class="status-dot"></span>
-        <span>Local preview · Not connected</span>
+        <span id="connection-status">Supabase not configured</span>
       </div>
     </aside>
 
@@ -38,14 +38,24 @@
           <h1>Engineering Knowledge Hub</h1>
           <p class="subtitle">A structured workspace for projects, technical files, calculations and lessons learned.</p>
         </div>
-        <div class="user-chip"><span class="avatar">H</span><span>Workspace Admin</span></div>
+        <div class="user-chip"><span class="avatar">H</span><span id="user-status">Not signed in</span></div>
       </header>
+
+      <section class="auth-panel" aria-label="Sign in">
+        <div class="auth-copy"><p class="eyebrow">SECURE WORKSPACE</p><h2>Sign in to H871</h2><p>Use your account in the dedicated H871 Supabase project. New users have no access until an administrator assigns a role.</p></div>
+        <form id="auth-form">
+          <label for="auth-email">Email</label><input id="auth-email" type="email" autocomplete="username" required placeholder="you@company.com" />
+          <label for="auth-password">Password</label><input id="auth-password" type="password" autocomplete="current-password" required minlength="6" placeholder="Password" />
+          <div class="auth-actions"><button type="submit" id="sign-in-button">Sign in</button><button type="button" id="sign-up-button" class="secondary-button">Create account</button><button type="button" id="sign-out-button" class="secondary-button" hidden>Sign out</button></div>
+          <p id="auth-message" class="auth-message" role="status">Configure Supabase to enable authentication.</p>
+        </form>
+      </section>
 
       <section class="notice" aria-label="Setup status">
         <div class="notice-icon">i</div>
         <div>
           <strong>Initial workspace preview</strong>
-          <p>This is a UI starter only. Authentication, database and document indexing have not been connected. Do not enter confidential information here yet.</p>
+          <p>The frontend is being connected to Supabase. Only signed-in users with an assigned role can access workspace records. Keep confidential files out of this public GitHub repository.</p>
         </div>
       </section>
 
@@ -60,7 +70,8 @@
           <input id="global-search" type="search" placeholder="Try: robot cycle time, substrate, M3 drilling..." autocomplete="off" />
           <button type="submit">Search</button>
         </form>
-        <p class="search-hint" id="search-message">Search will be enabled after the data source is connected.</p>
+        <p class="search-hint" id="search-message">Sign in and configure the H871 Supabase project to search records.</p>
+        <div id="search-results" class="search-results" aria-live="polite"></div>
       </section>
 
       <section class="section-heading">
@@ -72,7 +83,7 @@
       </section>
 
       <section class="metric-grid" aria-label="Workspace modules">
-        <article class="metric-card" id="projects"><div class="card-icon blue">PR</div><span class="card-label">Project Explorer</span><strong>Projects</strong><p>Equipment, requirements, status and project-linked files.</p><span class="card-state">Planned module</span></article>
+        <article class="metric-card" id="projects"><div class="card-icon blue">PR</div><span class="card-label">Project Explorer</span><strong>Projects</strong><p>Equipment, requirements, status and project-linked files.</p><span class="card-state">Supabase-backed</span></article>
         <article class="metric-card" id="customers"><div class="card-icon violet">CL</div><span class="card-label">Customer Intelligence</span><strong>Customers</strong><p>Customer profiles, standards, preferences and history.</p><span class="card-state">Planned module</span></article>
         <article class="metric-card" id="documents"><div class="card-icon amber">DOC</div><span class="card-label">Technical Library</span><strong>Documents</strong><p>PDF, Excel, Word, versions, source paths and metadata.</p><span class="card-state">Planned module</span></article>
         <article class="metric-card" id="knowledge"><div class="card-icon green">KN</div><span class="card-label">Engineering Memory</span><strong>Knowledge Library</strong><p>Calculations, troubleshooting, design rules and lessons learned.</p><span class="card-state">Planned module</span></article>
@@ -94,9 +105,11 @@
         </article>
       </section>
 
-      <footer>H871 Engineering Knowledge Hub <span>·</span> Prototype only <span>·</span> Keep confidential source files outside GitHub</footer>
+      <footer>H871 Engineering Knowledge Hub <span>·</span> Supabase-connected MVP <span>·</span> Keep confidential source files outside GitHub</footer>
     </main>
   </div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./supabase-config.js"></script>
   <script src="./app.js"></script>
 </body>
 </html>
