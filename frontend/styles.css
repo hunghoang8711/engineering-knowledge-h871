@@ -141,3 +141,22 @@ body{-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
  .project-card h3{font-size:17px}
  .project-detail-header .project-detail-code{font-size:15px;margin-bottom:12px}
 }
+
+/* Compact search and on-demand filters for Projects and Customers */
+.module-toolbar{display:flex;align-items:center;gap:9px;margin:16px 0 12px;position:relative;z-index:5}
+.compact-search{display:flex;align-items:center;gap:8px;min-width:0;flex:1;max-width:360px;padding:0 12px;height:38px;border:1px solid #263247;border-radius:10px;background:#0d1627;color:#8b9ab0;cursor:text}
+.search-icon{font-size:23px;line-height:1;color:#7e8da4;transform:rotate(-15deg)}
+.compact-search input{width:100%;min-width:0;border:0!important;outline:0!important;background:transparent!important;box-shadow:none!important;color:#e5e7eb!important;padding:0!important;font-size:13px!important}
+.compact-search input::placeholder{color:#718096;opacity:.9}
+.filter-wrap{position:relative;flex:0 0 auto}
+.compact-filter{display:grid;place-items:center;width:38px;height:38px;border:1px solid #263247;border-radius:10px;background:#0d1627;color:#a9b7cc;cursor:pointer;font-size:20px;transition:border-color .15s,background .15s}
+.compact-filter:hover,.compact-filter[aria-expanded="true"]{border-color:#4b7897;background:#14243a;color:#67e8f9}
+.filter-icon{line-height:1}
+.filter-panel{position:absolute;right:0;top:calc(100% + 8px);width:min(280px,calc(100vw - 40px));padding:15px;border:1px solid #2b3b53;border-radius:13px;background:#101a2b;box-shadow:0 18px 45px #0008;display:grid;gap:12px}
+.filter-panel[hidden]{display:none}
+.filter-panel-title{font-size:13px;color:#e5edf8}
+.filter-field{display:grid;gap:6px;font-size:12px;color:#9eacc1}
+.filter-field select{width:100%;min-width:0;padding:9px 10px;border:1px solid #2b3b53;border-radius:8px;background:#0b1424;color:#e5e7eb;font:inherit}
+.filter-actions{display:flex;justify-content:flex-end;border-top:1px solid #263247;padding-top:10px}
+.filter-clear{border:0;background:transparent;color:#67e8f9;font-size:12px;cursor:pointer;padding:5px 0}
+@media(max-width:600px){.module-toolbar{margin:12px 0 10px}.compact-search{height:36px}.compact-filter{height:36px;width:36px}.filter-panel{right:0}}
