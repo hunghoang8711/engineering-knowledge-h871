@@ -210,7 +210,32 @@
   $("#module-records").hidden=true;$("#module-search").parentElement.hidden=true;$("#module-message").hidden=true;
   let detail=$("#module-detail");if(!detail){detail=make("section","project-detail");detail.id="module-detail";$("#module-workspace").append(detail);}detail.replaceChildren();detail.hidden=false;
   const back=make("button","back-button","← Back");back.addEventListener("click",()=>{backToAppOr("./projects.html");});detail.append(back);
-  const header=make("div","project-detail-header");header.append(make("span","project-code",p.code||"PROJECT"),make("h2","",p.name),make("p","project-description",p.description||"No description provided."),make("span","project-status",p.status.replace("_"," ")));detail.append(header);
+  const header=make("div","project-detail-header");header.append(make("span","project-code",p.code||"PROJECT"),make("h2","",p.name),make("p","project-description",p.description||"No description provided."),make("span","project-status",String(p.status||"active").replace("_"," ")));
+  if(canWrite()){
+   const editButton=make("button","project-open","✎ Edit project");editButton.type="button";editButton.style.marginTop="18px";header.append(editButton);
+   const editForm=make("form","record-form project-edit-form");editForm.hidden=true;editForm.style.marginTop="18px";editForm.style.maxWidth="780px";
+   const addField=(labelText,id,value,maxLength,kind="input")=>{const label=make("label","",labelText);label.htmlFor=id;const input=kind==="textarea"?make("textarea"):make("input");input.id=id;input.name=id;input.maxLength=maxLength;input.value=value??"";if(kind==="textarea")input.rows=3;else input.type="text";editForm.append(label,input);return input;};
+   const editCode=addField("Project code","edit-project-code",p.code,80);
+   const editName=addField("Project name *","edit-project-name",p.name,200);editName.required=true;
+   const editDescription=addField("Summary / description","edit-project-description",p.description,2000,"textarea");
+   const statusLabel=make("label","","Project status");statusLabel.htmlFor="edit-project-status";const editStatus=make("select");editStatus.id="edit-project-status";[["active","Active"],["on_hold","On hold"],["completed","Completed"],["archived","Archived"]].forEach(([v,t])=>editStatus.append(new Option(t,v)));editStatus.value=p.status||"active";editForm.append(statusLabel,editStatus);
+   const editTags=addField("Tags (comma-separated)","edit-project-tags",(p.tags||[]).join(", "),500);
+   const actions=make("div","inline-add");const save=make("button","","Save changes");save.type="submit";const cancel=make("button","edit-note","Cancel");cancel.type="button";cancel.addEventListener("click",()=>{editForm.hidden=true;editButton.hidden=false;});actions.append(save,cancel);editForm.append(actions);
+   const statusMessage=make("p","form-feedback");statusMessage.setAttribute("role","status");editForm.append(statusMessage);
+   editButton.addEventListener("click",()=>{editForm.hidden=!editForm.hidden;editButton.hidden=editForm.hidden;});
+   editForm.addEventListener("submit",async e=>{e.preventDefault();if(!canWrite()){statusMessage.textContent="You do not have permission to edit projects.";statusMessage.classList.add("error");return;}
+    const name=editName.value.trim();if(!name){statusMessage.textContent="Project name is required.";statusMessage.classList.add("error");return;}
+    const tags=[...new Set(editTags.value.split(",").map(t=>t.trim()).filter(Boolean))];
+    save.disabled=true;cancel.disabled=true;statusMessage.classList.remove("error");statusMessage.textContent="Saving changes…";
+    try{const payload={code:editCode.value.trim()||null,name,description:editDescription.value.trim()||null,status:editStatus.value,tags,updated_at:new Date().toISOString()};
+     const {error:updateError}=await client.from("projects").update(payload).eq("id",p.id);if(updateError)throw updateError;
+     const {data:refreshed,error:refreshError}=await client.from("projects").select("id,code,name,description,status,tags,created_at,updated_at").eq("id",p.id).single();if(refreshError)throw refreshError;
+     projects=[...projects.filter(x=>x.id!==p.id),refreshed];selectedProject=refreshed;loadedModules.delete("projects");await loadModule("projects",true);await openProject(p.id,false);
+    }catch(err){statusMessage.textContent="Could not update project: "+err.message;statusMessage.classList.add("error");save.disabled=false;cancel.disabled=false;}
+   });
+   header.append(editForm);
+  }
+  detail.append(header);
   const customersForProject=await client.from("project_customers").select("customer_id,customers(id,name,customer_type,end_user_name)").eq("project_id",p.id);
   const custSection=make("section","detail-section");const custHead=make("div","detail-section-heading");custHead.append(make("h3","","Customers"),make("span","",String((customersForProject.data||[]).length)+" linked"));custSection.append(custHead);
   const custNames=make("div","linked-customer-list");(customersForProject.data||[]).forEach(link=>{const c=link.customers;if(c){const linkButton=make("button","linked-customer",c.name);linkButton.type="button";linkButton.addEventListener("click",()=>{location.href="./customer-detail.html?id="+encodeURIComponent(c.id);});custNames.append(linkButton);}});if(!custNames.children.length)custNames.append(make("p","muted-copy","No customers linked yet."));custSection.append(custNames);
