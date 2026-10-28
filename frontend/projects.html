@@ -87,7 +87,7 @@
             <label for="project-description">Summary</label><textarea id="project-description" rows="3" maxlength="2000" placeholder="Scope, process, key requirements"></textarea>
             <label for="project-status">Status</label><select id="project-status"><option value="active">Active</option><option value="on_hold">On hold</option><option value="completed">Completed</option><option value="archived">Archived</option></select>
              <label for="project-tags">Tags (comma-separated)</label><input id="project-tags" maxlength="500" placeholder="e.g. Robot, Vision, Fixture" list="project-tag-suggestions" /><datalist id="project-tag-suggestions"></datalist>
-            <label for="project-customers">Customers linked to this project</label><select id="project-customers" multiple size="3"></select><p class="form-note">Use Ctrl-click to select multiple customers.</p>
+            <label for="project-customers">Existing customer (optional)</label><select id="project-customers"><option value="">No customer selected</option></select><label for="project-new-customer">Or enter a new customer name</label><input id="project-new-customer" maxlength="200" placeholder="Type a new customer / company name" list="customer-suggestions" autocomplete="off" /><p class="form-note">Choose an existing customer or enter a new name. If the name already exists, the existing customer record will be reused.</p>
             <label for="project-files">Attach documents (PDF, Word, Excel, PowerPoint)</label><input id="project-files" type="file" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.docm,.xlsm,.pptm" />
             <label for="project-file-notes">Notes for these files</label><textarea id="project-file-notes" rows="2" maxlength="2000" placeholder="Optional note applied to selected files"></textarea>
             <button type="submit">Create project</button><p class="form-feedback" id="project-feedback" role="status"></p>
@@ -159,6 +159,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./supabase-config.js"></script>
   <script src="./app.js"></script>
-  <script src="./navigation.js?v=20261028-projectedit2"></script>
+  <script src="./navigation.js?v=20261029-customercreate1"></script>
 </body>
 </html>
