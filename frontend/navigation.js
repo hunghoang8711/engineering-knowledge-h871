@@ -1,7 +1,7 @@
 (() => {
  const $=s=>document.querySelector(s);
  const config=window.H871_SUPABASE_CONFIG||{};
- let client=null,user=null,role=null,active="overview",projects=[],customers=[],documents=[],selectedProject=null,searchApplied=false;
+ let client=null,user=null,role=null,active="overview",projects=[],customers=[],documents=[],selectedProject=null;
  const officeExt=["pdf","doc","docx","docm","xls","xlsx","xlsm","ppt","pptx","pptm"];
  const defs={
   projects:{title:"Projects",desc:"Projects with linked customers and technical documents."},
@@ -20,7 +20,7 @@
   document.querySelectorAll("[data-tab]").forEach(a=>a.classList.toggle("active",a.dataset.tab===tab));
   const module=!!defs[tab],profile=tab==="profile"||tab==="settings",overview=tab==="overview"||tab==="search";
   hideOverview(!overview);$("#module-workspace").hidden=!module;$("#profile-workspace").hidden=!profile;
-  if(module){$("#module-title").textContent=defs[tab].title;$("#module-eyebrow").textContent=defs[tab].title.toUpperCase();$("#module-description").textContent=defs[tab].desc;$("#module-search").value="";searchApplied=false;$("#module-records").replaceChildren();$("#module-detail")?.remove();$("#customer-detail")?.remove();document.querySelectorAll("[data-form-mount]").forEach(el=>el.hidden=true);$("#module-create-toggle").hidden=!["projects","customers"].includes(tab);$("#module-create-toggle").textContent=tab==="projects"?"＋ Add project":"＋ Add customer";loadModule(tab).then(()=>{if(active===tab&&(tab==="projects"||tab==="customers")){const search=$("#module-search");if(search)search.value="";renderRows(tab,tab==="projects"?projects:customers);}});}
+  if(module){$("#module-title").textContent=defs[tab].title;$("#module-eyebrow").textContent=defs[tab].title.toUpperCase();$("#module-description").textContent=defs[tab].desc;$("#module-search").value="";$("#module-records").replaceChildren();$("#module-detail")?.remove();$("#customer-detail")?.remove();document.querySelectorAll("[data-form-mount]").forEach(el=>el.hidden=true);$("#module-create-toggle").hidden=!["projects","customers"].includes(tab);$("#module-create-toggle").textContent=tab==="projects"?"＋ Add project":"＋ Add customer";loadModule(tab).then(()=>{if(active===tab&&(tab==="projects"||tab==="customers")){const search=$("#module-search");if(search)search.value="";renderRows(tab,tab==="projects"?projects:customers);}});}
   if(profile){$("#profile-title").textContent=tab==="settings"?"Profile settings":"Profile overview";$("#profile-description").textContent="Account status, access role and profile display name.";}
   if(tab==="overview")window.scrollTo({top:0,behavior:"smooth"});if(tab==="search")$("#search")?.scrollIntoView({behavior:"smooth",block:"start"});
  }
@@ -104,7 +104,7 @@
   }
  }
  function renderRows(tab,rows){
-  const box=$("#module-records");if(!box)return;box.replaceChildren();const term=searchApplied?(($("#module-search").value||"").trim().toLowerCase()):"";
+  const box=$("#module-records");if(!box)return;box.replaceChildren();const term=(($("#module-search").value||"").trim().toLowerCase());
   const filtered=rows.filter(r=>!term||Object.values(r).some(v=>String(v??"").toLowerCase().includes(term)));
   $("#module-count").textContent=filtered.length+" "+(tab==="projects"?"projects":tab==="customers"?"customers":"entries");
   if(!filtered.length){box.append(make("div","module-empty",term?"No records match this search.":"No records found yet."));return;}
@@ -199,8 +199,8 @@
   const sync=async()=>{const {data}=await client.auth.getSession();user=data.session?.user||null;role=null;if(user){const {data:r}=await client.from("user_roles").select("role").eq("user_id",user.id).maybeSingle();role=r?.role||null;}if(user&&role){await loadCustomers();if(defs[active])loadModule(active);}const auth=$("#auth-panel");if(auth)auth.hidden=!!user||!(active==="overview"||active==="search");};
   client.auth.onAuthStateChange(()=>setTimeout(sync,0));await sync();
   document.querySelectorAll("[data-tab]").forEach(a=>a.addEventListener("click",e=>{e.preventDefault();activate(a.dataset.tab);history.replaceState(null,"",a.getAttribute("href"));}));
-  $("#module-search")?.addEventListener("input",()=>{searchApplied=true;if(active==="projects")renderRows("projects",projects);if(active==="customers")renderRows("customers",customers);});
-  $("#module-search-clear")?.addEventListener("click",()=>{$("#module-search").value="";searchApplied=false;if(active==="projects")renderRows("projects",projects);if(active==="customers")renderRows("customers",customers);});
+  $("#module-search")?.addEventListener("input",()=>{if(active==="projects")renderRows("projects",projects);if(active==="customers")renderRows("customers",customers);});
+  $("#module-search-clear")?.addEventListener("click",()=>{$("#module-search").value="";if(active==="projects")renderRows("projects",projects);if(active==="customers")renderRows("customers",customers);});
   document.querySelectorAll("[data-account-action]").forEach(b=>b.addEventListener("click",()=>{const a=b.dataset.accountAction;if(a==="documents")activate("projects");if(a==="profile")activate("profile");if(a==="settings")activate("settings");}));
   document.querySelectorAll(".metric-card").forEach(card=>card.addEventListener("click",()=>{const id=card.id;if(id==="projects-card")activate("projects");if(id==="customers-card")activate("customers");if(id==="knowledge-card")activate("knowledge");}));
   activate("overview");
