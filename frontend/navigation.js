@@ -142,7 +142,7 @@
   card.addEventListener("click",()=>openCustomer(c.id));card.addEventListener("keydown",e=>{if(e.target===card&&(e.key==="Enter"||e.key===" ")){e.preventDefault();openCustomer(c.id);}});
   return card;
  }
- async function openCustomer(customerId){
+ async function openCustomer(customerId,navigate=true){
   const c=customers.find(x=>x.id===customerId);if(!c)return;if(navigate)history.pushState({h871Route:"customer",id:customerId},"","#customer/"+customerId);
   $("#module-records").hidden=true;$("#module-search").parentElement.hidden=true;$("#module-message").hidden=true;$("#module-create-toggle").hidden=true;
   let detail=$("#customer-detail");if(!detail){detail=make("section","customer-detail");detail.id="customer-detail";$("#module-workspace").append(detail);}detail.replaceChildren();
@@ -159,7 +159,7 @@
   });detail.append(section);window.scrollTo({top:0,behavior:"smooth"});
  }
  function populateTagSuggestions(){const list=$("#project-tag-suggestions");if(list){list.replaceChildren();[...knownTags].sort().forEach(t=>list.append(new Option(t)));}}
- async function openProject(projectId){
+ async function openProject(projectId,navigate=true){
   const p=projects.find(x=>x.id===projectId);if(!p)return;if(navigate)history.pushState({h871Route:"project",id:projectId},"","#project/"+projectId);selectedProject=p;
   $("#module-records").hidden=true;$("#module-search").parentElement.hidden=true;$("#module-message").hidden=true;
   let detail=$("#module-detail");if(!detail){detail=make("section","project-detail");detail.id="module-detail";$("#module-workspace").append(detail);}detail.replaceChildren();detail.hidden=false;
@@ -218,7 +218,7 @@
   client.auth.onAuthStateChange(()=>setTimeout(()=>sync(true),0));
   const renderRoute=async()=>{
    const parts=location.hash.replace(/^#/, "").split("/");
-   const route=parts[0]||"overview";
+   const route=parts[0]||document.body.dataset.startTab||"overview";
    const tab=({project:"projects",customer:"customers"})[route]||route;
    if(!(defs[tab]||["overview","profile","settings"].includes(tab)))return;
    await activate(tab);
