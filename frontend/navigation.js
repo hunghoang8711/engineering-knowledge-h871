@@ -15,6 +15,7 @@
  function feedback(id,msg,error=false){const el=$("#"+id+"-feedback");if(el){el.textContent=msg;el.classList.toggle("error",error);}}
  function esc(s){return String(s??"");}
  function make(tag,cls,text){const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e;}
+ function backToAppOr(path){try{const ref=document.referrer?new URL(document.referrer):null;const here=new URL(location.href);if(ref&&ref.origin===here.origin&&ref.pathname.startsWith(here.pathname.slice(0,here.pathname.lastIndexOf("/")+1))){history.back();return;}}catch{}location.href=path;}
  function hideOverview(hide){document.querySelectorAll(".main-content > section,.main-content > footer").forEach(el=>{if(!["module-workspace","profile-workspace"].includes(el.id))el.hidden=hide;});const auth=$("#auth-panel");if(auth)auth.hidden=hide||!!user;}
  function activate(tab){
   active=tab;selectedProject=null;
@@ -147,7 +148,7 @@
   if(navigate){location.href="./customer-detail.html?id="+encodeURIComponent(customerId);return;}
   $("#module-records").hidden=true;$("#module-search").parentElement.hidden=true;$("#module-message").hidden=true;$("#module-create-toggle").hidden=true;
   let detail=$("#customer-detail");if(!detail){detail=make("section","customer-detail");detail.id="customer-detail";$("#module-workspace").append(detail);}detail.replaceChildren();
-  const back=make("button","back-button","← All customers");back.addEventListener("click",()=>{if(history.length>1)history.back();else location.href="./customers.html";});detail.append(back);
+  const back=make("button","back-button","← All customers");back.addEventListener("click",()=>{backToAppOr("./customers.html");});detail.append(back);
   const header=make("div","project-detail-header");header.append(make("span","customer-type",c.customer_type==="intermediary"?"INTERMEDIARY PARTNER":"END USER"),make("h2","",c.name),make("p","project-description",c.description||c.notes||"No description provided."));if(c.customer_type==="intermediary"&&c.end_user_name)header.append(make("p","customer-enduser","End user: "+c.end_user_name));detail.append(header);
   const {data:links,error}=await client.from("project_customers").select("project_id").eq("customer_id",c.id);
   if(error){detail.append(make("p","form-feedback error","Could not load customer projects: "+error.message));return;}
@@ -165,7 +166,7 @@
   if(navigate){location.href="./project-detail.html?id="+encodeURIComponent(projectId);return;}selectedProject=p;
   $("#module-records").hidden=true;$("#module-search").parentElement.hidden=true;$("#module-message").hidden=true;
   let detail=$("#module-detail");if(!detail){detail=make("section","project-detail");detail.id="module-detail";$("#module-workspace").append(detail);}detail.replaceChildren();detail.hidden=false;
-  const back=make("button","back-button","← Back");back.addEventListener("click",()=>{if(history.length>1)history.back();else location.href="./projects.html";});detail.append(back);
+  const back=make("button","back-button","← Back");back.addEventListener("click",()=>{backToAppOr("./projects.html");});detail.append(back);
   const header=make("div","project-detail-header");header.append(make("span","project-code",p.code||"PROJECT"),make("h2","",p.name),make("p","project-description",p.description||"No description provided."),make("span","project-status",p.status.replace("_"," ")));detail.append(header);
   const customersForProject=await client.from("project_customers").select("customer_id,customers(id,name,customer_type,end_user_name)").eq("project_id",p.id);
   const custSection=make("section","detail-section");const custHead=make("div","detail-section-heading");custHead.append(make("h3","","Customers"),make("span","",String((customersForProject.data||[]).length)+" linked"));custSection.append(custHead);
