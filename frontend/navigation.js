@@ -1,7 +1,7 @@
 (() => {
  const $=s=>document.querySelector(s);
  const config=window.H871_SUPABASE_CONFIG||{};
- let client=null,user=null,role=null,active="overview",projects=[],customers=[],documents=[],selectedProject=null,searchActive=false;
+ let client=null,user=null,role=null,active="overview",projects=[],customers=[],documents=[],selectedProject=null,searchActive=false,moduleLoadToken=0;
  const officeExt=["pdf","doc","docx","docm","xls","xlsx","xlsm","ppt","pptx","pptm"];
  const defs={
   projects:{title:"Projects",desc:"Projects with linked customers and technical documents."},
@@ -20,7 +20,7 @@
   document.querySelectorAll("[data-tab]").forEach(a=>a.classList.toggle("active",a.dataset.tab===tab));
   const module=!!defs[tab],profile=tab==="profile"||tab==="settings",overview=tab==="overview"||tab==="search";
   hideOverview(!overview);$("#module-workspace").hidden=!module;$("#profile-workspace").hidden=!profile;
-  if(module){$("#module-title").textContent=defs[tab].title;$("#module-eyebrow").textContent=defs[tab].title.toUpperCase();$("#module-description").textContent=defs[tab].desc;$("#module-search").value="";searchActive=false;$("#module-records").replaceChildren();$("#module-detail")?.remove();$("#customer-detail")?.remove();document.querySelectorAll("[data-form-mount]").forEach(el=>el.hidden=true);$("#module-create-toggle").hidden=!["projects","customers"].includes(tab);$("#module-create-toggle").textContent=tab==="projects"?"＋ Add project":"＋ Add customer";return loadModule(tab).then(()=>{if(active===tab&&(tab==="projects"||tab==="customers")){const search=$("#module-search");if(search)search.value="";renderRows(tab,tab==="projects"?projects:customers);}});}
+  if(module){$("#module-title").textContent=defs[tab].title;$("#module-eyebrow").textContent=defs[tab].title.toUpperCase();$("#module-description").textContent=defs[tab].desc;$("#module-search").value="";searchActive=false;$("#module-records").replaceChildren();$("#module-detail")?.remove();$("#customer-detail")?.remove();document.querySelectorAll("[data-form-mount]").forEach(el=>el.hidden=true);$("#module-create-toggle").hidden=!["projects","customers"].includes(tab);$("#module-create-toggle").textContent=tab==="projects"?"＋ Add project":"＋ Add customer";return loadModule(tab);}
   if(profile){$("#profile-title").textContent=tab==="settings"?"Profile settings":"Profile overview";$("#profile-description").textContent="Account status, access role and profile display name.";}
   if(tab==="overview")window.scrollTo({top:0,behavior:"smooth"});if(tab==="search")$("#search")?.scrollIntoView({behavior:"smooth",block:"start"});
  }
@@ -88,18 +88,26 @@
   }return uploaded;
  }
  async function loadModule(tab){
-  if(!client||!user||!role){say(!user?"Sign in to view this list.":"Your account has no assigned role. Ask the administrator for access.",true);renderRows(tab,[]);return;}
-  say("Loading…");
+  const requestToken=++moduleLoadToken;
+  if(!client||!user||!role){if(active===tab){say(!user?"Sign in to view this list.":"Your account has no assigned role. Ask the administrator for access.",true);renderRows(tab,[]);}return;}
+  if(active===tab)say("Loading…");
   if(tab==="projects"){
    const [{data:p,error:pe},{data:d,error:de}]=await Promise.all([
     client.from("projects").select("id,code,name,description,status,tags,created_at,updated_at").order("updated_at",{ascending:false}).limit(300),
     client.from("documents").select("id,project_id,title,original_filename,file_type,notes,relative_path,status,created_by,updated_by,created_at,updated_at").order("updated_at",{ascending:false}).limit(1000)
    ]);
+   if(requestToken!==moduleLoadToken||active!==tab)return;
    if(pe||de){say("Could not load projects or documents: "+(pe||de).message,true);return;}
    projects=p||[];documents=d||[];knownTags.clear();projects.forEach(p=>(p.tags||[]).forEach(t=>knownTags.add(t)));populateTagSuggestions();renderRows(tab,projects);say(projects.length+" projects · documents are grouped within each project.");
-  }else if(tab==="customers"){await loadCustomers();const [{data:allProjects},{data:allDocuments}]=await Promise.all([client.from("projects").select("id,code,name,description,status,tags,created_at,updated_at").order("created_at",{ascending:false}).limit(500),client.from("documents").select("id,project_id,title,original_filename,file_type,notes,relative_path,status,created_by,updated_by,created_at,updated_at").order("updated_at",{ascending:false}).limit(1000)]);projects=allProjects||[];documents=allDocuments||[];knownTags.clear();projects.forEach(p=>(p.tags||[]).forEach(t=>knownTags.add(t)));populateTagSuggestions();renderRows(tab,customers);say(customers.length+" customers.");}
+  }else if(tab==="customers"){
+   await loadCustomers();
+   const [{data:allProjects,error:projectError},{data:allDocuments,error:documentError}]=await Promise.all([client.from("projects").select("id,code,name,description,status,tags,created_at,updated_at").order("created_at",{ascending:false}).limit(500),client.from("documents").select("id,project_id,title,original_filename,file_type,notes,relative_path,status,created_by,updated_by,created_at,updated_at").order("updated_at",{ascending:false}).limit(1000)]);
+   if(requestToken!==moduleLoadToken||active!==tab)return;
+   if(projectError||documentError){say("Could not load customer-related data: "+(projectError||documentError).message,true);return;}
+   projects=allProjects||[];documents=allDocuments||[];knownTags.clear();projects.forEach(p=>(p.tags||[]).forEach(t=>knownTags.add(t)));populateTagSuggestions();renderRows(tab,customers);say(customers.length+" customers.");}
   else{
    const {data,error}=await client.from("knowledge_entries").select("id,title,content,category,confidence,review_status,created_at").eq("review_status","approved").order("created_at",{ascending:false}).limit(200);
+   if(requestToken!==moduleLoadToken||active!==tab)return;
    if(error){say("Could not load knowledge: "+error.message,true);return;}renderRows(tab,data||[]);say((data||[]).length+" approved entries.");
   }
  }
@@ -196,8 +204,9 @@
   addForms();makeNewButton();wireForms();
   if(!config.url||!config.anonKey||!window.supabase?.createClient){say("Supabase configuration unavailable.",true);return;}
   client=window.supabase.createClient(config.url,config.anonKey);
-  const sync=async()=>{const {data}=await client.auth.getSession();user=data.session?.user||null;role=null;if(user){const {data:r}=await client.from("user_roles").select("role").eq("user_id",user.id).maybeSingle();role=r?.role||null;}if(user&&role){await loadCustomers();if(defs[active])loadModule(active);}const auth=$("#auth-panel");if(auth)auth.hidden=!!user||!(active==="overview"||active==="search");};
-  client.auth.onAuthStateChange(()=>setTimeout(sync,0));await sync();const initial=location.hash.replace(/^#/,"");const parts=initial.split("/");const routeTab=({project:"projects",customer:"customers"})[parts[0]]||parts[0]||"overview";if(defs[routeTab]||["overview","profile","settings"].includes(routeTab)){await activate(routeTab);if(parts[0]==="project"&&parts[1])openProject(parts[1]);if(parts[0]==="customer"&&parts[1])openCustomer(parts[1]);}
+  let authSyncToken=0;
+  const sync=async(loadCurrentModule=false)=>{const syncToken=++authSyncToken;const {data}=await client.auth.getSession();user=data.session?.user||null;role=null;if(user){const {data:r}=await client.from("user_roles").select("role").eq("user_id",user.id).maybeSingle();if(syncToken!==authSyncToken)return;role=r?.role||null;}if(syncToken!==authSyncToken)return;const auth=$("#auth-panel");if(auth)auth.hidden=!!user||!(active==="overview"||active==="search");if(loadCurrentModule&&defs[active])await activate(active);};
+  client.auth.onAuthStateChange(()=>setTimeout(()=>sync(true),0));await sync();const initial=location.hash.replace(/^#/,"");const parts=initial.split("/");const routeTab=({project:"projects",customer:"customers"})[parts[0]]||parts[0]||"overview";if(defs[routeTab]||["overview","profile","settings"].includes(routeTab)){await activate(routeTab);if(parts[0]==="project"&&parts[1])openProject(parts[1]);if(parts[0]==="customer"&&parts[1])openCustomer(parts[1]);}
   document.querySelectorAll("[data-tab]").forEach(a=>a.addEventListener("click",e=>{e.preventDefault();history.replaceState(null,"","#"+a.dataset.tab);activate(a.dataset.tab);}));
   $("#module-search")?.addEventListener("input",()=>{searchActive=true;if(active==="projects")renderRows("projects",projects);if(active==="customers")renderRows("customers",customers);});
   $("#module-search-clear")?.addEventListener("click",()=>{$("#module-search").value="";searchActive=false;if(active==="projects")renderRows("projects",projects);if(active==="customers")renderRows("customers",customers);});
