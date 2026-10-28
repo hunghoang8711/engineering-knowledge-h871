@@ -236,7 +236,6 @@
   client=window.supabase.createClient(config.url,config.anonKey);
   let authSyncToken=0;
   const sync=async(loadCurrentModule=false)=>{const syncToken=++authSyncToken;const {data}=await client.auth.getSession();user=data.session?.user||null;role=null;if(user){const {data:r}=await client.from("user_roles").select("role").eq("user_id",user.id).maybeSingle();if(syncToken!==authSyncToken)return;role=r?.role||null;}if(syncToken!==authSyncToken)return;const auth=$("#auth-panel");if(auth)auth.hidden=!!user||!(active==="overview"||active==="search");if(loadCurrentModule&&defs[active])await activate(active);};
-  client.auth.onAuthStateChange(()=>setTimeout(()=>sync(true),0));
   const renderRoute=async()=>{
    const path=location.pathname.split("/").pop()||"index.html";
    if(["customers.html","projects.html","customer-detail.html","project-detail.html","knowledge.html"].includes(path)&&location.hash){history.replaceState(history.state,"",location.pathname+location.search);}
@@ -246,10 +245,27 @@
    const routeId=params.get("id")||legacy[1];
    const tab=({project:"projects",customer:"customers"})[route]||route;
    if(!(defs[tab]||["overview","profile","settings"].includes(tab)))return;
+   // A newly loaded detail page can race Supabase's initial session event.
+   // Resolve the session here before loading records; otherwise openProject/openCustomer
+   // can run with user=null and leave the list page visible until a hard refresh.
+   if((route==="project"||route==="customer")&&!user){
+    const sessionResult=await client.auth.getSession();
+    user=sessionResult.data.session?.user||null;
+    role=null;
+    if(user){
+     const roleResult=await client.from("user_roles").select("role").eq("user_id",user.id).maybeSingle();
+     role=roleResult.data?.role||null;
+    }
+   }
    await activate(tab);
+   if((route==="project"||route==="customer")&&!user){
+    say("Please sign in to view this record.",true);
+    return;
+   }
    if(route==="project"&&routeId)await openProject(routeId,false);
    else if(route==="customer"&&routeId)await openCustomer(routeId,false);
   };
+  client.auth.onAuthStateChange(()=>setTimeout(async()=>{await sync(false);await renderRoute();},0));
   window.addEventListener("popstate",()=>{renderRoute();});
   await sync();await renderRoute();
   document.querySelectorAll("[data-tab]").forEach(a=>a.addEventListener("click",e=>{e.preventDefault();const tab=a.dataset.tab;const pages={overview:"index.html",projects:"projects.html",customers:"customers.html",knowledge:"knowledge.html"};if(pages[tab]){const target="./"+pages[tab];if(location.pathname.split("/").pop()!==pages[tab])location.href=target;else if(location.hash)history.replaceState({h871Route:tab},"",target);activate(tab);return;}history.replaceState({h871Route:tab},"",location.pathname+location.search);activate(tab);}));
