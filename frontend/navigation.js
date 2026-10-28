@@ -143,10 +143,11 @@
   return card;
  }
  async function openCustomer(customerId,navigate=true){
-  const c=customers.find(x=>x.id===customerId);if(!c)return;if(navigate)history.pushState({h871Route:"customer",id:customerId},"","#customer/"+customerId);
+  const c=customers.find(x=>x.id===customerId);if(!c)return;
+  if(navigate){location.href="./customer-detail.html?id="+encodeURIComponent(customerId);return;}
   $("#module-records").hidden=true;$("#module-search").parentElement.hidden=true;$("#module-message").hidden=true;$("#module-create-toggle").hidden=true;
   let detail=$("#customer-detail");if(!detail){detail=make("section","customer-detail");detail.id="customer-detail";$("#module-workspace").append(detail);}detail.replaceChildren();
-  const back=make("button","back-button","← All customers");back.addEventListener("click",()=>{if(history.state?.h871Route==="customer")history.back();else{history.replaceState({h871Route:"customers"},"","#customers");activate("customers");}});detail.append(back);
+  const back=make("button","back-button","← All customers");back.addEventListener("click",()=>{if(history.length>1)history.back();else location.href="./customers.html";});detail.append(back);
   const header=make("div","project-detail-header");header.append(make("span","customer-type",c.customer_type==="intermediary"?"INTERMEDIARY PARTNER":"END USER"),make("h2","",c.name),make("p","project-description",c.description||c.notes||"No description provided."));if(c.customer_type==="intermediary"&&c.end_user_name)header.append(make("p","customer-enduser","End user: "+c.end_user_name));detail.append(header);
   const {data:links,error}=await client.from("project_customers").select("project_id").eq("customer_id",c.id);
   if(error){detail.append(make("p","form-feedback error","Could not load customer projects: "+error.message));return;}
@@ -155,15 +156,16 @@
   if(!rows.length)section.append(make("p","muted-copy","No projects linked to this customer yet."));
   let currentYear="";
   rows.forEach(p=>{const date=new Date(p.created_at||Date.now());const year=String(date.getFullYear());if(year!==currentYear){currentYear=year;section.append(make("h4","customer-project-year",year));}
-   const row=make("button","customer-project-row");row.type="button";const dateLabel=make("span","customer-project-date",date.toLocaleDateString(undefined,{month:"2-digit",year:"numeric"}));const info=make("span","customer-project-info");info.append(make("strong","",p.name),make("small","",p.code||"Project"));row.append(dateLabel,info,make("span","customer-project-arrow","→"));row.addEventListener("click",()=>{activate("projects");openProject(p.id);});section.append(row);
+   const row=make("button","customer-project-row");row.type="button";const dateLabel=make("span","customer-project-date",date.toLocaleDateString(undefined,{month:"2-digit",year:"numeric"}));const info=make("span","customer-project-info");info.append(make("strong","",p.name),make("small","",p.code||"Project"));row.append(dateLabel,info,make("span","customer-project-arrow","→"));row.addEventListener("click",()=>{location.href="./project-detail.html?id="+encodeURIComponent(p.id);});section.append(row);
   });detail.append(section);window.scrollTo({top:0,behavior:"smooth"});
  }
  function populateTagSuggestions(){const list=$("#project-tag-suggestions");if(list){list.replaceChildren();[...knownTags].sort().forEach(t=>list.append(new Option(t)));}}
  async function openProject(projectId,navigate=true){
-  const p=projects.find(x=>x.id===projectId);if(!p)return;if(navigate)history.pushState({h871Route:"project",id:projectId},"","#project/"+projectId);selectedProject=p;
+  const p=projects.find(x=>x.id===projectId);if(!p)return;
+  if(navigate){location.href="./project-detail.html?id="+encodeURIComponent(projectId);return;}selectedProject=p;
   $("#module-records").hidden=true;$("#module-search").parentElement.hidden=true;$("#module-message").hidden=true;
   let detail=$("#module-detail");if(!detail){detail=make("section","project-detail");detail.id="module-detail";$("#module-workspace").append(detail);}detail.replaceChildren();detail.hidden=false;
-  const back=make("button","back-button","← Back");back.addEventListener("click",()=>{if(history.state?.h871Route==="project")history.back();else{history.replaceState({h871Route:"projects"},"","#projects");activate("projects");}});detail.append(back);
+  const back=make("button","back-button","← Back");back.addEventListener("click",()=>{if(history.length>1)history.back();else location.href="./projects.html";});detail.append(back);
   const header=make("div","project-detail-header");header.append(make("span","project-code",p.code||"PROJECT"),make("h2","",p.name),make("p","project-description",p.description||"No description provided."),make("span","project-status",p.status.replace("_"," ")));detail.append(header);
   const customersForProject=await client.from("project_customers").select("customer_id,customers(id,name,customer_type,end_user_name)").eq("project_id",p.id);
   const custSection=make("section","detail-section");const custHead=make("div","detail-section-heading");custHead.append(make("h3","","Customers"),make("span","",String((customersForProject.data||[]).length)+" linked"));custSection.append(custHead);
@@ -217,17 +219,20 @@
   const sync=async(loadCurrentModule=false)=>{const syncToken=++authSyncToken;const {data}=await client.auth.getSession();user=data.session?.user||null;role=null;if(user){const {data:r}=await client.from("user_roles").select("role").eq("user_id",user.id).maybeSingle();if(syncToken!==authSyncToken)return;role=r?.role||null;}if(syncToken!==authSyncToken)return;const auth=$("#auth-panel");if(auth)auth.hidden=!!user||!(active==="overview"||active==="search");if(loadCurrentModule&&defs[active])await activate(active);};
   client.auth.onAuthStateChange(()=>setTimeout(()=>sync(true),0));
   const renderRoute=async()=>{
-   const parts=location.hash.replace(/^#/, "").split("/");
-   const route=parts[0]||document.body.dataset.startTab||"overview";
+   const path=location.pathname.split("/").pop()||"index.html";
+   const params=new URLSearchParams(location.search);
+   const legacy=location.hash.replace(/^#/, "").split("/");
+   let route=({ "customers.html":"customers","projects.html":"projects","customer-detail.html":"customer","project-detail.html":"project","knowledge.html":"knowledge" })[path]||legacy[0]||document.body.dataset.startTab||"overview";
+   const routeId=params.get("id")||legacy[1];
    const tab=({project:"projects",customer:"customers"})[route]||route;
    if(!(defs[tab]||["overview","profile","settings"].includes(tab)))return;
    await activate(tab);
-   if(route==="project"&&parts[1])await openProject(parts[1],false);
-   else if(route==="customer"&&parts[1])await openCustomer(parts[1],false);
+   if(route==="project"&&routeId)await openProject(routeId,false);
+   else if(route==="customer"&&routeId)await openCustomer(routeId,false);
   };
   window.addEventListener("popstate",()=>{renderRoute();});
   await sync();await renderRoute();
-  document.querySelectorAll("[data-tab]").forEach(a=>a.addEventListener("click",e=>{e.preventDefault();const tab=a.dataset.tab;if(["projects","customers"].includes(tab)){const target="./"+tab+".html";if(!location.pathname.endsWith("/"+tab+".html")){location.href=target;return;}}history.pushState({h871Route:tab},"","#"+tab);activate(tab);}));
+  document.querySelectorAll("[data-tab]").forEach(a=>a.addEventListener("click",e=>{e.preventDefault();const tab=a.dataset.tab;const pages={overview:"index.html",projects:"projects.html",customers:"customers.html",knowledge:"knowledge.html"};if(pages[tab]){const target="./"+pages[tab];if(location.pathname.split("/").pop()!==pages[tab])location.href=target;else if(location.hash)history.replaceState({h871Route:tab},"",target);activate(tab);return;}history.replaceState({h871Route:tab},"",location.pathname+location.search);activate(tab);}));
   // Search functionality intentionally disabled while stabilizing list rendering.
   document.querySelectorAll("[data-account-action]").forEach(b=>b.addEventListener("click",()=>{const a=b.dataset.accountAction;if(a==="documents")activate("projects");if(a==="profile")activate("profile");if(a==="settings")activate("settings");}));
   document.querySelectorAll(".metric-card").forEach(card=>card.addEventListener("click",()=>{const id=card.id;if(id==="projects-card")activate("projects");if(id==="customers-card")activate("customers");if(id==="knowledge-card")activate("knowledge");}));
