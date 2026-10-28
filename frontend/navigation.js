@@ -87,7 +87,7 @@
    ]);
    if(pe||de){say("Could not load projects or documents: "+(pe||de).message,true);return;}
    projects=p||[];documents=d||[];knownTags.clear();projects.forEach(p=>(p.tags||[]).forEach(t=>knownTags.add(t)));populateTagSuggestions();renderRows(tab,projects);say(projects.length+" projects · documents are grouped within each project.");
-  }else if(tab==="customers"){await loadCustomers();const {data:allProjects}=await client.from("projects").select("id,code,name,description,status,tags,created_at,updated_at").order("created_at",{ascending:false}).limit(500);projects=allProjects||[];renderRows(tab,customers);say(customers.length+" customers.");}
+  }else if(tab==="customers"){await loadCustomers();const [{data:allProjects},{data:allDocuments}]=await Promise.all([client.from("projects").select("id,code,name,description,status,tags,created_at,updated_at").order("created_at",{ascending:false}).limit(500),client.from("documents").select("id,project_id,title,original_filename,file_type,notes,relative_path,status,created_by,updated_by,created_at,updated_at").order("updated_at",{ascending:false}).limit(1000)]);projects=allProjects||[];documents=allDocuments||[];knownTags.clear();projects.forEach(p=>(p.tags||[]).forEach(t=>knownTags.add(t)));populateTagSuggestions();renderRows(tab,customers);say(customers.length+" customers.");}
   else{
    const {data,error}=await client.from("knowledge_entries").select("id,title,content,category,confidence,review_status,created_at").eq("review_status","approved").order("created_at",{ascending:false}).limit(200);
    if(error){say("Could not load knowledge: "+error.message,true);return;}renderRows(tab,data||[]);say((data||[]).length+" approved entries.");
