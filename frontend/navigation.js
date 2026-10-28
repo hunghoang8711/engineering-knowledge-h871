@@ -184,24 +184,24 @@
   $("#customer-name")?.addEventListener("input",()=>customerMatch("#customer-name","#customer-match-hint"));
   $("#customer-end-user")?.addEventListener("input",()=>customerMatch("#customer-end-user","#customer-match-hint"));
   $("#project-form")?.addEventListener("submit",async e=>{
-   e.preventDefault();if(!canWrite())return feedback("project","Read-only access.",true);
+   e.preventDefault();const form=e.currentTarget;if(!canWrite())return feedback("project","Read-only access.",true);
    const btn=e.currentTarget.querySelector('button[type="submit"]');btn.disabled=true;feedback("project","Creating project…");
    try{
     const tags=$("#project-tags").value.split(",").map(t=>t.trim()).filter(Boolean).filter((t,i,a)=>a.findIndex(x=>x.toLowerCase()===t.toLowerCase())===i);const {data:p,error}=await client.from("projects").insert({code:$("#project-code").value.trim()||null,name:$("#project-name").value.trim(),description:$("#project-description").value.trim()||null,status:$("#project-status").value,tags,created_by:user.id}).select().single();if(error)throw error;
     const customerIds=[...$("#project-customers").selectedOptions].map(o=>o.value);
     if(customerIds.length){const {error:ce}=await client.from("project_customers").insert(customerIds.map(customer_id=>({project_id:p.id,customer_id,created_by:user.id})));if(ce)throw ce;}
     const files=[...$("#project-files").files];if(files.length)await uploadFiles(p.id,files,$("#project-file-notes").value.trim());
-    e.currentTarget.reset();feedback("project","Project created successfully.");document.querySelector('[data-form-mount="projects"]').hidden=true;$("#module-create-toggle").textContent="＋ Add project";await loadModule("projects");await openProject(p.id);
+    form.reset();feedback("project","Project created successfully.");document.querySelector('[data-form-mount="projects"]').hidden=true;$("#module-create-toggle").textContent="＋ Add project";await loadModule("projects");await openProject(p.id);
    }catch(err){feedback("project","Could not create project: "+err.message,true);}finally{btn.disabled=false;}
   });
   $("#customer-form")?.addEventListener("submit",async e=>{
-   e.preventDefault();if(!canWrite())return feedback("customer","Read-only access.",true);
+   e.preventDefault();const form=e.currentTarget;if(!canWrite())return feedback("customer","Read-only access.",true);
    const name=$("#customer-name").value.trim(),type=$("#customer-type").value,endUser=$("#customer-end-user").value.trim();
    if(customers.some(c=>[c.name,c.end_user_name].filter(Boolean).some(n=>n.trim().toLowerCase()===name.toLowerCase())))return feedback("customer","This name already exists as a customer or end user. Choose the existing record instead.",true);
    if(type==="intermediary"&&!endUser)return feedback("customer","Enter the end user company.",true);
    if(type==="intermediary"&&customers.some(c=>[c.name,c.end_user_name].filter(Boolean).some(n=>n.trim().toLowerCase()===endUser.toLowerCase()))){const ok=confirm("This end-user name already exists in the customer records. Continue using the existing name?");if(!ok)return;}
    const btn=e.currentTarget.querySelector('button[type="submit"]');btn.disabled=true;feedback("customer","Saving customer…");
-   try{const {error}=await client.from("customers").insert({name,customer_type:type,end_user_name:type==="intermediary"?endUser:null,description:$("#customer-description").value.trim()||null,industry:$("#customer-industry").value.trim()||null,notes:$("#customer-notes").value.trim()||null,created_by:user.id});if(error)throw error;e.currentTarget.reset();updateCustomerForm();feedback("customer","Customer saved.");await loadCustomers();renderRows("customers",customers);}catch(err){feedback("customer","Could not save customer: "+err.message,true);}finally{btn.disabled=false;}
+   try{const {error}=await client.from("customers").insert({name,customer_type:type,end_user_name:type==="intermediary"?endUser:null,description:$("#customer-description").value.trim()||null,industry:$("#customer-industry").value.trim()||null,notes:$("#customer-notes").value.trim()||null,created_by:user.id});if(error)throw error;form.reset();updateCustomerForm();feedback("customer","Customer saved.");await loadCustomers();renderRows("customers",customers);}catch(err){feedback("customer","Could not save customer: "+err.message,true);}finally{btn.disabled=false;}
   });
  }
  async function init(){
