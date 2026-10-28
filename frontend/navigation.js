@@ -156,7 +156,36 @@
   $("#module-records").hidden=true;$("#module-search").parentElement.hidden=true;$("#module-message").hidden=true;$("#module-create-toggle").hidden=true;
   let detail=$("#customer-detail");if(!detail){detail=make("section","customer-detail");detail.id="customer-detail";$("#module-workspace").append(detail);}detail.replaceChildren();
   const back=make("button","back-button","← All customers");back.addEventListener("click",()=>{backToAppOr("./customers.html");});detail.append(back);
-  const header=make("div","project-detail-header");header.append(make("span","customer-type",c.customer_type==="intermediary"?"INTERMEDIARY PARTNER":"END USER"),make("h2","",c.name),make("p","project-description",c.description||c.notes||"No description provided."));if(c.customer_type==="intermediary"&&c.end_user_name)header.append(make("p","customer-enduser","End user: "+c.end_user_name));detail.append(header);
+  const header=make("div","project-detail-header");header.append(make("span","customer-type",c.customer_type==="intermediary"?"INTERMEDIARY PARTNER":"END USER"),make("h2","",c.name),make("p","project-description",c.description||c.notes||"No description provided."));if(c.customer_type==="intermediary"&&c.end_user_name)header.append(make("p","customer-enduser","End user: "+c.end_user_name));
+  if(canWrite()){
+   const editButton=make("button","project-open","✎ Edit customer");editButton.type="button";editButton.style.marginTop="18px";header.append(editButton);
+   const editForm=make("form","record-form customer-edit-form");editForm.hidden=true;editForm.style.marginTop="18px";editForm.style.maxWidth="780px";
+   const field=(labelText,id,type,value,maxLength)=>{const label=make("label","",labelText);label.htmlFor=id;const input=type==="textarea"?make("textarea"):make("input");input.id=id;input.name=id;input.maxLength=maxLength;input.value=value||"";if(type==="textarea")input.rows=3;else input.type="text";editForm.append(label,input);return input;};
+   const editName=field("Customer name *","edit-customer-name","text",c.name,200);editName.required=true;
+   const typeLabel=make("label","","Customer type");typeLabel.htmlFor="edit-customer-type";const editType=make("select");editType.id="edit-customer-type";editType.append(new Option("End user","end_user"),new Option("Intermediary partner","intermediary"));editType.value=c.customer_type||"end_user";editForm.append(typeLabel,editType);
+   const endLabel=make("label","","End user company");endLabel.htmlFor="edit-customer-end-user";const editEnd=make("input");editEnd.id="edit-customer-end-user";editEnd.maxLength=200;editEnd.value=c.end_user_name||"";editForm.append(endLabel,editEnd);
+   const editDescription=field("Description","edit-customer-description","textarea",c.description,2000);
+   const editIndustry=field("Industry","edit-customer-industry","text",c.industry,120);
+   const editNotes=field("Notes","edit-customer-notes","textarea",c.notes,2000);
+   const updateEndUser=()=>{const intermediary=editType.value==="intermediary";endLabel.hidden=!intermediary;editEnd.hidden=!intermediary;editEnd.required=intermediary;};editType.addEventListener("change",updateEndUser);updateEndUser();
+   const actions=make("div","inline-add");const save=make("button","","Save changes");save.type="submit";const cancel=make("button","edit-note","Cancel");cancel.type="button";cancel.addEventListener("click",()=>{editForm.hidden=true;editButton.hidden=false;});actions.append(save,cancel);editForm.append(actions);
+   const status=make("p","form-feedback");status.setAttribute("role","status");editForm.append(status);
+   editButton.addEventListener("click",()=>{editForm.hidden=!editForm.hidden;editButton.hidden=editForm.hidden;});
+   editForm.addEventListener("submit",async e=>{e.preventDefault();if(!canWrite()){status.textContent="You do not have permission to edit customers.";status.classList.add("error");return;}
+    const name=editName.value.trim(),type=editType.value,endUser=editEnd.value.trim();
+    if(!name){status.textContent="Customer name is required.";status.classList.add("error");return;}
+    if(type==="intermediary"&&!endUser){status.textContent="Enter the end user company.";status.classList.add("error");return;}
+    if(customers.some(x=>x.id!==c.id&&[x.name,x.end_user_name].filter(Boolean).some(n=>n.trim().toLowerCase()===name.toLowerCase()))){status.textContent="This name already exists as a customer or end user.";status.classList.add("error");return;}
+    save.disabled=true;cancel.disabled=true;status.classList.remove("error");status.textContent="Saving changes…";
+    try{const payload={name,customer_type:type,end_user_name:type==="intermediary"?endUser:null,description:editDescription.value.trim()||null,industry:editIndustry.value.trim()||null,notes:editNotes.value.trim()||null};
+     const {error:updateError}=await client.from("customers").update(payload).eq("id",c.id);if(updateError)throw updateError;
+     const {data:refreshed,error:refreshError}=await client.from("customers").select("id,name,customer_type,end_user_name,description,industry,notes,created_at").eq("id",c.id).single();if(refreshError)throw refreshError;
+     customers=[...customers.filter(x=>x.id!==c.id),refreshed];populateCustomerChoices();populateCustomerSuggestions();await openCustomer(c.id,false);
+    }catch(err){status.textContent="Could not update customer: "+err.message;status.classList.add("error");save.disabled=false;cancel.disabled=false;}
+   });
+   header.append(editForm);
+  }
+  detail.append(header);
   const {data:links,error}=await client.from("project_customers").select("project_id").eq("customer_id",c.id);
   if(error){detail.append(make("p","form-feedback error","Could not load customer projects: "+error.message));return;}
   const ids=new Set((links||[]).map(x=>x.project_id));const rows=projects.filter(p=>ids.has(p.id)).sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0));
