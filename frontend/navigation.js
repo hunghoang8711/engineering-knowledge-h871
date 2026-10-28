@@ -209,6 +209,7 @@
   client.auth.onAuthStateChange(()=>setTimeout(()=>sync(true),0));await sync();const initial=location.hash.replace(/^#/,"");const parts=initial.split("/");const routeTab=({project:"projects",customer:"customers"})[parts[0]]||parts[0]||"overview";if(defs[routeTab]||["overview","profile","settings"].includes(routeTab)){await activate(routeTab);if(parts[0]==="project"&&parts[1])openProject(parts[1]);if(parts[0]==="customer"&&parts[1])openCustomer(parts[1]);}
   document.querySelectorAll("[data-tab]").forEach(a=>a.addEventListener("click",e=>{e.preventDefault();history.replaceState(null,"","#"+a.dataset.tab);activate(a.dataset.tab);}));
   const searchInput=$("#module-search");
+  $("#module-search-submit")?.addEventListener("click",()=>{if(defs[active])loadModule(active);});
   const updateSearchSuggestions=()=>{const list=$("#module-search-suggestions");if(!list)return;list.replaceChildren();const source=active==="projects"?projects.map(p=>p.name):active==="customers"?customers.map(c=>c.name):[];const term=(searchInput?.value||"").trim().toLowerCase();source.filter(Boolean).filter(name=>!term||name.toLowerCase().includes(term)).slice(0,12).forEach(name=>list.append(new Option(name)));};
   searchInput?.addEventListener("input",()=>{if(active==="projects")renderRows("projects",projects,true);if(active==="customers")renderRows("customers",customers,true);if(active==="knowledge")renderRows("knowledge",knowledgeEntries,true);updateSearchSuggestions();});
   searchInput?.addEventListener("focus",updateSearchSuggestions);
