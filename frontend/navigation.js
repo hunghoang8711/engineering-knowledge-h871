@@ -144,7 +144,14 @@
   return card;
  }
  async function openCustomer(customerId,navigate=true){
-  const c=customers.find(x=>x.id===customerId);if(!c)return;
+  let c=customers.find(x=>x.id===customerId);
+  if(!c&&client&&user){
+   const result=await client.from("customers").select("id,name,customer_type,end_user_name,description,industry,notes,created_at").eq("id",customerId).maybeSingle();
+   if(result.error){say("Could not load customer details: "+result.error.message,true);return;}
+   c=result.data||null;
+   if(c)customers=[...customers.filter(x=>x.id!==c.id),c];
+  }
+  if(!c){say("Customer not found. Return to Customers and refresh the list.",true);return;}
   if(navigate){location.href="./customer-detail.html?id="+encodeURIComponent(customerId);return;}
   $("#module-records").hidden=true;$("#module-search").parentElement.hidden=true;$("#module-message").hidden=true;$("#module-create-toggle").hidden=true;
   let detail=$("#customer-detail");if(!detail){detail=make("section","customer-detail");detail.id="customer-detail";$("#module-workspace").append(detail);}detail.replaceChildren();
@@ -162,7 +169,14 @@
  }
  function populateTagSuggestions(){const list=$("#project-tag-suggestions");if(list){list.replaceChildren();[...knownTags].sort().forEach(t=>list.append(new Option(t)));}}
  async function openProject(projectId,navigate=true){
-  const p=projects.find(x=>x.id===projectId);if(!p)return;
+  let p=projects.find(x=>x.id===projectId);
+  if(!p&&client&&user){
+   const result=await client.from("projects").select("id,code,name,description,status,tags,created_at,updated_at").eq("id",projectId).maybeSingle();
+   if(result.error){say("Could not load project details: "+result.error.message,true);return;}
+   p=result.data||null;
+   if(p)projects=[...projects.filter(x=>x.id!==p.id),p];
+  }
+  if(!p){say("Project not found. Return to Projects and refresh the list.",true);return;}
   if(navigate){location.href="./project-detail.html?id="+encodeURIComponent(projectId);return;}selectedProject=p;
   $("#module-records").hidden=true;$("#module-search").parentElement.hidden=true;$("#module-message").hidden=true;
   let detail=$("#module-detail");if(!detail){detail=make("section","project-detail");detail.id="module-detail";$("#module-workspace").append(detail);}detail.replaceChildren();detail.hidden=false;
