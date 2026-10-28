@@ -55,3 +55,28 @@ Therefore, documents.summary alone is insufficient for the requested versioned a
 ## Current implementation status
 
 This file records the approved design. It does not mean the Gemini integration has been deployed or that database migrations have been applied. The current repository frontend uses static JavaScript and Supabase; no Gemini secret may be added to frontend/ or .env.example as a browser-visible value.
+
+## Live schema and RLS observations (user-provided, 2026-10-29)
+
+The workspace owner ran read-only queries in the deployed Supabase SQL Editor and supplied these results. They are user-provided observations, not a direct live database connection from this tool.
+
+Confirmed columns:
+
+- `projects`: `id`, `code`, `name`, `description`, `status`, `created_by`, `created_at`, `updated_at`, `tags`.
+- `documents`: `id`, `project_id`, `customer_id`, `title`, `original_filename`, `file_type`, `relative_path`, `sha256`, `version_label`, `source_kind`, `source_uri`, `extracted_text`, `summary`, `status`, audit fields, and timestamps.
+- `user_roles`: `user_id`, `role`, `created_at`.
+- The query returned no rows for `project_ai_analyses` or `project_change_history`, so those tables were not found under those names in the queried public schema.
+
+Reported RLS policies:
+
+- `projects` and `documents`: authenticated users can SELECT with `qual = true`; admin/editor roles can manage rows through `public.has_hub_role(ARRAY['admin','editor'])`.
+- `user_roles`: users can read their own role (admins can read all); only admins can manage roles.
+- RLS is enabled and FORCE RLS is disabled on `projects`, `documents`, and `user_roles`.
+
+Implementation implications:
+
+1. Preserve the current shared-read/admin-editor-write pattern unless an explicit product requirement changes it; do not silently broaden write access.
+2. Additive schema is likely needed for Main Concept selection, immutable per-version analysis runs, and project change/restore history. Check migration history and exact deployed definitions before preparing the migration.
+3. New tables must enable RLS and have explicit SELECT/INSERT policies that match intended roles. AI analysis and history writes should not be trusted to browser code; enforce authorization in the server-side function and database policies.
+4. The results do not validate Storage policies, Edge Function authorization, function grants, or secrets configuration; verify those separately before enabling external AI calls.
+5. No live schema or RLS change has been applied as part of this review.
