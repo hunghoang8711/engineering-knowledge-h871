@@ -265,7 +265,10 @@
    if(route==="project"&&routeId)await openProject(routeId,false);
    else if(route==="customer"&&routeId)await openCustomer(routeId,false);
   };
-  client.auth.onAuthStateChange(()=>setTimeout(async()=>{await sync(false);await renderRoute();},0));
+  // Auth events update permissions and the sign-in panel only. Do not re-render the
+  // current route here: activate(tab) removes the detail DOM and can race navigation,
+  // causing the overview/list to flash back over a successfully opened record.
+  client.auth.onAuthStateChange(()=>setTimeout(async()=>{await sync(false);},0));
   window.addEventListener("popstate",()=>{renderRoute();});
   await sync();await renderRoute();
   document.querySelectorAll("[data-tab]").forEach(a=>a.addEventListener("click",e=>{e.preventDefault();const tab=a.dataset.tab;const pages={overview:"index.html",projects:"projects.html",customers:"customers.html",knowledge:"knowledge.html"};if(pages[tab]){const target="./"+pages[tab];if(location.pathname.split("/").pop()!==pages[tab])location.href=target;else if(location.hash)history.replaceState({h871Route:tab},"",target);activate(tab);return;}history.replaceState({h871Route:tab},"",location.pathname+location.search);activate(tab);}));
