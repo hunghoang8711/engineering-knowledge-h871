@@ -2,6 +2,7 @@
  const $=s=>document.querySelector(s);
  const config=window.H871_SUPABASE_CONFIG||{};
  let client=null,user=null,role=null,active="overview",projects=[],customers=[],documents=[],knowledgeEntries=[],selectedProject=null,moduleLoadToken=0;
+ let listSearch="",listFilter="",listFilterValue="",listToolbarReady=false;
  const knownTags=new Set();
  const loadedModules=new Set();
  const officeExt=["pdf","doc","docx","docm","xls","xlsx","xlsm","ppt","pptx","pptm"];
@@ -19,7 +20,7 @@
  function hideOverview(hide){document.querySelectorAll(".main-content > section,.main-content > footer").forEach(el=>{if(!["module-workspace","profile-workspace"].includes(el.id))el.hidden=hide;});const auth=$("#auth-panel");if(auth)auth.hidden=hide||!!user;}
  function activate(tab){
   active=tab;selectedProject=null;
-  $("#module-records").hidden=false;$("#module-search").parentElement.hidden=false;$("#module-message").hidden=false;$("#module-detail")?.remove();$("#customer-detail")?.remove();
+  $("#module-records").hidden=false;$("#module-toolbar").hidden=!(tab==="projects"||tab==="customers");$("#module-message").hidden=false;$("#module-detail")?.remove();$("#customer-detail")?.remove();
   document.querySelectorAll("[data-tab]").forEach(a=>a.classList.toggle("active",a.dataset.tab===tab));
   const module=!!defs[tab],profile=tab==="profile"||tab==="settings",overview=tab==="overview"||tab==="search";
   hideOverview(!overview);$("#module-workspace").hidden=!module;$("#profile-workspace").hidden=!profile;
@@ -120,12 +121,37 @@
   }
  }
  function renderRows(tab,rows){
-  const box=$("#module-records");if(!box)return;box.replaceChildren();const filtered=Array.isArray(rows)?rows:[];
+  const box=$("#module-records");if(!box)return;box.replaceChildren();const source=Array.isArray(rows)?rows:[];
+  const query=listSearch.trim().toLowerCase();
+  const filtered=source.filter(item=>{
+   if(query){const haystack=tab==="projects"?[item.code,item.name,item.description,...(item.tags||[])].filter(Boolean).join(" ").toLowerCase():tab==="customers"?[item.name,item.end_user_name,item.description,item.notes,item.industry,item.customer_type].filter(Boolean).join(" ").toLowerCase():"";if(!haystack.includes(query))return false;}
+   if(listFilter&&listFilterValue){if(listFilter==="status"&&item.status!==listFilterValue)return false;if(listFilter==="tag"&&!(item.tags||[]).includes(listFilterValue))return false;if(listFilter==="customer_type"&&item.customer_type!==listFilterValue)return false;}
+   return true;
+  });
   $("#module-count").textContent=filtered.length+" "+(tab==="projects"?"projects":tab==="customers"?"customers":"entries");
-  if(!filtered.length){box.append(make("div","module-empty","No records found yet."));return;}
+  if(!filtered.length){box.append(make("div","module-empty",query||listFilterValue?"No matching records.":"No records found yet."));return;}
   if(tab==="projects")filtered.forEach(p=>box.append(projectCard(p)));
   if(tab==="customers")filtered.forEach(c=>box.append(customerCard(c)));
   if(tab==="knowledge")filtered.forEach(k=>{const card=make("article","module-record");card.append(make("strong","",k.title),make("p","",[k.category,k.content].filter(Boolean).join(" · ")));box.append(card);});
+ }
+ function refreshListFilters(){if(active==="projects")renderRows("projects",projects);else if(active==="customers")renderRows("customers",customers);}
+ function setupListToolbar(){
+  if(listToolbarReady)return;const toolbar=$("#module-toolbar"),search=$("#module-search");if(!toolbar||!search)return;
+  listToolbarReady=true;toolbar.replaceChildren();toolbar.hidden=true;toolbar.className="module-toolbar";
+  const searchWrap=make("label","compact-search");searchWrap.setAttribute("aria-label","Search records");const icon=make("span","search-icon","⌕");icon.setAttribute("aria-hidden","true");search.type="search";search.placeholder="Search";search.setAttribute("aria-label","Search projects or customers");search.autocomplete="off";searchWrap.append(icon,search);
+  const filterWrap=make("div","filter-wrap");const filterButton=make("button","compact-filter","");filterButton.type="button";filterButton.setAttribute("aria-label","Open filters");filterButton.setAttribute("aria-expanded","false");filterButton.append(make("span","filter-icon","☷"));filterWrap.append(filterButton);
+  const panel=make("div","filter-panel");panel.hidden=true;panel.setAttribute("aria-label","Filter options");filterWrap.append(panel);toolbar.append(searchWrap,filterWrap);
+  const rebuild=()=>{panel.replaceChildren();panel.append(make("strong","filter-panel-title","Filter by"));
+   const label=make("label","filter-field",active==="projects"?"Project status":"Customer type");const select=make("select","");select.setAttribute("aria-label",active==="projects"?"Project status":"Customer type");select.append(new Option(active==="projects"?"All statuses":"All customer types",""));
+   if(active==="projects"){[...new Set(projects.map(p=>p.status).filter(Boolean))].sort().forEach(v=>select.append(new Option(v,v)));}else{select.append(new Option("End user","end_user"),new Option("Intermediary partner","intermediary"));}
+   if((listFilter==="status"||listFilter==="customer_type")&&listFilterValue)select.value=listFilterValue;select.addEventListener("change",()=>{listFilter=active==="projects"?"status":"customer_type";listFilterValue=select.value;refreshListFilters();});
+   label.append(select);panel.append(label);
+   if(active==="projects"){const tagLabel=make("label","filter-field","Project tag");const tagSelect=make("select","");tagSelect.setAttribute("aria-label","Project tag");tagSelect.append(new Option("All tags",""));[...new Set(projects.flatMap(p=>p.tags||[]))].sort().forEach(v=>tagSelect.append(new Option(v,v)));if(listFilter==="tag")tagSelect.value=listFilterValue;tagSelect.addEventListener("change",()=>{listFilter=tagSelect.value?"tag":"";listFilterValue=tagSelect.value;refreshListFilters();});tagLabel.append(tagSelect);panel.append(tagLabel);}
+   const actions=make("div","filter-actions");const clear=make("button","filter-clear","Clear filters");clear.type="button";clear.addEventListener("click",()=>{listFilter="";listFilterValue="";panel.querySelectorAll("select").forEach(s=>s.selectedIndex=0);refreshListFilters();});actions.append(clear);panel.append(actions);
+  };
+  filterButton.addEventListener("click",()=>{const opening=panel.hidden;if(opening)rebuild();panel.hidden=!opening;filterButton.setAttribute("aria-expanded",String(opening));});
+  search.addEventListener("input",()=>{listSearch=search.value;refreshListFilters();});
+  document.addEventListener("click",e=>{if(!filterWrap.contains(e.target)){panel.hidden=true;filterButton.setAttribute("aria-expanded","false");}});
  }
  function projectCard(p){
   const card=make("article","project-card");card.tabIndex=0;card.setAttribute("role","link");card.setAttribute("aria-label","Open project "+(p.code||"")+" "+(p.name||""));card.title="Click anywhere on this project card to open its details";card.addEventListener("click",e=>{if(e.target.closest("button,a,input,textarea,select,[contenteditable=true]"))return;openProject(p.id);});card.addEventListener("keydown",e=>{if(e.target===card&&(e.key==="Enter"||e.key===" ")){e.preventDefault();openProject(p.id);}});const head=make("div","project-card-head");const left=make("div","");left.append(make("span","project-code",p.code||"PROJECT"),make("h3","",p.name),make("p","project-description",p.description||"No project description yet."));const tags=make("div","project-tags");(p.tags||[]).forEach(t=>tags.append(make("span","project-tag",t)));left.append(tags);head.append(left);
@@ -306,7 +332,7 @@
   });
  }
  async function init(){
-  addForms();makeNewButton();wireForms();
+  addForms();makeNewButton();wireForms();setupListToolbar();
   // Resolve route before async auth checks to prevent the overview from flashing over detail pages.
   const initialPath=location.pathname.split("/").pop()||"index.html";
   active=({"customers.html":"customers","projects.html":"projects","customer-detail.html":"customers","project-detail.html":"projects","knowledge.html":"knowledge"})[initialPath]||"overview";
