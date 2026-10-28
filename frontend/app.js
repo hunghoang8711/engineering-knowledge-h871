@@ -90,7 +90,7 @@ async function loadUserState() {
   const signedIn = Boolean(session?.user);
   currentUser = session?.user || null;
   const authPanel = document.querySelector("#auth-panel");
-  if (authPanel) authPanel.hidden = signedIn;
+  if (authPanel) { authPanel.dataset.signedIn = String(signedIn); authPanel.hidden = signedIn; }
   const displayName = signedIn ? (localStorage.getItem("h871_profile_display_name") || session.user.email.split("@")[0]) : "Sign in";
   if (userStatus) userStatus.textContent = displayName;
   const avatar = document.querySelector("#account-avatar"); if (avatar) avatar.textContent = signedIn ? displayName.charAt(0).toUpperCase() : "H";
