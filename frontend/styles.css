@@ -73,3 +73,12 @@
 .record-form input[list]{width:100%}
 .record-form input[type=file]{color:#9fb0c5;font-size:11px}
 @media(max-width:760px){.header-actions{width:100%;justify-content:flex-end}.add-menu{right:0}.project-card-head{display:block}.project-open{margin-top:14px}.document-card{align-items:flex-start;flex-wrap:wrap}.download-file,.edit-note{margin-left:0}.inline-add{flex-direction:column}.project-detail-header,.detail-section{padding:17px}}
+
+/* Fix workspace creation and authentication visibility */
+.add-menu-trigger{display:none!important}
+.module-heading-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+.module-create-toggle{border:1px solid #25657a;border-radius:9px;background:linear-gradient(135deg,#164e63,#0e7490);color:#cffafe;padding:10px 13px;font:inherit;font-size:12px;font-weight:800;cursor:pointer}
+.module-create-toggle[hidden]{display:none!important}
+.module-create-toggle:hover{filter:brightness(1.12)}
+#auth-panel[data-signed-in="true"]{display:none!important}
+@media(max-width:760px){.module-heading-actions{justify-content:flex-start;margin-top:14px}}
