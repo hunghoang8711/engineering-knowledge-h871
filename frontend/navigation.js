@@ -2,6 +2,7 @@
  const $=s=>document.querySelector(s);
  const config=window.H871_SUPABASE_CONFIG||{};
  let client=null,user=null,role=null,active="overview",projects=[],customers=[],documents=[],knowledgeEntries=[],selectedProject=null,moduleLoadToken=0;
+ const knownTags=new Set();
  const officeExt=["pdf","doc","docx","docm","xls","xlsx","xlsm","ppt","pptx","pptm"];
  const defs={
   projects:{title:"Projects",desc:"Projects with linked customers and technical documents."},
