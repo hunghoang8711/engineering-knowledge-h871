@@ -228,6 +228,10 @@
  }
  async function init(){
   addForms();makeNewButton();wireForms();
+  // Resolve route before async auth checks to prevent the overview from flashing over detail pages.
+  const initialPath=location.pathname.split("/").pop()||"index.html";
+  active=({"customers.html":"customers","projects.html":"projects","customer-detail.html":"customers","project-detail.html":"projects","knowledge.html":"knowledge"})[initialPath]||"overview";
+  if(initialPath!=="index.html"&&initialPath!=="")hideOverview(true);
   if(!config.url||!config.anonKey||!window.supabase?.createClient){say("Supabase configuration unavailable.",true);return;}
   client=window.supabase.createClient(config.url,config.anonKey);
   let authSyncToken=0;
