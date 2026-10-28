@@ -122,34 +122,57 @@
         </div>
       </section>
 
-      <section class="section-heading">
-        <div>
-          <p class="eyebrow">WORKSPACE MAP</p>
-          <h2>Knowledge at a glance</h2>
+      <section class="implementation-plan" id="implementation-plan" aria-labelledby="plan-title">
+        <div class="plan-heading">
+          <div><p class="eyebrow">PROJECT ROADMAP / H871</p><h2 id="plan-title">Our implementation plan</h2><p class="plan-intro">A shared record of what we have built, what is working at source-code level, and what remains to validate.</p></div>
+          <span class="plan-progress">Current focus · Workflow validation</span>
         </div>
+        <div class="plan-summary" aria-label="Progress summary">
+          <div><strong>4</strong><span>milestones implemented</span></div>
+          <div><strong>1</strong><span>milestone in progress</span></div>
+          <div><strong>0</strong><span>live end-to-end tests confirmed</span></div>
+        </div>
+        <div class="plan-table-wrap">
+          <table class="plan-table">
+            <thead><tr><th scope="col">Milestone</th><th scope="col">Progress</th><th scope="col">Delivered features</th><th scope="col">Next action / acceptance</th></tr></thead>
+            <tbody>
+              <tr><th scope="row"><span class="plan-step">01</span>Workspace foundation</th><td><span class="plan-status is-done">Implemented</span></td><td>H871 workspace shell, navigation, Supabase authentication integration, role-aware access checks and separated project configuration.</td><td>Verify production configuration, role permissions and repository privacy before importing sensitive records.</td></tr>
+              <tr><th scope="row"><span class="plan-step">02</span>Project management</th><td><span class="plan-status is-done">Implemented</span></td><td>Create and browse projects; project code, description, status and tags; open a project card from its non-interactive area; group technical documents under each project.</td><td>Run browser tests for create, edit/open, refresh and linked document access with permitted test accounts.</td></tr>
+              <tr><th scope="row"><span class="plan-step">03</span>Customer management</th><td><span class="plan-status is-done">Implemented</span></td><td>Customer profiles; end-user and intermediary types; link customers to projects; customer detail view with a project register and update dates.</td><td>Validate customer creation, project links and data visibility using real authorized sessions.</td></tr>
+              <tr><th scope="row"><span class="plan-step">04</span>Search, filters and UI consistency</th><td><span class="plan-status is-done">Implemented</span></td><td>Compact Search and icon-only Filter for Projects and Customers; search by relevant record fields; filter by project status/tags or customer type; aligned dimensions and styling.</td><td>Confirm both pages visually after hard refresh and test combined search/filter, clear-filter and mobile layouts.</td></tr>
+              <tr><th scope="row"><span class="plan-step">05</span>Knowledge and document workflow</th><td><span class="plan-status is-progress">In progress</span></td><td>Knowledge entry form with category/confidence and approved-entry listing; document metadata and project document storage flow are present in the source.</td><td>Build and verify document batch import, extraction/AI suggestions, review-queue actions and end-to-end approval before treating this milestone as complete.</td></tr>
+              <tr><th scope="row"><span class="plan-step">06</span>Release readiness</th><td><span class="plan-status is-next">Next</span></td><td>Not yet marked complete.</td><td>Complete a test checklist for authentication/RLS, storage permissions, error handling, data backup and responsive browser behavior; then import a small approved sample batch.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="plan-footnote"><strong>Progress note:</strong> “Implemented” means the corresponding UI/code has been added and reviewed in the repository. It does not mean live Supabase, permissions or end-to-end behavior has been independently tested. Update this roadmap as each acceptance check passes.</p>
+      </section>
+
+      <section class="section-heading">
+        <div><p class="eyebrow">WORKSPACE MAP</p><h2>Knowledge at a glance</h2></div>
         <span class="pill">MVP · Phase 1</span>
       </section>
 
       <section class="metric-grid" aria-label="Workspace modules">
-        <article class="metric-card" id="projects-card"><div class="card-icon blue">PR</div><span class="card-label">Project Explorer</span><strong>Projects</strong><p>Equipment, requirements, status and project-linked files.</p><span class="card-state">Supabase-backed</span></article>
-        <article class="metric-card" id="customers-card"><div class="card-icon violet">CL</div><span class="card-label">Customer Intelligence</span><strong>Customers</strong><p>Customer profiles, standards, preferences and history.</p><span class="card-state">Planned module</span></article>
-        <article class="metric-card" id="documents-card"><div class="card-icon amber">DOC</div><span class="card-label">Technical Library</span><strong>Documents</strong><p>PDF, Excel, Word, versions, source paths and metadata.</p><span class="card-state">Planned module</span></article>
-        <article class="metric-card" id="knowledge-card"><div class="card-icon green">KN</div><span class="card-label">Engineering Memory</span><strong>Knowledge Library</strong><p>Calculations, troubleshooting, design rules and lessons learned.</p><span class="card-state">Planned module</span></article>
+        <article class="metric-card" id="projects-card"><div class="card-icon blue">PR</div><span class="card-label">Project Explorer</span><strong>Projects</strong><p>Equipment, requirements, status and project-linked files.</p><span class="card-state">Implemented · validation pending</span></article>
+        <article class="metric-card" id="customers-card"><div class="card-icon violet">CL</div><span class="card-label">Customer Intelligence</span><strong>Customers</strong><p>Customer profiles, end users, intermediary partners and linked projects.</p><span class="card-state">Implemented · validation pending</span></article>
+        <article class="metric-card" id="documents-card"><div class="card-icon amber">DOC</div><span class="card-label">Technical Library</span><strong>Documents</strong><p>Project-linked file storage, metadata, notes and review status.</p><span class="card-state">Core flow present · import workflow pending</span></article>
+        <article class="metric-card" id="knowledge-card"><div class="card-icon green">KN</div><span class="card-label">Engineering Memory</span><strong>Knowledge Library</strong><p>Knowledge entries, categories, confidence and approved-entry browsing.</p><span class="card-state">Core module present · review workflow pending</span></article>
       </section>
 
       <section class="lower-grid">
         <article class="panel">
-          <div class="panel-heading"><div><p class="eyebrow">NEXT ACTIONS</p><h2>Implementation checklist</h2></div><span class="panel-icon">↗</span></div>
+          <div class="panel-heading"><div><p class="eyebrow">NEXT ACTIONS</p><h2>Immediate checklist</h2></div><span class="panel-icon">↗</span></div>
           <ol class="check-list">
-            <li><span>01</span><div><strong>Confirm repository privacy</strong><p>Decide whether this repository may remain public.</p></div></li>
-            <li><span>02</span><div><strong>Create a separate database</strong><p>Keep this project isolated from all existing websites.</p></div></li>
-            <li><span>03</span><div><strong>Build schema and access rules</strong><p>Validate role permissions before importing real data.</p></div></li>
-            <li><span>04</span><div><strong>Test a small document batch</strong><p>Start with 20–30 representative files.</p></div></li>
+            <li><span>01</span><div><strong>Validate the live workspace</strong><p>Test sign-in, role access, project/customer operations and Search/Filter in the browser.</p></div></li>
+            <li><span>02</span><div><strong>Test document permissions</strong><p>Verify storage and database access using authorized test accounts before uploading confidential files.</p></div></li>
+            <li><span>03</span><div><strong>Complete ingestion and review</strong><p>Define the small-batch import, extraction, review and approval path.</p></div></li>
+            <li><span>04</span><div><strong>Import a controlled sample</strong><p>Start with a small approved batch and check metadata quality before scaling up.</p></div></li>
           </ol>
         </article>
         <article class="panel" id="intake">
-          <div class="panel-heading"><div><p class="eyebrow">DATA INTAKE</p><h2>Review queue</h2></div><span class="queue-count">0</span></div>
-          <div class="empty-state"><div class="empty-symbol">✓</div><strong>No records imported</strong><p>When ingestion is built, extracted content and AI suggestions will appear here for verification before entering the knowledge base.</p></div>
+          <div class="panel-heading"><div><p class="eyebrow">DATA INTAKE</p><h2>Review queue</h2></div><span class="queue-count">Workflow pending</span></div>
+          <div class="empty-state"><div class="empty-symbol">✓</div><strong>Review workflow not yet validated</strong><p>The queue is currently a placeholder. Extracted content and AI suggestions still need a verified intake and approval workflow.</p></div>
         </article>
       </section>
 
