@@ -67,7 +67,9 @@
    const ext=file.name.split(".").pop().toLowerCase();
    if(!officeExt.includes(ext))throw new Error("Unsupported file type: "+file.name+". Only PDF, Word, Excel and PowerPoint files are allowed.");
    if(file.size>50*1024*1024)throw new Error(file.name+" exceeds the 50 MB limit.");
-   // Use an ASCII-only object key: keep the original filename in document metadata, not in the Storage path.\n   const safeExt=ext.replace(/[^a-z0-9]/g,"")||"bin";\n   const path=projectId+"/"+crypto.randomUUID()+"."+safeExt;
+   // Store under an ASCII-only key; retain the original filename in metadata.
+   const safeExt=ext.replace(/[^a-z0-9]/g,"")||"bin";
+   const path=projectId+"/"+crypto.randomUUID()+"."+safeExt;
    const {error:storageError}=await client.storage.from("h871-project-documents").upload(path,file,{upsert:false,contentType:file.type||undefined});
    if(storageError)throw storageError;
    const {error:rowError}=await client.from("documents").insert({
@@ -83,12 +85,12 @@
   say("Loading…");
   if(tab==="projects"){
    const [{data:p,error:pe},{data:d,error:de}]=await Promise.all([
-    client.from("projects").select("id,code,name,description,status,created_at,updated_at").order("updated_at",{ascending:false}).limit(300),
+    client.from("projects").select("id,code,name,description,status,tags,created_at,updated_at").order("updated_at",{ascending:false}).limit(300),
     client.from("documents").select("id,project_id,title,original_filename,file_type,notes,relative_path,status,created_by,updated_by,created_at,updated_at").order("updated_at",{ascending:false}).limit(1000)
    ]);
    if(pe||de){say("Could not load projects or documents: "+(pe||de).message,true);return;}
-   projects=p||[];documents=d||[];renderRows(tab,projects);say(projects.length+" projects · documents are grouped within each project.");
-  }else if(tab==="customers"){await loadCustomers();renderRows(tab,customers);say(customers.length+" customers.");}
+   projects=p||[];documents=d||[];knownTags.clear();projects.forEach(p=>(p.tags||[]).forEach(t=>knownTags.add(t)));populateTagSuggestions();renderRows(tab,projects);say(projects.length+" projects · documents are grouped within each project.");
+  }else if(tab==="customers"){await loadCustomers();const {data:allProjects}=await client.from("projects").select("id,code,name,description,status,tags,created_at,updated_at").order("created_at",{ascending:false}).limit(500);projects=allProjects||[];renderRows(tab,customers);say(customers.length+" customers.");}
   else{
    const {data,error}=await client.from("knowledge_entries").select("id,title,content,category,confidence,review_status,created_at").eq("review_status","approved").order("created_at",{ascending:false}).limit(200);
    if(error){say("Could not load knowledge: "+error.message,true);return;}renderRows(tab,data||[]);say((data||[]).length+" approved entries.");
@@ -104,7 +106,7 @@
   if(tab==="knowledge")filtered.forEach(k=>{const card=make("article","module-record");card.append(make("strong","",k.title),make("p","",[k.category,k.content].filter(Boolean).join(" · ")));box.append(card);});
  }
  function projectCard(p){
-  const card=make("article","project-card");const head=make("div","project-card-head");const left=make("div","");left.append(make("span","project-code",p.code||"PROJECT"),make("h3","",p.name),make("p","project-description",p.description||"No project description yet."));head.append(left);
+  const card=make("article","project-card");const head=make("div","project-card-head");const left=make("div","");left.append(make("span","project-code",p.code||"PROJECT"),make("h3","",p.name),make("p","project-description",p.description||"No project description yet."));const tags=make("div","project-tags");(p.tags||[]).forEach(t=>tags.append(make("span","project-tag",t)));left.append(tags);head.append(left);
   const open=make("button","project-open","Open project →");open.type="button";open.addEventListener("click",()=>openProject(p.id));head.append(open);card.append(head);
   const docs=documents.filter(d=>d.project_id===p.id);const preview=make("div","project-file-preview");
   docs.slice(0,3).forEach(d=>preview.append(make("span","file-chip",d.original_filename||d.title)));
@@ -112,10 +114,27 @@
   const row=make("button","project-expand",docs.length?"Show file list":"Add the first file");row.type="button";row.addEventListener("click",()=>openProject(p.id));card.append(preview,row);return card;
  }
  function customerCard(c){
-  const card=make("article","customer-card");const type=make("span","customer-type",c.customer_type==="intermediary"?"INTERMEDIARY PARTNER":"END USER");const name=make("h3","",c.name);const desc=make("p","customer-description",c.description||c.notes||"No description added yet.");card.append(type,name,desc);
+  const card=make("article","customer-card customer-card-clickable");card.tabIndex=0;card.setAttribute("role","button");card.addEventListener("click",()=>openCustomer(c.id));card.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();openCustomer(c.id);}});const type=make("span","customer-type",c.customer_type==="intermediary"?"INTERMEDIARY PARTNER":"END USER");const name=make("h3","customer-card-name",c.name);const desc=make("p","customer-description",c.description||c.notes||"No description added yet.");card.append(type,name,desc,make("span","customer-open-hint","View customer projects →"));
   if(c.customer_type==="intermediary"&&c.end_user_name)card.append(make("p","customer-enduser","End user: "+c.end_user_name));
   if(c.industry)card.append(make("span","customer-industry",c.industry));return card;
  }
+ async function openCustomer(customerId){
+  const c=customers.find(x=>x.id===customerId);if(!c)return;
+  $("#module-records").hidden=true;$("#module-search").parentElement.hidden=true;$("#module-message").hidden=true;$("#module-create-toggle").hidden=true;
+  let detail=$("#customer-detail");if(!detail){detail=make("section","customer-detail");detail.id="customer-detail";$("#module-workspace").append(detail);}detail.replaceChildren();
+  const back=make("button","back-button","← All customers");back.addEventListener("click",()=>{detail.hidden=true;$("#module-records").hidden=false;$("#module-search").parentElement.hidden=false;$("#module-message").hidden=false;$("#module-create-toggle").hidden=false;});detail.append(back);
+  const header=make("div","project-detail-header");header.append(make("span","customer-type",c.customer_type==="intermediary"?"INTERMEDIARY PARTNER":"END USER"),make("h2","",c.name),make("p","project-description",c.description||c.notes||"No description provided."));if(c.customer_type==="intermediary"&&c.end_user_name)header.append(make("p","customer-enduser","End user: "+c.end_user_name));detail.append(header);
+  const {data:links,error}=await client.from("project_customers").select("project_id").eq("customer_id",c.id);
+  if(error){detail.append(make("p","form-feedback error","Could not load customer projects: "+error.message));return;}
+  const ids=new Set((links||[]).map(x=>x.project_id));const rows=projects.filter(p=>ids.has(p.id)).sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0));
+  const section=make("section","detail-section");section.append(make("h3","","Customer projects"));
+  if(!rows.length)section.append(make("p","muted-copy","No projects linked to this customer yet."));
+  let currentYear="";
+  rows.forEach(p=>{const date=new Date(p.created_at||Date.now());const year=String(date.getFullYear());if(year!==currentYear){currentYear=year;section.append(make("h4","customer-project-year",year));}
+   const row=make("button","customer-project-row");row.type="button";const dateLabel=make("span","customer-project-date",date.toLocaleDateString(undefined,{month:"2-digit",year:"numeric"}));const info=make("span","customer-project-info");info.append(make("strong","",p.name),make("small","",p.code||"Project"));row.append(dateLabel,info,make("span","customer-project-arrow","→"));row.addEventListener("click",()=>{activate("projects");openProject(p.id);});section.append(row);
+  });detail.append(section);window.scrollTo({top:0,behavior:"smooth"});
+ }
+ function populateTagSuggestions(){const list=$("#project-tag-suggestions");if(list){list.replaceChildren();[...knownTags].sort().forEach(t=>list.append(new Option(t)));}}
  async function openProject(projectId){
   const p=projects.find(x=>x.id===projectId);if(!p)return;selectedProject=p;
   $("#module-records").hidden=true;$("#module-search").parentElement.hidden=true;$("#module-message").hidden=true;
@@ -142,18 +161,18 @@
   return card;
  }
  function wireForms(){
-  $("#customer-type")?.addEventListener("change",updateCustomerForm);updateCustomerForm();
+  $("#customer-type")?.addEventListener("change",updateCustomerForm);updateCustomerForm();$("#project-tags")?.addEventListener("input",()=>{const values=$("#project-tags").value.split(",").map(x=>x.trim()).filter(Boolean);values.forEach(t=>knownTags.add(t));populateTagSuggestions();});
   $("#customer-name")?.addEventListener("input",()=>customerMatch("#customer-name","#customer-match-hint"));
   $("#customer-end-user")?.addEventListener("input",()=>customerMatch("#customer-end-user","#customer-match-hint"));
   $("#project-form")?.addEventListener("submit",async e=>{
    e.preventDefault();if(!canWrite())return feedback("project","Read-only access.",true);
    const btn=e.currentTarget.querySelector('button[type="submit"]');btn.disabled=true;feedback("project","Creating project…");
    try{
-    const {data:p,error}=await client.from("projects").insert({code:$("#project-code").value.trim()||null,name:$("#project-name").value.trim(),description:$("#project-description").value.trim()||null,status:$("#project-status").value,created_by:user.id}).select().single();if(error)throw error;
+    const tags=$("#project-tags").value.split(",").map(t=>t.trim()).filter(Boolean).filter((t,i,a)=>a.findIndex(x=>x.toLowerCase()===t.toLowerCase())===i);const {data:p,error}=await client.from("projects").insert({code:$("#project-code").value.trim()||null,name:$("#project-name").value.trim(),description:$("#project-description").value.trim()||null,status:$("#project-status").value,tags,created_by:user.id}).select().single();if(error)throw error;
     const customerIds=[...$("#project-customers").selectedOptions].map(o=>o.value);
     if(customerIds.length){const {error:ce}=await client.from("project_customers").insert(customerIds.map(customer_id=>({project_id:p.id,customer_id,created_by:user.id})));if(ce)throw ce;}
     const files=[...$("#project-files").files];if(files.length)await uploadFiles(p.id,files,$("#project-file-notes").value.trim());
-    e.currentTarget.reset();feedback("project","Project created successfully.");await loadModule("projects");await openProject(p.id);
+    e.currentTarget.reset();feedback("project","Project created successfully.");document.querySelector('[data-form-mount="projects"]').hidden=true;$("#module-create-toggle").textContent="＋ Add project";await loadModule("projects");await openProject(p.id);
    }catch(err){feedback("project","Could not create project: "+err.message,true);}finally{btn.disabled=false;}
   });
   $("#customer-form")?.addEventListener("submit",async e=>{
