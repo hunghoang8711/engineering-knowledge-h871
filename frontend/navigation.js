@@ -143,10 +143,10 @@
   return card;
  }
  async function openCustomer(customerId){
-  const c=customers.find(x=>x.id===customerId);if(!c)return;history.replaceState(null,"","#customer/"+customerId);
+  const c=customers.find(x=>x.id===customerId);if(!c)return;if(navigate)history.pushState({h871Route:"customer",id:customerId},"","#customer/"+customerId);
   $("#module-records").hidden=true;$("#module-search").parentElement.hidden=true;$("#module-message").hidden=true;$("#module-create-toggle").hidden=true;
   let detail=$("#customer-detail");if(!detail){detail=make("section","customer-detail");detail.id="customer-detail";$("#module-workspace").append(detail);}detail.replaceChildren();
-  const back=make("button","back-button","← All customers");back.addEventListener("click",()=>{detail.hidden=true;$("#module-records").hidden=false;$("#module-search").parentElement.hidden=false;$("#module-message").hidden=false;$("#module-create-toggle").hidden=false;history.replaceState(null,"","#customers");});detail.append(back);
+  const back=make("button","back-button","← All customers");back.addEventListener("click",()=>{if(history.state?.h871Route==="customer")history.back();else{history.replaceState({h871Route:"customers"},"","#customers");activate("customers");}});detail.append(back);
   const header=make("div","project-detail-header");header.append(make("span","customer-type",c.customer_type==="intermediary"?"INTERMEDIARY PARTNER":"END USER"),make("h2","",c.name),make("p","project-description",c.description||c.notes||"No description provided."));if(c.customer_type==="intermediary"&&c.end_user_name)header.append(make("p","customer-enduser","End user: "+c.end_user_name));detail.append(header);
   const {data:links,error}=await client.from("project_customers").select("project_id").eq("customer_id",c.id);
   if(error){detail.append(make("p","form-feedback error","Could not load customer projects: "+error.message));return;}
@@ -160,10 +160,10 @@
  }
  function populateTagSuggestions(){const list=$("#project-tag-suggestions");if(list){list.replaceChildren();[...knownTags].sort().forEach(t=>list.append(new Option(t)));}}
  async function openProject(projectId){
-  const p=projects.find(x=>x.id===projectId);if(!p)return;history.replaceState(null,"","#project/"+projectId);selectedProject=p;
+  const p=projects.find(x=>x.id===projectId);if(!p)return;if(navigate)history.pushState({h871Route:"project",id:projectId},"","#project/"+projectId);selectedProject=p;
   $("#module-records").hidden=true;$("#module-search").parentElement.hidden=true;$("#module-message").hidden=true;
   let detail=$("#module-detail");if(!detail){detail=make("section","project-detail");detail.id="module-detail";$("#module-workspace").append(detail);}detail.replaceChildren();detail.hidden=false;
-  const back=make("button","back-button","← All projects");back.addEventListener("click",()=>{detail.hidden=true;$("#module-records").hidden=false;$("#module-search").parentElement.hidden=false;$("#module-message").hidden=false;selectedProject=null;history.replaceState(null,"","#projects");});detail.append(back);
+  const back=make("button","back-button","← Back");back.addEventListener("click",()=>{if(history.state?.h871Route==="project")history.back();else{history.replaceState({h871Route:"projects"},"","#projects");activate("projects");}});detail.append(back);
   const header=make("div","project-detail-header");header.append(make("span","project-code",p.code||"PROJECT"),make("h2","",p.name),make("p","project-description",p.description||"No description provided."),make("span","project-status",p.status.replace("_"," ")));detail.append(header);
   const customersForProject=await client.from("project_customers").select("customer_id,customers(id,name,customer_type,end_user_name)").eq("project_id",p.id);
   const custSection=make("section","detail-section");const custHead=make("div","detail-section-heading");custHead.append(make("h3","","Customers"),make("span","",String((customersForProject.data||[]).length)+" linked"));custSection.append(custHead);
@@ -215,8 +215,19 @@
   client=window.supabase.createClient(config.url,config.anonKey);
   let authSyncToken=0;
   const sync=async(loadCurrentModule=false)=>{const syncToken=++authSyncToken;const {data}=await client.auth.getSession();user=data.session?.user||null;role=null;if(user){const {data:r}=await client.from("user_roles").select("role").eq("user_id",user.id).maybeSingle();if(syncToken!==authSyncToken)return;role=r?.role||null;}if(syncToken!==authSyncToken)return;const auth=$("#auth-panel");if(auth)auth.hidden=!!user||!(active==="overview"||active==="search");if(loadCurrentModule&&defs[active])await activate(active);};
-  client.auth.onAuthStateChange(()=>setTimeout(()=>sync(true),0));await sync();const initial=location.hash.replace(/^#/,"");const parts=initial.split("/");const routeTab=({project:"projects",customer:"customers"})[parts[0]]||parts[0]||"overview";if(defs[routeTab]||["overview","profile","settings"].includes(routeTab)){await activate(routeTab);if(parts[0]==="project"&&parts[1])openProject(parts[1]);if(parts[0]==="customer"&&parts[1])openCustomer(parts[1]);}
-  document.querySelectorAll("[data-tab]").forEach(a=>a.addEventListener("click",e=>{e.preventDefault();history.replaceState(null,"","#"+a.dataset.tab);activate(a.dataset.tab);}));
+  client.auth.onAuthStateChange(()=>setTimeout(()=>sync(true),0));
+  const renderRoute=async()=>{
+   const parts=location.hash.replace(/^#/, "").split("/");
+   const route=parts[0]||"overview";
+   const tab=({project:"projects",customer:"customers"})[route]||route;
+   if(!(defs[tab]||["overview","profile","settings"].includes(tab)))return;
+   await activate(tab);
+   if(route==="project"&&parts[1])await openProject(parts[1],false);
+   else if(route==="customer"&&parts[1])await openCustomer(parts[1],false);
+  };
+  window.addEventListener("popstate",()=>{renderRoute();});
+  await sync();await renderRoute();
+  document.querySelectorAll("[data-tab]").forEach(a=>a.addEventListener("click",e=>{e.preventDefault();history.pushState({h871Route:a.dataset.tab},"","#"+a.dataset.tab);activate(a.dataset.tab);}));
   // Search functionality intentionally disabled while stabilizing list rendering.
   document.querySelectorAll("[data-account-action]").forEach(b=>b.addEventListener("click",()=>{const a=b.dataset.accountAction;if(a==="documents")activate("projects");if(a==="profile")activate("profile");if(a==="settings")activate("settings");}));
   document.querySelectorAll(".metric-card").forEach(card=>card.addEventListener("click",()=>{const id=card.id;if(id==="projects-card")activate("projects");if(id==="customers-card")activate("customers");if(id==="knowledge-card")activate("knowledge");}));
