@@ -171,3 +171,12 @@ body{-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
 .filter-icon,.filter-icon svg{width:22px;height:22px}
 .filter-icon svg{stroke-width:1.8}
 @media(max-width:600px){.compact-search{height:42px}.compact-filter{width:42px;height:42px}}
+
+/* Keep the Customers toolbar visually identical to Projects. */
+body[data-start-tab="customers"] .module-toolbar{display:flex;align-items:center;gap:10px}
+body[data-start-tab="customers"] .module-toolbar .compact-search{display:flex;align-items:center;gap:9px;flex:1 1 auto;width:auto;max-width:396px;min-width:0;height:42px;padding:0 13px;border:1px solid #26364d;border-radius:12px;background:#0d1727}
+body[data-start-tab="customers"] .module-toolbar .search-icon,body[data-start-tab="customers"] .module-toolbar .search-icon svg{display:block;width:16px;height:16px;flex:0 0 16px}
+body[data-start-tab="customers"] .module-toolbar .compact-search input{width:100%;min-width:0;padding:0;border:0;background:transparent;font-size:13px}
+body[data-start-tab="customers"] .module-toolbar .compact-filter{display:grid;place-items:center;flex:0 0 42px;width:42px;height:42px;padding:0;border:1px solid #2b3b52;border-radius:12px;background:#182438;color:#c0ccdc}
+body[data-start-tab="customers"] .module-toolbar .filter-icon,body[data-start-tab="customers"] .module-toolbar .filter-icon svg{display:block;width:22px;height:22px}
+@media(max-width:600px){body[data-start-tab="customers"] .module-toolbar .compact-search{height:42px}body[data-start-tab="customers"] .module-toolbar .compact-filter{width:42px;height:42px;flex-basis:42px}}
