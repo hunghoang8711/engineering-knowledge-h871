@@ -1,0 +1,4 @@
+# Supabase CLI project configuration.
+# This setting requires a valid Supabase user JWT at the Edge Function boundary.
+[functions.analyze-document]
+verify_jwt = true
