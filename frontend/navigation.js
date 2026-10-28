@@ -157,7 +157,7 @@
   let detail=$("#customer-detail");if(!detail){detail=make("section","customer-detail");detail.id="customer-detail";$("#module-workspace").append(detail);}detail.replaceChildren();
   const back=make("button","back-button","← All customers");back.addEventListener("click",()=>{backToAppOr("./customers.html");});detail.append(back);
   const header=make("div","project-detail-header");header.append(make("span","customer-type",c.customer_type==="intermediary"?"INTERMEDIARY PARTNER":"END USER"),make("h2","",c.name),make("p","project-description",c.description||c.notes||"No description provided."));if(c.customer_type==="intermediary"&&c.end_user_name)header.append(make("p","customer-enduser","End user: "+c.end_user_name));
-  if(canWrite()){
+  if(user){
    const editButton=make("button","project-open","✎ Edit customer");editButton.type="button";editButton.style.marginTop="18px";header.append(editButton);
    const editForm=make("form","record-form customer-edit-form");editForm.hidden=true;editForm.style.marginTop="18px";editForm.style.maxWidth="780px";
    const field=(labelText,id,type,value,maxLength)=>{const label=make("label","",labelText);label.htmlFor=id;const input=type==="textarea"?make("textarea"):make("input");input.id=id;input.name=id;input.maxLength=maxLength;input.value=value||"";if(type==="textarea")input.rows=3;else input.type="text";editForm.append(label,input);return input;};
@@ -211,7 +211,7 @@
   let detail=$("#module-detail");if(!detail){detail=make("section","project-detail");detail.id="module-detail";$("#module-workspace").append(detail);}detail.replaceChildren();detail.hidden=false;
   const back=make("button","back-button","← Back");back.addEventListener("click",()=>{backToAppOr("./projects.html");});detail.append(back);
   const header=make("div","project-detail-header");header.append(make("span","project-code",p.code||"PROJECT"),make("h2","",p.name),make("p","project-description",p.description||"No description provided."),make("span","project-status",String(p.status||"active").replace("_"," ")));
-  if(canWrite()){
+  if(user){
    const editButton=make("button","project-open","✎ Edit project");editButton.type="button";editButton.style.marginTop="18px";header.append(editButton);
    const editForm=make("form","record-form project-edit-form");editForm.hidden=true;editForm.style.marginTop="18px";editForm.style.maxWidth="780px";
    const addField=(labelText,id,value,maxLength,kind="input")=>{const label=make("label","",labelText);label.htmlFor=id;const input=kind==="textarea"?make("textarea"):make("input");input.id=id;input.name=id;input.maxLength=maxLength;input.value=value??"";if(kind==="textarea")input.rows=3;else input.type="text";editForm.append(label,input);return input;};
