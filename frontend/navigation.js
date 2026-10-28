@@ -1,7 +1,7 @@
 (() => {
  const $=s=>document.querySelector(s);
  const config=window.H871_SUPABASE_CONFIG||{};
- let client=null,user=null,role=null,active="overview",projects=[],customers=[],documents=[],selectedProject=null,searchActive=false,moduleLoadToken=0;
+ let client=null,user=null,role=null,active="overview",projects=[],customers=[],documents=[],selectedProject=null,moduleLoadToken=0;
  const officeExt=["pdf","doc","docx","docm","xls","xlsx","xlsm","ppt","pptx","pptm"];
  const defs={
   projects:{title:"Projects",desc:"Projects with linked customers and technical documents."},
@@ -20,7 +20,7 @@
   document.querySelectorAll("[data-tab]").forEach(a=>a.classList.toggle("active",a.dataset.tab===tab));
   const module=!!defs[tab],profile=tab==="profile"||tab==="settings",overview=tab==="overview"||tab==="search";
   hideOverview(!overview);$("#module-workspace").hidden=!module;$("#profile-workspace").hidden=!profile;
-  if(module){$("#module-title").textContent=defs[tab].title;$("#module-eyebrow").textContent=defs[tab].title.toUpperCase();$("#module-description").textContent=defs[tab].desc;$("#module-search").value="";searchActive=false;$("#module-records").replaceChildren();$("#module-detail")?.remove();$("#customer-detail")?.remove();document.querySelectorAll("[data-form-mount]").forEach(el=>el.hidden=true);$("#module-create-toggle").hidden=!["projects","customers"].includes(tab);$("#module-create-toggle").textContent=tab==="projects"?"＋ Add project":"＋ Add customer";return loadModule(tab);}
+  if(module){$("#module-title").textContent=defs[tab].title;$("#module-eyebrow").textContent=defs[tab].title.toUpperCase();$("#module-description").textContent=defs[tab].desc;$("#module-search").value="";$("#module-records").replaceChildren();$("#module-detail")?.remove();$("#customer-detail")?.remove();document.querySelectorAll("[data-form-mount]").forEach(el=>el.hidden=true);$("#module-create-toggle").hidden=!["projects","customers"].includes(tab);$("#module-create-toggle").textContent=tab==="projects"?"＋ Add project":"＋ Add customer";return loadModule(tab);}
   if(profile){$("#profile-title").textContent=tab==="settings"?"Profile settings":"Profile overview";$("#profile-description").textContent="Account status, access role and profile display name.";}
   if(tab==="overview")window.scrollTo({top:0,behavior:"smooth"});if(tab==="search")$("#search")?.scrollIntoView({behavior:"smooth",block:"start"});
  }
@@ -111,8 +111,8 @@
    if(error){say("Could not load knowledge: "+error.message,true);return;}renderRows(tab,data||[]);say((data||[]).length+" approved entries.");
   }
  }
- function renderRows(tab,rows){
-  const box=$("#module-records");if(!box)return;box.replaceChildren();const term=searchActive?(($("#module-search").value||"").trim().toLowerCase()):"";
+ function renderRows(tab,rows,applySearch=false){
+  const box=$("#module-records");if(!box)return;box.replaceChildren();const term=applySearch?(($("#module-search").value||"").trim().toLowerCase()):"";
   const filtered=rows.filter(r=>!term||Object.values(r).some(v=>String(v??"").toLowerCase().includes(term)));
   $("#module-count").textContent=filtered.length+" "+(tab==="projects"?"projects":tab==="customers"?"customers":"entries");
   if(!filtered.length){box.append(make("div","module-empty",term?"No records match this search.":"No records found yet."));return;}
@@ -208,8 +208,10 @@
   const sync=async(loadCurrentModule=false)=>{const syncToken=++authSyncToken;const {data}=await client.auth.getSession();user=data.session?.user||null;role=null;if(user){const {data:r}=await client.from("user_roles").select("role").eq("user_id",user.id).maybeSingle();if(syncToken!==authSyncToken)return;role=r?.role||null;}if(syncToken!==authSyncToken)return;const auth=$("#auth-panel");if(auth)auth.hidden=!!user||!(active==="overview"||active==="search");if(loadCurrentModule&&defs[active])await activate(active);};
   client.auth.onAuthStateChange(()=>setTimeout(()=>sync(true),0));await sync();const initial=location.hash.replace(/^#/,"");const parts=initial.split("/");const routeTab=({project:"projects",customer:"customers"})[parts[0]]||parts[0]||"overview";if(defs[routeTab]||["overview","profile","settings"].includes(routeTab)){await activate(routeTab);if(parts[0]==="project"&&parts[1])openProject(parts[1]);if(parts[0]==="customer"&&parts[1])openCustomer(parts[1]);}
   document.querySelectorAll("[data-tab]").forEach(a=>a.addEventListener("click",e=>{e.preventDefault();history.replaceState(null,"","#"+a.dataset.tab);activate(a.dataset.tab);}));
-  $("#module-search")?.addEventListener("input",()=>{searchActive=true;if(active==="projects")renderRows("projects",projects);if(active==="customers")renderRows("customers",customers);});
-  $("#module-search-clear")?.addEventListener("click",()=>{$("#module-search").value="";searchActive=false;if(active==="projects")renderRows("projects",projects);if(active==="customers")renderRows("customers",customers);});
+  const runModuleSearch=()=>{if(active==="projects")renderRows("projects",projects,true);if(active==="customers")renderRows("customers",customers,true);if(active==="knowledge")renderRows("knowledge",[] ,true);};
+  $("#module-search-submit")?.addEventListener("click",runModuleSearch);
+  $("#module-search")?.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();runModuleSearch();}});
+  $("#module-search-clear")?.addEventListener("click",()=>{$("#module-search").value="";if(active==="projects")renderRows("projects",projects);if(active==="customers")renderRows("customers",customers);if(active==="knowledge")activate("knowledge");});
   document.querySelectorAll("[data-account-action]").forEach(b=>b.addEventListener("click",()=>{const a=b.dataset.accountAction;if(a==="documents")activate("projects");if(a==="profile")activate("profile");if(a==="settings")activate("settings");}));
   document.querySelectorAll(".metric-card").forEach(card=>card.addEventListener("click",()=>{const id=card.id;if(id==="projects-card")activate("projects");if(id==="customers-card")activate("customers");if(id==="knowledge-card")activate("knowledge");}));
  }
