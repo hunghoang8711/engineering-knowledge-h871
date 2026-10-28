@@ -227,7 +227,7 @@
   };
   window.addEventListener("popstate",()=>{renderRoute();});
   await sync();await renderRoute();
-  document.querySelectorAll("[data-tab]").forEach(a=>a.addEventListener("click",e=>{e.preventDefault();history.pushState({h871Route:a.dataset.tab},"","#"+a.dataset.tab);activate(a.dataset.tab);}));
+  document.querySelectorAll("[data-tab]").forEach(a=>a.addEventListener("click",e=>{e.preventDefault();const tab=a.dataset.tab;if(["projects","customers"].includes(tab)){const target="./"+tab+".html";if(!location.pathname.endsWith("/"+tab+".html")){location.href=target;return;}}history.pushState({h871Route:tab},"","#"+tab);activate(tab);}));
   // Search functionality intentionally disabled while stabilizing list rendering.
   document.querySelectorAll("[data-account-action]").forEach(b=>b.addEventListener("click",()=>{const a=b.dataset.accountAction;if(a==="documents")activate("projects");if(a==="profile")activate("profile");if(a==="settings")activate("settings");}));
   document.querySelectorAll(".metric-card").forEach(card=>card.addEventListener("click",()=>{const id=card.id;if(id==="projects-card")activate("projects");if(id==="customers-card")activate("customers");if(id==="knowledge-card")activate("knowledge");}));
