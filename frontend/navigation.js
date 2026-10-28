@@ -97,14 +97,18 @@
     client.from("documents").select("id,project_id,title,original_filename,file_type,notes,relative_path,status,created_by,updated_by,created_at,updated_at").order("updated_at",{ascending:false}).limit(1000)
    ]);
    if(requestToken!==moduleLoadToken||active!==tab)return;
-   if(pe||de){say("Could not load projects or documents: "+(pe||de).message,true);return;}
-   projects=p||[];documents=d||[];knownTags.clear();projects.forEach(p=>(p.tags||[]).forEach(t=>knownTags.add(t)));populateTagSuggestions();renderRows(tab,projects);say(projects.length+" projects · documents are grouped within each project.");
+   if(pe){projects=[];documents=[];renderRows(tab,[]);say("Could not load projects: "+pe.message,true);return;}
+   projects=p||[];
+   if(de){documents=[];say("Projects loaded; documents could not be loaded: "+de.message,true);}else{documents=d||[];}
+   knownTags.clear();projects.forEach(p=>(p.tags||[]).forEach(t=>knownTags.add(t)));populateTagSuggestions();renderRows(tab,projects);
+   if(!de)say(projects.length+" projects · documents are grouped within each project.");
   }else if(tab==="customers"){
    await loadCustomers();
    const [{data:allProjects,error:projectError},{data:allDocuments,error:documentError}]=await Promise.all([client.from("projects").select("id,code,name,description,status,tags,created_at,updated_at").order("created_at",{ascending:false}).limit(500),client.from("documents").select("id,project_id,title,original_filename,file_type,notes,relative_path,status,created_by,updated_by,created_at,updated_at").order("updated_at",{ascending:false}).limit(1000)]);
    if(requestToken!==moduleLoadToken||active!==tab)return;
-   if(projectError||documentError){say("Could not load customer-related data: "+(projectError||documentError).message,true);return;}
-   projects=allProjects||[];documents=allDocuments||[];knownTags.clear();projects.forEach(p=>(p.tags||[]).forEach(t=>knownTags.add(t)));populateTagSuggestions();renderRows(tab,customers);say(customers.length+" customers.");}
+   projects=allProjects||[];documents=documentError?[]:(allDocuments||[]);
+   knownTags.clear();projects.forEach(p=>(p.tags||[]).forEach(t=>knownTags.add(t)));populateTagSuggestions();renderRows(tab,customers);
+   if(projectError||documentError)say("Customers loaded; related data warning: "+(projectError||documentError).message,true);else say(customers.length+" customers.");}
   else{
    const {data,error}=await client.from("knowledge_entries").select("id,title,content,category,confidence,review_status,created_at").eq("review_status","approved").order("created_at",{ascending:false}).limit(200);
    if(requestToken!==moduleLoadToken||active!==tab)return;
