@@ -191,7 +191,7 @@
     const customerIds=[...$("#project-customers").selectedOptions].map(o=>o.value);
     if(customerIds.length){const {error:ce}=await client.from("project_customers").insert(customerIds.map(customer_id=>({project_id:p.id,customer_id,created_by:user.id})));if(ce)throw ce;}
     const files=[...$("#project-files").files];if(files.length)await uploadFiles(p.id,files,$("#project-file-notes").value.trim());
-    form.reset();feedback("project","Project created successfully.");document.querySelector('[data-form-mount="projects"]').hidden=true;$("#module-create-toggle").textContent="＋ Add project";await loadModule("projects");await openProject(p.id);
+    form.reset();feedback("project","Project created successfully.");document.querySelector('[data-form-mount="projects"]').hidden=true;$("#module-create-toggle").textContent="＋ Add project";loadedModules.delete("projects");await loadModule("projects",true);await openProject(p.id);
    }catch(err){feedback("project","Could not create project: "+err.message,true);}finally{btn.disabled=false;}
   });
   $("#customer-form")?.addEventListener("submit",async e=>{
