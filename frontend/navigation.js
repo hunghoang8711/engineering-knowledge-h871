@@ -125,7 +125,7 @@
   const query=listSearch.trim().toLowerCase();
   const filtered=source.filter(item=>{
    if(query){const haystack=tab==="projects"?[item.code,item.name,item.description,...(item.tags||[])].filter(Boolean).join(" ").toLowerCase():tab==="customers"?[item.name,item.end_user_name,item.description,item.notes,item.industry,item.customer_type].filter(Boolean).join(" ").toLowerCase():"";if(!haystack.includes(query))return false;}
-   if(listFilter&&listFilterValue){if(listFilter==="status"&&item.status!==listFilterValue)return false;if(listFilter==="tag"&&!(item.tags||[]).includes(listFilterValue))return false;if(listFilter==="customer_type"&&item.customer_type!==listFilterValue)return false;}
+   if(listFilter&&listFilterValue){if(tab==="projects"&&listFilter==="status"&&item.status!==listFilterValue)return false;if(tab==="projects"&&listFilter==="tag"&&!(item.tags||[]).includes(listFilterValue))return false;if(tab==="customers"&&listFilter==="customer_type"&&item.customer_type!==listFilterValue)return false;}
    return true;
   });
   $("#module-count").textContent=filtered.length+" "+(tab==="projects"?"projects":tab==="customers"?"customers":"entries");
