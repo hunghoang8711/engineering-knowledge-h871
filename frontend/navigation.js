@@ -195,19 +195,6 @@
   rows.forEach(p=>{const date=new Date(p.created_at||Date.now());const year=String(date.getFullYear());if(year!==currentYear){currentYear=year;section.append(make("h4","customer-project-year",year));}
    const row=make("button","customer-project-row");row.type="button";const dateLabel=make("span","customer-project-date",date.toLocaleDateString(undefined,{month:"2-digit",year:"numeric"}));const info=make("span","customer-project-info");info.append(make("strong","",p.name),make("small","",p.code||"Project"));row.append(dateLabel,info,make("span","customer-project-arrow","→"));row.addEventListener("click",()=>{location.href="./project-detail.html?id="+encodeURIComponent(p.id);});section.append(row);
   });
-  if(canWrite()){
-   const toggle=make("button","module-create-toggle","＋ Link existing project");toggle.type="button";const form=make("form","inline-add");form.hidden=true;
-   const select=make("select");select.required=true;select.append(new Option("Select a project…",""));
-   projects.filter(p=>!ids.has(p.id)).forEach(p=>select.append(new Option((p.code?p.code+" · ":"")+p.name,p.id)));
-   const submit=make("button","","Link project");submit.type="submit";const feedbackText=make("p","form-feedback");feedbackText.setAttribute("role","status");form.append(select,submit,feedbackText);
-   toggle.addEventListener("click",()=>{form.hidden=!form.hidden;toggle.textContent=form.hidden?"＋ Link existing project":"Cancel";});
-   form.addEventListener("submit",async e=>{e.preventDefault();if(!select.value)return;submit.disabled=true;feedbackText.classList.remove("error");feedbackText.textContent="Linking project…";
-    const {error:linkError}=await client.from("project_customers").insert({project_id:select.value,customer_id:c.id,created_by:user.id});
-    if(linkError){feedbackText.textContent="Could not link project: "+linkError.message;feedbackText.classList.add("error");submit.disabled=false;return;}
-    loadedModules.delete("customers");await loadModule("customers",true);await openCustomer(c.id,false);
-   });
-   section.append(toggle,form);
-  }
   detail.append(section);window.scrollTo({top:0,behavior:"smooth"});
  }
  function populateTagSuggestions(){const list=$("#project-tag-suggestions");if(list){list.replaceChildren();[...knownTags].sort().forEach(t=>list.append(new Option(t)));}}
@@ -277,9 +264,21 @@
    e.preventDefault();const form=e.currentTarget;if(!canWrite())return feedback("project","Read-only access.",true);
    const btn=e.currentTarget.querySelector('button[type="submit"]');btn.disabled=true;feedback("project","Creating project…");
    try{
+    const selectedCustomerId=$("#project-customers").value;
+    const newCustomerName=$("#project-new-customer").value.trim();
+    if(selectedCustomerId&&newCustomerName)throw new Error("Choose an existing customer or enter a new customer name, not both.");
     const tags=$("#project-tags").value.split(",").map(t=>t.trim()).filter(Boolean).filter((t,i,a)=>a.findIndex(x=>x.toLowerCase()===t.toLowerCase())===i);const {data:p,error}=await client.from("projects").insert({code:$("#project-code").value.trim()||null,name:$("#project-name").value.trim(),description:$("#project-description").value.trim()||null,status:$("#project-status").value,tags,created_by:user.id}).select().single();if(error)throw error;
-    const customerIds=[...$("#project-customers").selectedOptions].map(o=>o.value);
-    if(customerIds.length){const {error:ce}=await client.from("project_customers").insert(customerIds.map(customer_id=>({project_id:p.id,customer_id,created_by:user.id})));if(ce)throw ce;}
+    let customerId=selectedCustomerId||null;
+    if(newCustomerName){
+     const match=customers.find(c=>[c.name,c.end_user_name].filter(Boolean).some(n=>n.trim().toLowerCase()===newCustomerName.toLowerCase()));
+     if(match)customerId=match.id;
+     else{
+      const {data:newCustomer,error:customerError}=await client.from("customers").insert({name:newCustomerName,customer_type:"end_user",created_by:user.id}).select("id,name,customer_type,end_user_name,description,industry,notes,created_at").single();
+      if(customerError)throw new Error("Project was created, but the new customer could not be saved: "+customerError.message);
+      customers=[...customers,newCustomer].sort((a,b)=>a.name.localeCompare(b.name));customerId=newCustomer.id;populateCustomerChoices();populateCustomerSuggestions();
+     }
+    }
+    if(customerId){const {error:ce}=await client.from("project_customers").insert({project_id:p.id,customer_id:customerId,created_by:user.id});if(ce)throw new Error("Project was created, but the customer link failed: "+ce.message);}
     const files=[...$("#project-files").files];if(files.length)await uploadFiles(p.id,files,$("#project-file-notes").value.trim());
     form.reset();feedback("project","Project created successfully.");document.querySelector('[data-form-mount="projects"]').hidden=true;$("#module-create-toggle").textContent="＋ Add project";loadedModules.delete("projects");await loadModule("projects",true);await openProject(p.id);
    }catch(err){feedback("project","Could not create project: "+err.message,true);}finally{btn.disabled=false;}
