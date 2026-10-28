@@ -52,9 +52,17 @@ Therefore, documents.summary alone is insufficient for the requested versioned a
 4. Main Concept and project history: select a document version, auto-apply its successful summary/tags, and provide history/restore controls.
 5. Verification: test with synthetic files and editor/viewer accounts; check Main Concept switching, failed runs, duplicate requests, restore history and RLS before real data.
 
-## Current implementation status
+## Current implementation status (2026-10-29)
 
-This file records the approved design. It does not mean the Gemini integration has been deployed or that database migrations have been applied. The current repository frontend uses static JavaScript and Supabase; no Gemini secret may be added to frontend/ or .env.example as a browser-visible value.
+Code has been committed to the repository, but **has not been deployed or tested against the live Supabase project**.
+
+- `supabase/migrations/0004_ai_project_intelligence.sql` is an additive migration draft for Main Concept/private note fields, per-run analysis records, project history, indexes, and RLS policies. It has **not** been run in SQL Editor.
+- `supabase/functions/analyze-document/index.ts` is the first server-side analysis implementation. It requires a signed-in admin/editor, checks that the document belongs to the requested project, downloads the file from the private bucket using a server-side client, calls only the explicitly configured Gemini model, validates the JSON shape, and records run status/results. Quota/rate-limit responses fail visibly; there is no paid-model fallback.
+- `supabase/config.toml` enables JWT verification for the function.
+- Required function secrets are `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `GEMINI_API_KEY`, and `GEMINI_MODEL`. Never put the Gemini key or service-role key in frontend files.
+- The function currently **does not** apply a successful analysis to `projects.description` / `projects.tags`, implement Main Concept selection, or implement restore. Those need a transaction-safe database operation and UI work; do not treat this first endpoint as the finished feature.
+- The endpoint uses a conservative 18 MiB file cap for the initial inline-file path. Actual model/file compatibility and current free-tier eligibility still need verification before setting `GEMINI_MODEL` or making requests.
+- Do not configure secrets, run the migration, deploy the function, or send any customer/company files to Gemini until the live schema, storage policies, model free-tier terms, and company data policy are checked.
 
 ## Live schema and RLS observations (user-provided, 2026-10-29)
 
@@ -76,7 +84,6 @@ Reported RLS policies:
 Implementation implications:
 
 1. Preserve the current shared-read/admin-editor-write pattern unless an explicit product requirement changes it; do not silently broaden write access.
-2. Additive schema is likely needed for Main Concept selection, immutable per-version analysis runs, and project change/restore history. Check migration history and exact deployed definitions before preparing the migration.
-3. New tables must enable RLS and have explicit SELECT/INSERT policies that match intended roles. AI analysis and history writes should not be trusted to browser code; enforce authorization in the server-side function and database policies.
-4. The results do not validate Storage policies, Edge Function authorization, function grants, or secrets configuration; verify those separately before enabling external AI calls.
-5. No live schema or RLS change has been applied as part of this review.
+2. The migration draft is based on these reported columns and policies, but the complete live schema, constraints, Storage policies, and function grants still need verification before applying it.
+3. New tables must have explicit RLS. The Edge Function uses a service-role client only after validating the caller's JWT and checking the admin/editor role; service-role keys must remain server-side.
+4. No live schema or RLS change has been applied as part of this implementation.
