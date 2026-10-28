@@ -1,7 +1,7 @@
 (() => {
  const $=s=>document.querySelector(s);
  const config=window.H871_SUPABASE_CONFIG||{};
- let client=null,user=null,role=null,active="overview",projects=[],customers=[],documents=[],selectedProject=null,moduleLoadToken=0;
+ let client=null,user=null,role=null,active="overview",projects=[],customers=[],documents=[],knowledgeEntries=[],selectedProject=null,moduleLoadToken=0;
  const officeExt=["pdf","doc","docx","docm","xls","xlsx","xlsm","ppt","pptx","pptm"];
  const defs={
   projects:{title:"Projects",desc:"Projects with linked customers and technical documents."},
@@ -89,7 +89,7 @@
  }
  async function loadModule(tab){
   const requestToken=++moduleLoadToken;
-  if(!client||!user||!role){if(active===tab){say(!user?"Sign in to view this list.":"Your account has no assigned role. Ask the administrator for access.",true);renderRows(tab,[]);}return;}
+  if(!client||!user){if(active===tab){say("Sign in to view this list.",true);renderRows(tab,[]);}return;}
   if(active===tab)say("Loading…");
   if(tab==="projects"){
    const [{data:p,error:pe},{data:d,error:de}]=await Promise.all([
@@ -111,7 +111,7 @@
    if(error){say("Could not load knowledge: "+error.message,true);return;}renderRows(tab,data||[]);say((data||[]).length+" approved entries.");
   }
  }
- function renderRows(tab,rows,applySearch=false){
+ function renderRows(tab,rows,applySearch=true){
   const box=$("#module-records");if(!box)return;box.replaceChildren();const term=applySearch?(($("#module-search").value||"").trim().toLowerCase()):"";
   const filtered=rows.filter(r=>!term||Object.values(r).some(v=>String(v??"").toLowerCase().includes(term)));
   $("#module-count").textContent=filtered.length+" "+(tab==="projects"?"projects":tab==="customers"?"customers":"entries");
@@ -208,10 +208,11 @@
   const sync=async(loadCurrentModule=false)=>{const syncToken=++authSyncToken;const {data}=await client.auth.getSession();user=data.session?.user||null;role=null;if(user){const {data:r}=await client.from("user_roles").select("role").eq("user_id",user.id).maybeSingle();if(syncToken!==authSyncToken)return;role=r?.role||null;}if(syncToken!==authSyncToken)return;const auth=$("#auth-panel");if(auth)auth.hidden=!!user||!(active==="overview"||active==="search");if(loadCurrentModule&&defs[active])await activate(active);};
   client.auth.onAuthStateChange(()=>setTimeout(()=>sync(true),0));await sync();const initial=location.hash.replace(/^#/,"");const parts=initial.split("/");const routeTab=({project:"projects",customer:"customers"})[parts[0]]||parts[0]||"overview";if(defs[routeTab]||["overview","profile","settings"].includes(routeTab)){await activate(routeTab);if(parts[0]==="project"&&parts[1])openProject(parts[1]);if(parts[0]==="customer"&&parts[1])openCustomer(parts[1]);}
   document.querySelectorAll("[data-tab]").forEach(a=>a.addEventListener("click",e=>{e.preventDefault();history.replaceState(null,"","#"+a.dataset.tab);activate(a.dataset.tab);}));
-  const runModuleSearch=()=>{if(active==="projects")renderRows("projects",projects,true);if(active==="customers")renderRows("customers",customers,true);if(active==="knowledge")renderRows("knowledge",[] ,true);};
-  $("#module-search-submit")?.addEventListener("click",runModuleSearch);
-  $("#module-search")?.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();runModuleSearch();}});
-  $("#module-search-clear")?.addEventListener("click",()=>{$("#module-search").value="";if(active==="projects")renderRows("projects",projects);if(active==="customers")renderRows("customers",customers);if(active==="knowledge")activate("knowledge");});
+  const searchInput=$("#module-search");
+  const updateSearchSuggestions=()=>{const list=$("#module-search-suggestions");if(!list)return;list.replaceChildren();const source=active==="projects"?projects.map(p=>p.name):active==="customers"?customers.map(c=>c.name):[];const term=(searchInput?.value||"").trim().toLowerCase();source.filter(Boolean).filter(name=>!term||name.toLowerCase().includes(term)).slice(0,12).forEach(name=>list.append(new Option(name)));};
+  searchInput?.addEventListener("input",()=>{if(active==="projects")renderRows("projects",projects,true);if(active==="customers")renderRows("customers",customers,true);if(active==="knowledge")renderRows("knowledge",knowledgeEntries,true);updateSearchSuggestions();});
+  searchInput?.addEventListener("focus",updateSearchSuggestions);
+  searchInput?.addEventListener("keydown",e=>{if(e.key==="Escape"){searchInput.value="";searchInput.dispatchEvent(new Event("input"));}});
   document.querySelectorAll("[data-account-action]").forEach(b=>b.addEventListener("click",()=>{const a=b.dataset.accountAction;if(a==="documents")activate("projects");if(a==="profile")activate("profile");if(a==="settings")activate("settings");}));
   document.querySelectorAll(".metric-card").forEach(card=>card.addEventListener("click",()=>{const id=card.id;if(id==="projects-card")activate("projects");if(id==="customers-card")activate("customers");if(id==="knowledge-card")activate("knowledge");}));
  }
