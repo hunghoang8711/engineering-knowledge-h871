@@ -82,3 +82,9 @@
 .module-create-toggle:hover{filter:brightness(1.12)}
 #auth-panel[data-signed-in="true"]{display:none!important}
 @media(max-width:760px){.module-heading-actions{justify-content:flex-start;margin-top:14px}}
+
+/* Customer cards open their profile from any non-interactive area. */
+.customer-card{cursor:pointer;transition:border-color .15s,transform .15s,box-shadow .15s}
+.customer-card:hover,.customer-card:focus-visible{border-color:#67e8f9;transform:translateY(-2px);box-shadow:0 12px 30px #0003;outline:none}
+.customer-card:focus-visible{outline:2px solid #67e8f9;outline-offset:3px}
+.customer-card-name{cursor:pointer}
