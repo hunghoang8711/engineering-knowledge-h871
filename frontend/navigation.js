@@ -50,7 +50,7 @@
   $("#end-user-field").hidden=!intermediary;$("#customer-end-user").required=intermediary;
  }
  async function loadCustomers(){
-  if(!client||!user||!role){customers=[];return;}
+  if(!client||!user){customers=[];return;}
   const {data,error}=await client.from("customers").select("id,name,customer_type,end_user_name,description,industry,notes,created_at").order("name");
   if(error){say("Could not load customers: "+error.message,true);return;}
   customers=data||[];populateCustomerChoices();populateCustomerSuggestions();
@@ -111,11 +111,10 @@
    if(error){say("Could not load knowledge: "+error.message,true);return;}renderRows(tab,data||[]);say((data||[]).length+" approved entries.");
   }
  }
- function renderRows(tab,rows,applySearch=true){
-  const box=$("#module-records");if(!box)return;box.replaceChildren();const term=applySearch?(($("#module-search").value||"").trim().toLowerCase()):"";
-  const filtered=rows.filter(r=>!term||Object.values(r).some(v=>String(v??"").toLowerCase().includes(term)));
+ function renderRows(tab,rows){
+  const box=$("#module-records");if(!box)return;box.replaceChildren();const filtered=Array.isArray(rows)?rows:[];
   $("#module-count").textContent=filtered.length+" "+(tab==="projects"?"projects":tab==="customers"?"customers":"entries");
-  if(!filtered.length){box.append(make("div","module-empty",term?"No records match this search.":"No records found yet."));return;}
+  if(!filtered.length){box.append(make("div","module-empty","No records found yet."));return;}
   if(tab==="projects")filtered.forEach(p=>box.append(projectCard(p)));
   if(tab==="customers")filtered.forEach(c=>box.append(customerCard(c)));
   if(tab==="knowledge")filtered.forEach(k=>{const card=make("article","module-record");card.append(make("strong","",k.title),make("p","",[k.category,k.content].filter(Boolean).join(" · ")));box.append(card);});
@@ -208,12 +207,7 @@
   const sync=async(loadCurrentModule=false)=>{const syncToken=++authSyncToken;const {data}=await client.auth.getSession();user=data.session?.user||null;role=null;if(user){const {data:r}=await client.from("user_roles").select("role").eq("user_id",user.id).maybeSingle();if(syncToken!==authSyncToken)return;role=r?.role||null;}if(syncToken!==authSyncToken)return;const auth=$("#auth-panel");if(auth)auth.hidden=!!user||!(active==="overview"||active==="search");if(loadCurrentModule&&defs[active])await activate(active);};
   client.auth.onAuthStateChange(()=>setTimeout(()=>sync(true),0));await sync();const initial=location.hash.replace(/^#/,"");const parts=initial.split("/");const routeTab=({project:"projects",customer:"customers"})[parts[0]]||parts[0]||"overview";if(defs[routeTab]||["overview","profile","settings"].includes(routeTab)){await activate(routeTab);if(parts[0]==="project"&&parts[1])openProject(parts[1]);if(parts[0]==="customer"&&parts[1])openCustomer(parts[1]);}
   document.querySelectorAll("[data-tab]").forEach(a=>a.addEventListener("click",e=>{e.preventDefault();history.replaceState(null,"","#"+a.dataset.tab);activate(a.dataset.tab);}));
-  const searchInput=$("#module-search");
-  $("#module-search-submit")?.addEventListener("click",()=>{if(defs[active])loadModule(active);});
-  const updateSearchSuggestions=()=>{const list=$("#module-search-suggestions");if(!list)return;list.replaceChildren();const source=active==="projects"?projects.map(p=>p.name):active==="customers"?customers.map(c=>c.name):[];const term=(searchInput?.value||"").trim().toLowerCase();source.filter(Boolean).filter(name=>!term||name.toLowerCase().includes(term)).slice(0,12).forEach(name=>list.append(new Option(name)));};
-  searchInput?.addEventListener("input",()=>{if(active==="projects")renderRows("projects",projects,true);if(active==="customers")renderRows("customers",customers,true);if(active==="knowledge")renderRows("knowledge",knowledgeEntries,true);updateSearchSuggestions();});
-  searchInput?.addEventListener("focus",updateSearchSuggestions);
-  searchInput?.addEventListener("keydown",e=>{if(e.key==="Escape"){searchInput.value="";searchInput.dispatchEvent(new Event("input"));}});
+  // Search functionality intentionally disabled while stabilizing list rendering.
   document.querySelectorAll("[data-account-action]").forEach(b=>b.addEventListener("click",()=>{const a=b.dataset.accountAction;if(a==="documents")activate("projects");if(a==="profile")activate("profile");if(a==="settings")activate("settings");}));
   document.querySelectorAll(".metric-card").forEach(card=>card.addEventListener("click",()=>{const id=card.id;if(id==="projects-card")activate("projects");if(id==="customers-card")activate("customers");if(id==="knowledge-card")activate("knowledge");}));
  }
