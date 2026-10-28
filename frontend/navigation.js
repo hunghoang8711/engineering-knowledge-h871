@@ -223,7 +223,7 @@
   $("#module-records").hidden=true;$("#module-search").parentElement.hidden=true;$("#module-message").hidden=true;
   let detail=$("#module-detail");if(!detail){detail=make("section","project-detail");detail.id="module-detail";$("#module-workspace").append(detail);}detail.replaceChildren();detail.hidden=false;
   const back=make("button","back-button","← Back");back.addEventListener("click",()=>{backToAppOr("./projects.html");});detail.append(back);
-  const header=make("div","project-detail-header");header.append(make("span","project-code",p.code||"PROJECT"),make("h2","",p.name),make("p","project-description",p.description||"No description provided."),make("span","project-status",String(p.status||"active").replace("_"," ")));
+  const header=make("div","project-detail-header");header.append(make("span","project-code project-detail-code",p.code||"PROJECT"),make("h2","",p.name),make("p","project-description",p.description||"No description provided."),make("span","project-status",String(p.status||"active").replace("_"," ")));
   if(user){
    const editButton=make("button","project-open","✎ Edit project");editButton.type="button";editButton.style.marginTop="18px";header.append(editButton);
    const editForm=make("form","record-form project-edit-form");editForm.hidden=true;editForm.style.marginTop="18px";editForm.style.maxWidth="780px";
