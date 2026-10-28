@@ -188,13 +188,25 @@
   detail.append(header);
   const {data:links,error}=await client.from("project_customers").select("project_id").eq("customer_id",c.id);
   if(error){detail.append(make("p","form-feedback error","Could not load customer projects: "+error.message));return;}
-  const ids=new Set((links||[]).map(x=>x.project_id));const rows=projects.filter(p=>ids.has(p.id)).sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0));
-  const section=make("section","detail-section");const sectionHead=make("div","detail-section-heading");sectionHead.append(make("h3","","Customer projects"),make("span","",String(rows.length)+" linked"));section.append(sectionHead);
+  const ids=new Set((links||[]).map(x=>x.project_id));const rows=projects.filter(p=>ids.has(p.id)).sort((a,b)=>new Date(b.updated_at||b.created_at||0)-new Date(a.updated_at||a.created_at||0));
+  const section=make("section","detail-section customer-projects-section");const sectionHead=make("div","detail-section-heading");sectionHead.append(make("h3","","Customer projects"),make("span","",String(rows.length)+" linked"));section.append(sectionHead);
   if(!rows.length)section.append(make("p","muted-copy","No projects linked to this customer yet."));
-  let currentYear="";
-  rows.forEach(p=>{const date=new Date(p.created_at||Date.now());const year=String(date.getFullYear());if(year!==currentYear){currentYear=year;section.append(make("h4","customer-project-year",year));}
-   const row=make("button","customer-project-row");row.type="button";const dateLabel=make("span","customer-project-date",date.toLocaleDateString(undefined,{month:"2-digit",year:"numeric"}));const info=make("span","customer-project-info");info.append(make("strong","",p.name),make("small","",p.code||"Project"));row.append(dateLabel,info,make("span","customer-project-arrow","→"));row.addEventListener("click",()=>{location.href="./project-detail.html?id="+encodeURIComponent(p.id);});section.append(row);
-  });
+  else{
+   const table=make("div","customer-project-table");table.setAttribute("role","table");table.setAttribute("aria-label","Projects linked to this customer");
+   const headerRow=make("div","customer-project-table-head");headerRow.setAttribute("role","row");
+   [["Project code","code"],["Project name","name"],["Last updated","updated"],["Note","note"]].forEach(([label,kind])=>{const cell=make("span","customer-project-cell customer-project-"+kind,label);cell.setAttribute("role","columnheader");headerRow.append(cell);});
+   table.append(headerRow);
+   rows.forEach(p=>{
+    const row=make("button","customer-project-row");row.type="button";row.setAttribute("role","row");row.setAttribute("aria-label","Open project "+(p.code||"")+" "+p.name);
+    const code=make("span","customer-project-cell customer-project-code",p.code||"—");
+    const name=make("span","customer-project-cell customer-project-name",p.name||"Untitled project");
+    const updatedRaw=p.updated_at||p.created_at;const updatedDate=updatedRaw?new Date(updatedRaw):null;
+    const updated=make("span","customer-project-cell customer-project-updated",updatedDate&&!Number.isNaN(updatedDate.getTime())?updatedDate.toLocaleDateString(undefined,{day:"2-digit",month:"short",year:"numeric"}):"—");
+    const note=make("span","customer-project-cell customer-project-note",p.description||"—");note.title=p.description||"No note";
+    row.append(code,name,updated,note);row.addEventListener("click",()=>{location.href="./project-detail.html?id="+encodeURIComponent(p.id);});table.append(row);
+   });
+   section.append(table);
+  }
   detail.append(section);window.scrollTo({top:0,behavior:"smooth"});
  }
  function populateTagSuggestions(){const list=$("#project-tag-suggestions");if(list){list.replaceChildren();[...knownTags].sort().forEach(t=>list.append(new Option(t)));}}
