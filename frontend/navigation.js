@@ -20,7 +20,7 @@
   document.querySelectorAll("[data-tab]").forEach(a=>a.classList.toggle("active",a.dataset.tab===tab));
   const module=!!defs[tab],profile=tab==="profile"||tab==="settings",overview=!module&&!profile;
   hideOverview(!overview);$("#module-workspace").hidden=!module;$("#profile-workspace").hidden=!profile;
-  if(module){$("#module-title").textContent=defs[tab].title;$("#module-eyebrow").textContent=defs[tab].title.toUpperCase();$("#module-description").textContent=defs[tab].desc;$("#module-search").value="";$("#module-records").replaceChildren();$("#module-detail")?.remove();document.querySelectorAll("[data-form-mount]").forEach(el=>el.hidden=el.dataset.formMount!==tab);loadModule(tab);}
+  if(module){$("#module-title").textContent=defs[tab].title;$("#module-eyebrow").textContent=defs[tab].title.toUpperCase();$("#module-description").textContent=defs[tab].desc;$("#module-search").value="";$("#module-records").replaceChildren();$("#module-detail")?.remove();$("#customer-detail")?.remove();document.querySelectorAll("[data-form-mount]").forEach(el=>el.hidden=true);$("#module-create-toggle").hidden=!["projects","customers"].includes(tab);$("#module-create-toggle").textContent=tab==="projects"?"＋ Add project":"＋ Add customer";loadModule(tab);}
   if(profile){$("#profile-title").textContent=tab==="settings"?"Profile settings":"Profile overview";$("#profile-description").textContent="Account status, access role and profile display name.";}
   if(tab==="overview")window.scrollTo({top:0,behavior:"smooth"});
  }
@@ -32,11 +32,8 @@
   const doc=$("#document-form");if(doc)doc.remove();
  }
  function makeNewButton(){
-  const trigger=$("#add-menu-trigger"),menu=$("#add-menu");
-  trigger?.addEventListener("click",()=>{menu.hidden=!menu.hidden;trigger.setAttribute("aria-expanded",String(!menu.hidden));});
-  document.addEventListener("click",e=>{if(!e.target.closest(".header-actions")){if(menu)menu.hidden=true;trigger?.setAttribute("aria-expanded","false");}});
-  document.querySelectorAll("[data-create]").forEach(b=>b.addEventListener("click",()=>{menu.hidden=true;const t=b.dataset.create==="project"?"projects":b.dataset.create==="customer"?"customers":"knowledge";activate(t);const form=$("#"+(t==="projects"?"project-form":t==="customers"?"customer-form":"knowledge-form"));form?.scrollIntoView({behavior:"smooth",block:"start"});form?.querySelector("input,textarea,select")?.focus({preventScroll:true});}));
-  document.addEventListener("contextmenu",e=>{if(e.target.closest(".main-content")&&!e.target.closest("input,textarea,select,button,a")){e.preventDefault();menu.hidden=false;trigger?.setAttribute("aria-expanded","true");menu.style.position="fixed";menu.style.left=Math.min(e.clientX,window.innerWidth-230)+"px";menu.style.top=Math.min(e.clientY,window.innerHeight-160)+"px";}});
+  const toggle=$("#module-create-toggle");
+  toggle?.addEventListener("click",()=>{const mount=document.querySelector('[data-form-mount="'+active+'"]');if(!mount)return;const opening=mount.hidden;mount.hidden=!opening;const form=mount.querySelector("form");if(form)form.hidden=!opening;toggle.textContent=opening?"Cancel":"＋ Add "+(active==="projects"?"project":"customer");if(opening){mount.scrollIntoView({behavior:"smooth",block:"start"});mount.querySelector("input,textarea,select")?.focus({preventScroll:true});}});
  }
  function updateCustomerForm(){
   const intermediary=$("#customer-type")?.value==="intermediary";
