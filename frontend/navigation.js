@@ -59,7 +59,7 @@
   customers=data||[];populateCustomerChoices();populateCustomerSuggestions();
  }
  function populateCustomerChoices(){
-  const select=$("#project-customers");if(!select)return;const prior=new Set([...select.selectedOptions].map(o=>o.value));select.replaceChildren();
+  const select=$("#project-customers");if(!select)return;const prior=new Set([...select.selectedOptions].map(o=>o.value));select.replaceChildren();select.append(new Option("No customer selected",""));
   customers.forEach(c=>{const o=make("option","",c.name+(c.customer_type==="intermediary"&&c.end_user_name?" → "+c.end_user_name:""));o.value=c.id;o.selected=prior.has(c.id);select.append(o);});
  }
  function populateCustomerSuggestions(){
