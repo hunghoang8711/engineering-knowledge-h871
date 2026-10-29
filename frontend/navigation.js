@@ -282,7 +282,7 @@
      projects=[...projects.filter(x=>x.id!==p.id),refreshed];selectedProject=refreshed;loadedModules.delete("projects");await loadModule("projects",true);await openProject(p.id,false);
     }catch(err){statusMessage.textContent="Could not update project: "+err.message;statusMessage.classList.add("error");save.disabled=false;cancel.disabled=false;}
    });
-   header.append(editForm);
+   projectMain.append(editForm);
   }
   detail.append(header);
   if(canWrite()){const editCust=make("button","project-customer-edit","✎ Manage links");editCust.type="button";editCust.setAttribute("aria-label","Manage linked customers");customerAside.append(editCust);const addCust=make("form","inline-add project-customer-link-form");addCust.hidden=true;const sel=make("select");sel.required=true;sel.append(new Option("Select a customer to link…",""));customers.forEach(c=>{if(!(customersForProject.data||[]).some(x=>x.customer_id===c.id))sel.append(new Option(c.name,c.id));});const btn=make("button","","Link customer");btn.type="submit";addCust.append(sel,btn);editCust.addEventListener("click",()=>{addCust.hidden=!addCust.hidden;});addCust.addEventListener("submit",async e=>{e.preventDefault();if(!sel.value)return;const {error}=await client.from("project_customers").insert({project_id:p.id,customer_id:sel.value,created_by:user.id});if(error){say(error.message,true);return;}await loadCustomers();await openProject(p.id);});customerAside.append(addCust);}
