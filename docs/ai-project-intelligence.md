@@ -46,21 +46,21 @@ Therefore, documents.summary alone is insufficient for the requested versioned a
 
 ## Implementation phases
 
-1. Schema reconciliation: inspect the live Supabase schema and current migration state; prepare an additive migration for analysis runs, Main Concept selection and project history only if required.
+1. Schema reconciliation: compare the live Supabase schema with the additive migration and run a read-only preflight; never replay migrations 0001-0003 against this manually provisioned database.
 2. Server-side AI boundary: implement a Supabase Edge Function (or approved server-side runtime), secrets configuration, authorization checks, file-type/size checks, structured output validation, and free-only failure behavior.
 3. Per-document analysis: persist each run independently and expose status/result in the project document UI.
-4. Main Concept and project history: select a document version, auto-apply its successful summary/tags, and provide history/restore controls.
+4. Main Concept and project history: expose the new apply/restore RPCs through editor-only UI controls; select a document version, apply its latest successful summary/tags, and show history/restore controls.
 5. Verification: test with synthetic files and editor/viewer accounts; check Main Concept switching, failed runs, duplicate requests, restore history and RLS before real data.
 
 ## Current implementation status (2026-10-29)
 
 Code has been committed to the repository, but **has not been deployed or tested against the live Supabase project**.
 
-- `supabase/migrations/0004_ai_project_intelligence.sql` is an additive migration draft for Main Concept/private note fields, per-run analysis records, project history, indexes, and RLS policies. It has **not** been run in SQL Editor.
+- `supabase/migrations/0004_ai_project_intelligence.sql` is an additive migration draft for Main Concept/private note fields, per-run analysis records, project history, indexes, RLS policies, a same-project Main Concept validation trigger, and transaction-safe apply/restore RPCs. It has **not** been run in SQL Editor. The RPCs require admin/editor role and append snapshots atomically; restore adds a new history row and preserves the original event.
 - `supabase/functions/analyze-document/index.ts` is the first server-side analysis implementation. It requires a signed-in admin/editor, checks that the document belongs to the requested project, downloads the file from the private bucket using a server-side client, calls only the explicitly configured Gemini model, validates the JSON shape, and records run status/results. Quota/rate-limit responses fail visibly; there is no paid-model fallback.
 - `supabase/config.toml` enables JWT verification for the function.
 - Required function secrets are `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `GEMINI_API_KEY`, and `GEMINI_MODEL`. Never put the Gemini key or service-role key in frontend files.
-- The function currently **does not** apply a successful analysis to `projects.description` / `projects.tags`, implement Main Concept selection, or implement restore. Those need a transaction-safe database operation and UI work; do not treat this first endpoint as the finished feature.
+- The Edge Function currently records analysis runs but does not itself apply project description/tags. The additive migration now defines transaction-safe `apply_main_concept(project_id, document_id)` and `restore_project_history(project_id, history_id)` RPCs. These RPCs and their same-project trigger are code-only until the migration is reviewed and applied; the frontend still needs Main Concept/history controls.
 - The endpoint initially accepts PDF files only, with an 18 MiB application-level cap. The Storage bucket may still store Office files, but those files are rejected by this initial analysis endpoint before any Gemini request. Google's current Gemini API documentation identifies PDF as the native document-understanding path; non-PDF types are treated as plain text and lose layout/chart/diagram context. Any later Office support must be explicitly verified and designed without silently adding a custom parser. See [Gemini document understanding](https://ai.google.dev/gemini-api/docs/generate-content/document-processing) and [file input methods](https://ai.google.dev/gemini-api/docs/generate-content/file-input-methods). Current free-tier eligibility still needs verification before setting `GEMINI_MODEL` or making requests.
 - Do not configure secrets, run the migration, deploy the function, or send any customer/company files to Gemini until the live schema, storage policies, model free-tier terms, and company data policy are checked.
 
