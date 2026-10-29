@@ -200,6 +200,9 @@ Deno.serve(async (req) => {
 
   let stage = "read_file_bytes";
   const analysisStartedAt = Date.now();
+  let geminiTimeoutHandle: number | undefined;
+  let geminiTimedOut = false;
+  let geminiAbortController: AbortController | undefined;
   try {
     const fileBytes = new Uint8Array(await fileBlob.arrayBuffer());
     logStage("file_bytes_ready", { fileBytes: fileBytes.byteLength });
@@ -230,10 +233,24 @@ Chỉ trả về JSON hợp lệ theo đúng cấu trúc:
 Dùng mảng rỗng nếu không có bằng chứng. Không bịa số trang, thông số, thiết bị, rủi ro hoặc yêu cầu. Mọi nhận định phải dựa trên tài liệu gốc.`;
     const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
     stage = "gemini_request";
-    logStage("gemini_request_started", { fileBytes: fileBytes.byteLength });
+    // Free-tier Edge Functions have a finite wall-clock budget. Stop waiting
+    // for Gemini early enough to persist a useful failure instead of letting
+    // the worker be terminated with a generic 546.
+    const GEMINI_TIMEOUT_MS = 100_000;
+    geminiAbortController = new AbortController();
+    geminiTimedOut = false;
+    geminiTimeoutHandle = setTimeout(() => {
+      geminiTimedOut = true;
+      geminiAbortController?.abort();
+    }, GEMINI_TIMEOUT_MS);
+    logStage("gemini_request_started", {
+      fileBytes: fileBytes.byteLength,
+      timeoutMs: GEMINI_TIMEOUT_MS,
+    });
     const response = await fetch(endpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json", "x-goog-api-key": geminiKey },
+      signal: geminiAbortController.signal,
       body: JSON.stringify({
         contents: [{
           role: "user",
@@ -255,6 +272,8 @@ Dùng mảng rỗng nếu không có bằng chứng. Không bịa số trang, th
     });
     if (!response.ok) {
       const providerBody = await response.text();
+      if (geminiTimeoutHandle !== undefined) clearTimeout(geminiTimeoutHandle);
+      geminiTimeoutHandle = undefined;
       const quota = response.status === 429 ||
         /quota|rate.?limit|resource.?exhausted/i.test(providerBody);
       const status = quota ? "quota_exhausted" : "failed";
@@ -275,6 +294,8 @@ Dùng mảng rỗng nếu không có bằng chứng. Không bịa số trang, th
 
     stage = "parse_gemini_response";
     const providerData = await response.json();
+    if (geminiTimeoutHandle !== undefined) clearTimeout(geminiTimeoutHandle);
+    geminiTimeoutHandle = undefined;
     const responseText = providerData?.candidates?.[0]?.content?.parts
       ?.map((part: { text?: string }) => part.text || "").join("");
     if (!responseText) throw new Error("MODEL_OUTPUT_EMPTY");
@@ -315,22 +336,37 @@ Dùng mảng rỗng nếu không có bằng chứng. Không bịa số trang, th
     });
     return json({ analysisId: run.id, status: "succeeded", result });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "UNKNOWN_ANALYSIS_ERROR";
+    if (geminiTimeoutHandle !== undefined) clearTimeout(geminiTimeoutHandle);
+    geminiTimeoutHandle = undefined;
+    const message = geminiTimedOut
+      ? "GEMINI_REQUEST_TIMEOUT"
+      : error instanceof Error
+      ? error.name === "AbortError" ? "GEMINI_REQUEST_ABORTED" : error.message
+      : "UNKNOWN_ANALYSIS_ERROR";
     logStage("analysis_failed", {
       stage,
       durationMs: Date.now() - analysisStartedAt,
       errorCode: message.slice(0, 80),
+      ...(geminiTimedOut ? { timeoutMs: 100_000 } : {}),
     });
-    await adminClient.from("project_ai_analyses").update({
+    const timedOut = geminiTimedOut;
+    const { error: updateError } = await adminClient.from("project_ai_analyses").update({
       status: "failed",
       error_code: message.slice(0, 120),
-      error_message: "Analysis failed or returned invalid structured output. Project description and tags were not changed.",
+      error_message: timedOut
+        ? "Gemini did not respond within 100 seconds. Retry the analysis; no paid fallback was attempted."
+        : "Analysis failed or returned invalid structured output. Project description and tags were not changed.",
       completed_at: new Date().toISOString(),
     }).eq("id", run.id);
+    if (updateError) {
+      logStage("analysis_failure_status_save_failed", { errorCode: "DATABASE_UPDATE_FAILED" });
+    }
     return json({
-      error: "ANALYSIS_FAILED",
+      error: timedOut ? "GEMINI_REQUEST_TIMEOUT" : "ANALYSIS_FAILED",
       analysisId: run.id,
-      message: "Analysis failed. The project description and tags were not changed.",
-    }, 502);
+      message: timedOut
+        ? "Gemini did not respond within 100 seconds. The failed attempt was recorded; you can retry. No paid fallback was attempted."
+        : "Analysis failed. The project description and tags were not changed.",
+    }, timedOut ? 504 : 502);
   }
 });
