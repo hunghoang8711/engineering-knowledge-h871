@@ -290,3 +290,13 @@ body[data-start-tab="customers"] .module-toolbar .filter-icon,body[data-start-ta
 .document-card.is-main-concept:hover{border-color:#67e8f9;box-shadow:0 0 0 1px #67e8f977,0 0 25px #06b6d455}
 .document-main .document-title{display:block;overflow-wrap:anywhere}
 .main-concept-badge{display:inline-flex;align-items:center;justify-content:center;width:max-content;margin-top:7px;padding:3px 8px;border:1px solid #38bdf8;border-radius:5px;background:#082f49;color:#7dd3fc;font-size:9px;font-weight:900;letter-spacing:.12em;box-shadow:0 0 12px #0ea5e955}
+
+
+/* Project tags use the same centered, outlined chip treatment as AI analysis tags. */
+.project-tags{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-start;gap:8px;margin-top:12px;min-width:0}
+.project-tag{display:inline-flex;align-items:center;justify-content:center;max-width:100%;min-height:30px;padding:6px 12px;border:1px solid #34465d;border-radius:999px;background:#101c2d;color:#c8d5e3;font-size:12px;line-height:1.45;text-align:center;overflow-wrap:anywhere;white-space:normal}
+.project-detail-header .project-tags{margin:12px 0 14px}
+.project-header-actions{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-top:16px}
+.project-header-actions .project-status{display:inline-flex;align-items:center;justify-content:center;min-height:38px;box-sizing:border-box;padding:8px 13px;margin:0;border:1px solid #31536a;border-radius:9px;background:#10283a;color:#8be9f4;font-size:12px;font-weight:800;line-height:1.35;text-transform:capitalize}
+.project-header-actions .project-edit-toggle{display:inline-flex;align-items:center;justify-content:center;min-height:38px;box-sizing:border-box;margin:0;padding:8px 13px;border-radius:9px;font-size:12px;line-height:1.35;white-space:nowrap}
+@media(max-width:600px){.project-header-actions{gap:8px}.project-header-actions .project-status,.project-header-actions .project-edit-toggle{min-height:36px;padding:7px 11px}}
