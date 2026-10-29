@@ -313,7 +313,7 @@
     if(error){let detail=error.message||"Function request failed";try{const ctx=error.context;if(ctx&&typeof ctx.json==="function"){const body=await ctx.json();detail=body.message||body.error||detail;}}catch{}throw new Error(detail);}
     if(data?.error)throw new Error(data.message||data.error);
     renderProjectAIResult(output,d,data);
-    await loadProjectAIHistory(p.id,$("#ai-history-list"));
+    await loadProjectAIHistory(d.project_id,$("#ai-history-list"));
    }catch(err){output.replaceChildren();const msg=make("p","form-feedback error","AI analysis failed: "+(err.message||"Unknown error"));output.append(msg);}
    finally{analyze.disabled=false;analyze.textContent="✦ Analyze PDF";}
   });card.append(analyze);}
