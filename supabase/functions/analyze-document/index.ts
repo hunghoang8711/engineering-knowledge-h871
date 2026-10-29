@@ -18,13 +18,24 @@ const json = (body: unknown, status = 200) =>
   });
 
 function base64FromBytes(bytes: Uint8Array): string {
-  // Avoid spreading a large byte array into a single function call.
-  let binary = "";
-  const chunkSize = 0x8000;
+  // Encode bounded chunks instead of constructing one full-size binary string.
+  // Chunk size is divisible by 3 so intermediate Base64 chunks can be concatenated safely.
+  const chunkSize = 3 * 8192;
+  const encodedChunks: string[] = [];
   for (let i = 0; i < bytes.length; i += chunkSize) {
-    binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+    const chunk = bytes.subarray(i, Math.min(i + chunkSize, bytes.length));
+    let binary = "";
+    for (let j = 0; j < chunk.length; j += 0x4000) {
+      binary += String.fromCharCode(...chunk.subarray(j, Math.min(j + 0x4000, chunk.length)));
+    }
+    encodedChunks.push(btoa(binary));
   }
-  return btoa(binary);
+  return encodedChunks.join("");
+}
+
+function logStage(stage: string, details: Record<string, string | number | boolean> = {}) {
+  // Never log document names, file contents, Base64 data, user tokens, or API keys.
+  console.info(JSON.stringify({ function: "analyze-document", stage, ...details }));
 }
 
 function cleanText(value: unknown, max = 12000): string {
@@ -137,15 +148,24 @@ Deno.serve(async (req) => {
 
   // Keep initial free-tier requests conservative. Larger files need a separately
   // verified Gemini model/file limit; never silently switch to a paid service.
-  const MAX_BYTES = 18 * 1024 * 1024;
+  // Conservative cap for the Supabase Edge Function memory budget. 5 MiB PDFs remain supported.
+  const MAX_BYTES = 8 * 1024 * 1024;
   const storagePath = cleanText(document.relative_path, 1000);
   if (!storagePath || storagePath.startsWith("/") || storagePath.includes("..")) {
     return json({ error: "INVALID_STORAGE_PATH" }, 400);
   }
 
+  const downloadStartedAt = Date.now();
   const { data: fileBlob, error: downloadError } = await adminClient.storage
     .from("h871-project-documents").download(storagePath);
-  if (downloadError || !fileBlob) return json({ error: "PRIVATE_FILE_DOWNLOAD_FAILED" }, 422);
+  if (downloadError || !fileBlob) {
+    logStage("download_failed");
+    return json({ error: "PRIVATE_FILE_DOWNLOAD_FAILED" }, 422);
+  }
+  logStage("download_complete", {
+    fileBytes: fileBlob.size,
+    downloadDurationMs: Date.now() - downloadStartedAt,
+  });
   if (fileBlob.size > MAX_BYTES) {
     return json({
       error: "FILE_TOO_LARGE_FOR_INITIAL_FREE_TIER_FLOW",
@@ -177,8 +197,19 @@ Deno.serve(async (req) => {
     }, 503);
   }
 
+  let stage = "read_file_bytes";
+  const analysisStartedAt = Date.now();
   try {
     const fileBytes = new Uint8Array(await fileBlob.arrayBuffer());
+    logStage("file_bytes_ready", { fileBytes: fileBytes.byteLength });
+    stage = "base64_encode";
+    const base64StartedAt = Date.now();
+    const fileBase64 = base64FromBytes(fileBytes);
+    logStage("base64_encode_complete", {
+      fileBytes: fileBytes.byteLength,
+      base64Chars: fileBase64.length,
+      durationMs: Date.now() - base64StartedAt,
+    });
     const prompt = `You are an engineering document analyst for H871, an industrial automation engineering workspace.
 Analyze the supplied original document directly. Do not invent facts. Use concise technical English.
 Project: ${cleanText(project.name, 300)} (${cleanText(project.code, 100)}).
@@ -196,6 +227,8 @@ Return ONLY valid JSON with this exact shape:
 }
 Use empty arrays when no evidence is available. Do not fabricate page numbers, specifications, equipment, risks or requirements. Distinguish stated facts from inferred assumptions. Keep source references grounded in the supplied file.`;
     const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
+    stage = "gemini_request";
+    logStage("gemini_request_started", { fileBytes: fileBytes.byteLength });
     const response = await fetch(endpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json", "x-goog-api-key": geminiKey },
@@ -204,7 +237,7 @@ Use empty arrays when no evidence is available. Do not fabricate page numbers, s
           role: "user",
           parts: [
             { text: prompt },
-            { inline_data: { mime_type: mimeType, data: base64FromBytes(fileBytes) } },
+            { inline_data: { mime_type: mimeType, data: fileBase64 } },
           ],
         }],
         generationConfig: {
@@ -214,6 +247,10 @@ Use empty arrays when no evidence is available. Do not fabricate page numbers, s
       }),
     });
 
+    logStage("gemini_response_received", {
+      httpStatus: response.status,
+      durationMs: Date.now() - analysisStartedAt,
+    });
     if (!response.ok) {
       const providerBody = await response.text();
       const quota = response.status === 429 ||
@@ -234,6 +271,7 @@ Use empty arrays when no evidence is available. Do not fabricate page numbers, s
       }, quota ? 429 : 502);
     }
 
+    stage = "parse_gemini_response";
     const providerData = await response.json();
     const responseText = providerData?.candidates?.[0]?.content?.parts
       ?.map((part: { text?: string }) => part.text || "").join("");
@@ -253,6 +291,7 @@ Use empty arrays when no evidence is available. Do not fabricate page numbers, s
     };
     if (!result.summary) throw new Error("MODEL_OUTPUT_MISSING_SUMMARY");
 
+    stage = "save_analysis_result";
     const { error: saveError } = await adminClient.from("project_ai_analyses").update({
       status: "succeeded",
       result,
@@ -268,9 +307,18 @@ Use empty arrays when no evidence is available. Do not fabricate page numbers, s
     }).eq("id", run.id);
     if (saveError) throw new Error("ANALYSIS_RESULT_SAVE_FAILED");
 
+    logStage("analysis_succeeded", {
+      durationMs: Date.now() - analysisStartedAt,
+      resultTagCount: result.suggested_tags.length,
+    });
     return json({ analysisId: run.id, status: "succeeded", result });
   } catch (error) {
     const message = error instanceof Error ? error.message : "UNKNOWN_ANALYSIS_ERROR";
+    logStage("analysis_failed", {
+      stage,
+      durationMs: Date.now() - analysisStartedAt,
+      errorCode: message.slice(0, 80),
+    });
     await adminClient.from("project_ai_analyses").update({
       status: "failed",
       error_code: message.slice(0, 120),
