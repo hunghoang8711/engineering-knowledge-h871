@@ -211,32 +211,23 @@ Deno.serve(async (req) => {
       base64Chars: fileBase64.length,
       durationMs: Date.now() - base64StartedAt,
     });
-    const prompt = `You are an engineering document analyst for H871, an industrial automation engineering workspace.
-Analyze the supplied original document directly. Do not invent facts. Produce BOTH English and Vietnamese versions, with Vietnamese as the default display language. Vietnamese must use accurate industrial automation engineering terminology; English must be concise technical English. Keep the same facts, technical values, units, risks, requirements and source references in both languages.
-Project: ${cleanText(project.name, 300)} (${cleanText(project.code, 100)}).
-Document title: ${cleanText(document.title, 500)}.
-Return ONLY valid JSON with this exact shape:
+    const prompt = `Bạn là chuyên gia phân tích tài liệu kỹ thuật cho H871, một workspace kỹ thuật tự động hóa công nghiệp.
+Đọc trực tiếp tài liệu gốc được cung cấp và trả kết quả hoàn toàn bằng tiếng Việt. Không dịch từ một bản phân tích tiếng Anh; hãy tự đọc hiểu nội dung gốc, giữ chính xác thuật ngữ kỹ thuật, tên model, mã linh kiện, thông số, đơn vị và điều kiện kỹ thuật. Với thuật ngữ chuyên ngành thường dùng bằng tiếng Anh, có thể giữ nguyên thuật ngữ đó khi cần để tránh sai lệch.
+Phần lớn tài liệu trong workspace được trình bày bằng tiếng Việt. Ưu tiên diễn đạt tiếng Việt rõ ràng, đúng ngữ cảnh kỹ thuật tự động hóa. Không suy diễn thành dữ kiện; phân biệt rõ thông tin nêu trong tài liệu và giả định.
+Dự án: ${cleanText(project.name, 300)} (${cleanText(project.code, 100)}).
+Tên tài liệu: ${cleanText(document.title, 500)}.
+Chỉ trả về JSON hợp lệ theo đúng cấu trúc:
 {
- "vi": {
-  "summary": "tóm tắt ngắn gọn có thể dùng làm mô tả dự án",
-  "technical_scope": "phạm vi kỹ thuật và mô tả quy trình",
-  "key_equipment": ["thiết bị/linh kiện được nêu trong tài liệu"],
-  "requirements": ["yêu cầu/thông số kỹ thuật được nêu rõ"],
-  "risks": ["rủi ro, giới hạn, giả định; ghi rõ đâu là giả định"],
-  "open_questions": ["các câu hỏi chưa được giải quyết"]
- },
- "en": {
-  "summary": "short project-description-ready summary",
-  "technical_scope": "scope and process description",
-  "key_equipment": ["equipment/components stated in the file"],
-  "requirements": ["explicit technical requirements/specifications"],
-  "risks": ["risks, constraints, assumptions; label assumptions clearly"],
-  "open_questions": ["unresolved questions"]
- },
- "suggested_tags": ["short engineering tags, preferably English technical terms"],
- "source_references": [{"reference":"page/section/sheet if identifiable","claim":"fact supported by that source"}]
+ "summary": "tóm tắt ngắn gọn bằng tiếng Việt, có thể dùng làm mô tả dự án",
+ "technical_scope": "phạm vi kỹ thuật và mô tả quy trình bằng tiếng Việt",
+ "key_equipment": ["thiết bị/linh kiện được nêu trong tài liệu"],
+ "requirements": ["yêu cầu và thông số kỹ thuật được nêu rõ"],
+ "risks": ["rủi ro, giới hạn, giả định; ghi rõ đâu là giả định"],
+ "open_questions": ["các câu hỏi chưa được giải quyết"],
+ "suggested_tags": ["thẻ kỹ thuật ngắn gọn, ưu tiên thuật ngữ kỹ thuật chuẩn"],
+ "source_references": [{"reference":"trang/mục nếu xác định được","claim":"thông tin được nguồn đó hỗ trợ"}]
 }
-Use empty arrays when no evidence is available. Do not fabricate page numbers, specifications, equipment, risks or requirements. Distinguish stated facts from inferred assumptions. Keep source references grounded in the supplied file.`;
+Dùng mảng rỗng nếu không có bằng chứng. Không bịa số trang, thông số, thiết bị, rủi ro hoặc yêu cầu. Mọi nhận định phải dựa trên tài liệu gốc.`;
     const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
     stage = "gemini_request";
     logStage("gemini_request_started", { fileBytes: fileBytes.byteLength });
@@ -288,34 +279,13 @@ Use empty arrays when no evidence is available. Do not fabricate page numbers, s
       ?.map((part: { text?: string }) => part.text || "").join("");
     if (!responseText) throw new Error("MODEL_OUTPUT_EMPTY");
     const parsed = parseJsonResponse(responseText);
-    const vi = (parsed.vi && typeof parsed.vi === "object" && !Array.isArray(parsed.vi))
-      ? parsed.vi as Record<string, unknown> : parsed;
-    const en = (parsed.en && typeof parsed.en === "object" && !Array.isArray(parsed.en))
-      ? parsed.en as Record<string, unknown> : parsed;
     const result = {
-      // Root fields remain Vietnamese for backwards compatibility and default display.
-      summary: cleanText(vi.summary),
-      technical_scope: cleanText(vi.technical_scope),
-      key_equipment: asStringArray(vi.key_equipment),
-      requirements: asStringArray(vi.requirements),
-      risks: asStringArray(vi.risks),
-      open_questions: asStringArray(vi.open_questions),
-      vi: {
-        summary: cleanText(vi.summary),
-        technical_scope: cleanText(vi.technical_scope),
-        key_equipment: asStringArray(vi.key_equipment),
-        requirements: asStringArray(vi.requirements),
-        risks: asStringArray(vi.risks),
-        open_questions: asStringArray(vi.open_questions),
-      },
-      en: {
-        summary: cleanText(en.summary),
-        technical_scope: cleanText(en.technical_scope),
-        key_equipment: asStringArray(en.key_equipment),
-        requirements: asStringArray(en.requirements),
-        risks: asStringArray(en.risks),
-        open_questions: asStringArray(en.open_questions),
-      },
+      summary: cleanText(parsed.summary),
+      technical_scope: cleanText(parsed.technical_scope),
+      key_equipment: asStringArray(parsed.key_equipment),
+      requirements: asStringArray(parsed.requirements),
+      risks: asStringArray(parsed.risks),
+      open_questions: asStringArray(parsed.open_questions),
       suggested_tags: asStringArray(parsed.suggested_tags, 30),
       source_references: Array.isArray(parsed.source_references)
         ? parsed.source_references.filter((x: unknown) => x && typeof x === "object").slice(0, 80)
