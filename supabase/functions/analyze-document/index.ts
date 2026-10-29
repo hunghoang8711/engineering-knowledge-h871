@@ -18,10 +18,10 @@ const json = (body: unknown, status = 200) =>
   });
 
 function base64FromBytes(bytes: Uint8Array): string {
-  // Encode bounded chunks instead of constructing one full-size binary string.
-  // Chunk size is divisible by 3 so intermediate Base64 chunks can be concatenated safely.
+  // Encode bounded chunks and append directly to avoid retaining an array of
+  // encoded chunks plus a second full-size joined Base64 string.
   const chunkSize = 3 * 8192;
-  const encodedChunks: string[] = [];
+  let encoded = "";
   for (let i = 0; i < bytes.length; i += chunkSize) {
     const chunk = bytes.subarray(i, Math.min(i + chunkSize, bytes.length));
     let binary = "";
@@ -29,11 +29,10 @@ function base64FromBytes(bytes: Uint8Array): string {
     for (let j = 0; j < chunk.length; j += binaryChunkSize) {
       binary += String.fromCharCode(...chunk.subarray(j, Math.min(j + binaryChunkSize, chunk.length)));
     }
-    encodedChunks.push(btoa(binary));
+    encoded += btoa(binary);
   }
-  return encodedChunks.join("");
+  return encoded;
 }
-
 function logStage(stage: string, details: Record<string, string | number | boolean> = {}) {
   // Never log document names, file contents, Base64 data, user tokens, or API keys.
   console.info(JSON.stringify({ function: "analyze-document", stage, ...details }));
@@ -149,8 +148,9 @@ Deno.serve(async (req) => {
 
   // Keep initial free-tier requests conservative. Larger files need a separately
   // verified Gemini model/file limit; never silently switch to a paid service.
-  // Conservative cap for the Supabase Edge Function memory budget. 5 MiB PDFs remain supported.
-  const MAX_BYTES = 8 * 1024 * 1024;
+  // PDF bytes, Base64 text, and the outgoing JSON body briefly coexist in memory.
+  // Keep the cap conservative to reduce Edge Function worker 546 failures.
+  const MAX_BYTES = 5 * 1024 * 1024;
   const storagePath = cleanText(document.relative_path, 1000);
   if (!storagePath || storagePath.startsWith("/") || storagePath.includes("..")) {
     return json({ error: "INVALID_STORAGE_PATH" }, 400);
