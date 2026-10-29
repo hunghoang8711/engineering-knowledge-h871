@@ -272,3 +272,7 @@ body[data-start-tab="customers"] .module-toolbar .filter-icon,body[data-start-ta
 .ai-tag-check{display:inline-grid;place-items:center;width:16px;height:16px;border-radius:50%;background:#26374b;color:#9fb4c8;font-size:11px;font-weight:800;flex:0 0 16px}
 .ai-suggested-tag.is-selected .ai-tag-check{background:#67e8f9;color:#08202c}
 .ai-tag-editor .ai-result-block p,.ai-result-block p,.ai-result-block li{font-size:12px;line-height:1.75}
+
+/* Multi-select AI tags: explicit button semantics and accessible focus. */
+.ai-suggested-tag{appearance:none;font:inherit;text-align:left;}
+.ai-suggested-tag:focus-visible{outline:2px solid #67e8f9;outline-offset:3px}
