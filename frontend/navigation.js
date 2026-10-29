@@ -99,16 +99,18 @@
   if(!client||!user){if(active===tab){say("Sign in to view this list.",true);renderRows(tab,[]);}return;}
   if(active===tab)say("Loading…");
   if(tab==="projects"){
-   const [{data:p,error:pe},{data:d,error:de}]=await Promise.all([
+   const [{data:p,error:pe},{data:d,error:de},{data:projectLinks,error:ple}]=await Promise.all([
     client.from("projects").select("id,code,name,description,status,tags,main_concept_document_id,created_at,updated_at").order("updated_at",{ascending:false}).limit(300),
-    client.from("documents").select("id,project_id,title,original_filename,file_type,notes,tags,relative_path,status,created_by,updated_by,created_at,updated_at").order("updated_at",{ascending:false}).limit(1000)
+    client.from("documents").select("id,project_id,title,original_filename,file_type,notes,tags,relative_path,status,created_by,updated_by,created_at,updated_at").order("updated_at",{ascending:false}).limit(1000),
+    client.from("project_customers").select("project_id,customer_id,customers(id,name,customer_type,end_user_name)")
    ]);
    if(requestToken!==moduleLoadToken||active!==tab)return;
    if(pe){projects=[];documents=[];renderRows(tab,[]);say("Could not load projects: "+pe.message,true);return;}
-   projects=p||[];
+   projects=(p||[]).map(project=>({...project,linkedCustomers:(projectLinks||[]).filter(link=>link.project_id===project.id&&link.customers).map(link=>link.customers)}));
    if(de){documents=[];say("Projects loaded; documents could not be loaded: "+de.message,true);}else{documents=d||[];}
-   knownTags.clear();projects.forEach(p=>(p.tags||[]).forEach(t=>knownTags.add(t)));populateTagSuggestions();renderRows(tab,projects);loadedModules.add(tab);
-   if(!de)say(projects.length+" projects · documents are grouped within each project.");
+   if(ple)say("Projects loaded; customer links could not be loaded: "+ple.message,true);
+   knownTags.clear();projects.forEach(project=>projectTags(project.tags).forEach(tag=>knownTags.add(tag)));populateTagSuggestions();renderRows(tab,projects);loadedModules.add(tab);
+   if(!de&&!ple)say(projects.length+" projects · documents are grouped within each project.");
   }else if(tab==="customers"){
    await loadCustomers();
    const [{data:allProjects,error:projectError},{data:allDocuments,error:documentError}]=await Promise.all([client.from("projects").select("id,code,name,description,status,tags,main_concept_document_id,created_at,updated_at").order("created_at",{ascending:false}).limit(500),client.from("documents").select("id,project_id,title,original_filename,file_type,notes,tags,relative_path,status,created_by,updated_by,created_at,updated_at").order("updated_at",{ascending:false}).limit(1000)]);
@@ -156,8 +158,11 @@
   document.addEventListener("click",e=>{if(!filterWrap.contains(e.target)){panel.hidden=true;filterButton.setAttribute("aria-expanded","false");}});
  }
  function projectCard(p){
-  const card=make("article","project-card");card.tabIndex=0;card.setAttribute("role","link");card.setAttribute("aria-label","Open project "+(p.code||"")+" "+(p.name||""));card.title="Click anywhere on this project card to open its details";card.addEventListener("click",e=>{if(e.target.closest("button,a,input,textarea,select,[contenteditable=true]"))return;openProject(p.id);});card.addEventListener("keydown",e=>{if(e.target===card&&(e.key==="Enter"||e.key===" ")){e.preventDefault();openProject(p.id);}});const head=make("div","project-card-head");const left=make("div","");left.append(make("span","project-code",p.code||"PROJECT"),make("h3","",p.name),make("p","project-description",p.description||"No project description yet."));const tags=make("div","project-tags");renderProjectTags(tags,p.tags);if(tags.childElementCount)left.append(tags);head.append(left);
-  const open=make("button","project-open","Open project →");open.type="button";open.addEventListener("click",()=>openProject(p.id));head.append(open);card.append(head);
+  const card=make("article","project-card");card.tabIndex=0;card.setAttribute("role","link");card.setAttribute("aria-label","Open project "+(p.code||"")+" "+(p.name||""));card.title="Click anywhere on this project card to open its details";card.addEventListener("click",e=>{if(e.target.closest("button,a,input,textarea,select,[contenteditable=true]"))return;openProject(p.id);});card.addEventListener("keydown",e=>{if(e.target===card&&(e.key==="Enter"||e.key===" ")){e.preventDefault();openProject(p.id);}});const head=make("div","project-card-head");const left=make("div","project-card-main");left.append(make("span","project-code",p.code||"PROJECT"),make("h3","",p.name),make("p","project-description",p.description||"No project description yet."));const tags=make("div","project-tags");renderProjectTags(tags,p.tags);if(tags.childElementCount)left.append(tags);head.append(left);
+  const linked=make("div","project-customer-panel");const linkedCustomers=Array.isArray(p.linkedCustomers)?p.linkedCustomers:[];
+  if(linkedCustomers.length){linkedCustomers.forEach(c=>{const customer=make("button","project-customer-card");customer.type="button";customer.setAttribute("aria-label","Open customer "+c.name+(c.end_user_name?" / end user "+c.end_user_name:""));customer.append(make("span","project-customer-meta",c.customer_type==="intermediary"?"CUSTOMER / INTERMEDIARY":"CUSTOMER / END USER"),make("strong","project-customer-title",c.name||"Unnamed customer"));if(c.end_user_name)customer.append(make("span","project-customer-enduser","End user: "+c.end_user_name));customer.addEventListener("click",e=>{e.stopPropagation();location.href="./customer-detail.html?id="+encodeURIComponent(c.id);});linked.append(customer);});}
+  else linked.append(make("span","project-customer-empty","No customer linked"));
+  head.append(linked);const open=make("button","project-open","Open project →");open.type="button";open.addEventListener("click",()=>openProject(p.id));head.append(open);card.append(head);
   const docs=documents.filter(d=>d.project_id===p.id);const preview=make("div","project-file-preview");
   docs.slice(0,3).forEach(d=>preview.append(make("span","file-chip",d.original_filename||d.title)));
   if(docs.length>3)preview.append(make("button","file-overflow","+"+(docs.length-3)));if(!docs.length)preview.append(make("span","no-files","No files attached yet"));
@@ -335,8 +340,8 @@
   const title=make("div","ai-result-title");title.append(make("span","ai-status","Phân tích thành công"),make("strong","",doc.original_filename||doc.title||"PDF"));output.append(title);
   const addText=(label,value)=>{if(!value)return;const block=make("div","ai-result-block");block.append(make("h4","",label),make("p","",value));output.append(block);};
   const addList=(label,items)=>{if(!Array.isArray(items)||!items.length)return;const block=make("div","ai-result-block");block.append(make("h4","",label));const ul=make("ul","");items.forEach(item=>{const li=make("li","",typeof item==="string"?item:JSON.stringify(item));ul.append(li);});block.append(ul);output.append(block);};
-  addText("Tóm tắt",localized.summary||result.summary);addText("Phạm vi kỹ thuật",localized.technical_scope||result.technical_scope);
-  addList("Thiết bị chính",localized.key_equipment||result.key_equipment);addList("Yêu cầu",localized.requirements||result.requirements);addList("Rủi ro / giới hạn",localized.risks||result.risks);addList("Câu hỏi cần làm rõ",localized.open_questions||result.open_questions);
+  addText("Summary",localized.summary||result.summary);addText("Technical Scope",localized.technical_scope||result.technical_scope);
+  addList("Key Equipment",localized.key_equipment||result.key_equipment);addList("Requirements",localized.requirements||result.requirements);addList("Risks / Limitations",localized.risks||result.risks);addList("Open Questions",localized.open_questions||result.open_questions);
   if(Array.isArray(result.suggested_tags)&&result.suggested_tags.length&&canWrite()){
    const block=make("div","ai-result-block ai-tag-editor");block.append(make("h4","","Suggested tags"));
    const targetLabel=make("label","ai-tag-target-label","Save selected tags to");
