@@ -423,3 +423,10 @@ footer{font-size:12px;line-height:1.6}
  .plan-table{font-size:12px}
  .module-record p{font-size:13px}
 }
+
+
+/* Prevent the Overview sections from painting before a routed module is initialized. */
+body[data-start-tab]:not([data-start-tab="overview"]):not([data-start-tab="search"]) .main-content > section:not(#module-workspace):not(#profile-workspace),
+body[data-start-tab]:not([data-start-tab="overview"]):not([data-start-tab="search"]) .main-content > footer {
+  display: none;
+}
