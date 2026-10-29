@@ -340,12 +340,12 @@
     const current=target.value==="project"?(projects.find(x=>x.id===doc.project_id)?.tags||[]):(doc.tags||[]);
     const all=[...new Map([...current,...result.suggested_tags.map(t=>String(t).trim()).filter(Boolean)].map(t=>[String(t).toLowerCase(),String(t)])).values()];
     const existing=new Set(current.map(t=>String(t).toLowerCase()));
-    all.forEach(tag=>{const label=make("label","ai-suggested-tag");const input=make("input");input.type="checkbox";input.value=tag;input.checked=existing.has(tag.toLowerCase());label.classList.toggle("is-selected",input.checked);input.addEventListener("change",()=>label.classList.toggle("is-selected",input.checked));const text=make("span","ai-suggested-tag-text",tag);const indicator=make("span","ai-tag-check",input.checked?"✓":"+");indicator.setAttribute("aria-hidden","true");input.addEventListener("change",()=>{indicator.textContent=input.checked?"✓":"+";});label.append(input,indicator,text);choices.append(label);});
+    all.forEach(tag=>{const chip=make("button","ai-suggested-tag", "");chip.type="button";chip.setAttribute("aria-pressed",String(existing.has(tag.toLowerCase())));chip.classList.toggle("is-selected",existing.has(tag.toLowerCase()));const indicator=make("span","ai-tag-check",existing.has(tag.toLowerCase())?"✓":"+");indicator.setAttribute("aria-hidden","true");const text=make("span","ai-suggested-tag-text",tag);chip.append(indicator,text);chip.addEventListener("click",()=>{const selected=chip.getAttribute("aria-pressed")!=="true";chip.setAttribute("aria-pressed",String(selected));chip.classList.toggle("is-selected",selected);indicator.textContent=selected?"✓":"+";});choices.append(chip);});
    };
    renderTagChoices();
    target.addEventListener("change",renderTagChoices);
    saveTags.addEventListener("click",async()=>{
-    const selected=[...choices.querySelectorAll('input[type="checkbox"]:checked')].map(input=>input.value);
+    const selected=[...choices.querySelectorAll('button.ai-suggested-tag[aria-pressed="true"]')].map(button=>button.querySelector(".ai-suggested-tag-text")?.textContent||"");
     const additions=custom.value.split(",").map(t=>t.trim()).filter(Boolean);
     const tags=[...new Map([...selected,...additions].map(t=>[t.toLowerCase(),t])).values()];
     saveTags.disabled=true;tagStatus.classList.remove("error");tagStatus.textContent="Saving tags…";
@@ -495,12 +495,16 @@
   const globalForm=$("#search-form"),globalInput=$("#global-search"),globalResults=$("#search-results"),globalMessage=$("#search-message");
   if(globalForm&&globalInput&&globalResults&&!globalForm.dataset.h871Bound){
    globalForm.dataset.h871Bound="1";
-   globalForm.addEventListener("submit",async e=>{
-    e.preventDefault();const query=globalInput.value.trim().toLowerCase();globalResults.replaceChildren();globalMessage.classList.remove("error");
-    if(!query){globalMessage.textContent="Enter a search term.";return;}
-    if(!client||!user){globalMessage.textContent="Sign in to search workspace records.";return;}
-    globalMessage.textContent="Searching projects, documents and AI analysis…";
-    try{
+   let searchTimer=null,searchToken=0,searchCache=null,cachePromise=null;
+   const highlight=(element,value,query)=>{
+    element.replaceChildren();const text=String(value??"");if(!query){element.textContent=text;return;}
+    const lower=text.toLocaleLowerCase(),needle=query.toLocaleLowerCase();let cursor=0,at=lower.indexOf(needle);
+    while(at!==-1){if(at>cursor)element.append(document.createTextNode(text.slice(cursor,at)));const mark=make("mark","search-highlight",text.slice(at,at+needle.length));element.append(mark);cursor=at+needle.length;at=lower.indexOf(needle,cursor);}
+    if(cursor<text.length)element.append(document.createTextNode(text.slice(cursor)));
+   };
+   const loadSearchData=async()=>{
+    if(searchCache)return searchCache;if(cachePromise)return cachePromise;
+    cachePromise=(async()=>{
      const [{data:ps,error:pe},{data:ds,error:de},{data:as,error:ae},{data:ks,error:ke}]=await Promise.all([
       client.from("projects").select("id,code,name,description,status,tags").limit(500),
       client.from("documents").select("id,project_id,title,original_filename,file_type,notes,tags,created_at").limit(1500),
@@ -508,17 +512,33 @@
       client.from("knowledge_entries").select("id,title,content,category,review_status").eq("review_status","approved").limit(500)
      ]);
      const err=pe||de||ae||ke;if(err)throw err;
-     const projectRows=ps||[],docRows=ds||[],analysisRows=as||[],knowledgeRows=ks||[],matches=[];
-     const includes=value=>String(value??"").toLowerCase().includes(query);
-     projectRows.forEach(p=>{if([p.code,p.name,p.description,(p.tags||[]).join(" ")].some(includes))matches.push({type:"Project",title:(p.code?p.code+" · ":"")+p.name,detail:[p.description,(p.tags||[]).join(", ")].filter(Boolean).join(" · "),href:"./project-detail.html?id="+encodeURIComponent(p.id)});});
-     docRows.forEach(d=>{if([d.title,d.original_filename,d.notes,d.file_type,(d.tags||[]).join(" ")].some(includes)){const p=projectRows.find(x=>x.id===d.project_id);matches.push({type:"Document",title:d.original_filename||d.title,detail:[p?.name,(d.tags||[]).join(", "),d.notes].filter(Boolean).join(" · "),href:d.project_id?"./project-detail.html?id="+encodeURIComponent(d.project_id):null});}});
-     analysisRows.forEach(a=>{const serialized=JSON.stringify(a.result||{});if(includes(a.summary)||includes(serialized)){const d=docRows.find(x=>x.id===a.document_id),p=projectRows.find(x=>x.id===a.project_id);matches.push({type:"AI Analysis",title:a.summary||d?.original_filename||"Saved AI analysis",detail:[p?.name,d?.original_filename,new Date(a.created_at).toLocaleString()].filter(Boolean).join(" · "),href:a.project_id?"./project-detail.html?id="+encodeURIComponent(a.project_id):null});}});
-     knowledgeRows.forEach(k=>{if([k.title,k.content,k.category].some(includes))matches.push({type:"Knowledge",title:k.title,detail:[k.category,k.content].filter(Boolean).join(" · "),href:null});});
+     searchCache={projects:ps||[],documents:ds||[],analyses:as||[],knowledge:ks||[]};return searchCache;
+    })();
+    try{return await cachePromise;}catch(err){cachePromise=null;throw err;}
+   };
+   const runSearch=async()=>{
+    const token=++searchToken,query=globalInput.value.trim();
+    globalResults.replaceChildren();globalMessage.classList.remove("error");
+    if(!query){globalMessage.textContent="Type to search engineering knowledge.";return;}
+    if(!client||!user){globalMessage.textContent="Sign in to search workspace records.";return;}
+    globalMessage.textContent="Searching…";
+    try{
+     const data=await loadSearchData();if(token!==searchToken)return;
+     const q=query.toLocaleLowerCase(),matches=[];
+     const includes=value=>String(value??"").toLocaleLowerCase().includes(q);
+     data.projects.forEach(p=>{if([p.code,p.name,p.description,(p.tags||[]).join(" ")].some(includes))matches.push({type:"Project",title:(p.code?p.code+" · ":"")+(p.name||""),detail:[p.description,(p.tags||[]).join(", ")].filter(Boolean).join(" · "),href:"./project-detail.html?id="+encodeURIComponent(p.id)});});
+     data.documents.forEach(d=>{if([d.title,d.original_filename,d.notes,d.file_type,(d.tags||[]).join(" ")].some(includes)){const p=data.projects.find(x=>x.id===d.project_id);matches.push({type:"Document",title:d.original_filename||d.title||"Untitled document",detail:[p?.name,(d.tags||[]).join(", "),d.notes].filter(Boolean).join(" · "),href:d.project_id?"./project-detail.html?id="+encodeURIComponent(d.project_id):null});}});
+     data.analyses.forEach(a=>{const serialized=JSON.stringify(a.result||{});if(includes(a.summary)||includes(serialized)){const d=data.documents.find(x=>x.id===a.document_id),p=data.projects.find(x=>x.id===a.project_id);matches.push({type:"AI Analysis",title:a.summary||d?.original_filename||"Saved AI analysis",detail:[p?.name,d?.original_filename,new Date(a.created_at).toLocaleString()].filter(Boolean).join(" · "),href:a.project_id?"./project-detail.html?id="+encodeURIComponent(a.project_id):null});}});
+     data.knowledge.forEach(k=>{if([k.title,k.content,k.category].some(includes))matches.push({type:"Knowledge",title:k.title||"Knowledge entry",detail:[k.category,k.content].filter(Boolean).join(" · "),href:null});});
+     if(token!==searchToken)return;
      if(!matches.length){globalMessage.textContent="No matching records found.";return;}
      globalMessage.textContent=matches.length+" matching records · Includes saved AI analysis results.";
-     matches.slice(0,50).forEach(m=>{const card=make("article","search-result-card");card.append(make("span","search-result-type",m.type),make("strong","",""+m.title),make("p","",m.detail));if(m.href){const link=make("a","search-result-link","Open record →");link.href=m.href;card.append(link);}globalResults.append(card);});
-    }catch(err){globalMessage.textContent="Search failed: "+err.message;globalMessage.classList.add("error");}
-   });
+     matches.slice(0,50).forEach(m=>{const card=make("article","search-result-card"),type=make("span","search-result-type",m.type),title=make("strong"),detail=make("p");highlight(title,m.title,query);highlight(detail,m.detail,query);card.append(type,title,detail);if(m.href){const link=make("a","search-result-link","Open record →");link.href=m.href;card.append(link);}globalResults.append(card);});
+    }catch(err){if(token!==searchToken)return;globalMessage.textContent="Search failed: "+err.message;globalMessage.classList.add("error");}
+   };
+   const scheduleSearch=()=>{clearTimeout(searchTimer);searchToken++;globalResults.replaceChildren();globalMessage.classList.remove("error");globalMessage.textContent=globalInput.value.trim()?"Searching…":"Type to search engineering knowledge.";searchTimer=setTimeout(runSearch,220);};
+   globalInput.addEventListener("input",scheduleSearch);
+   globalForm.addEventListener("submit",e=>{e.preventDefault();clearTimeout(searchTimer);runSearch();});
   }
   document.querySelectorAll("[data-account-action]").forEach(b=>b.addEventListener("click",()=>{const a=b.dataset.accountAction;if(a==="documents")activate("projects");if(a==="profile")activate("profile");if(a==="settings")activate("settings");}));
   document.querySelectorAll(".metric-card").forEach(card=>card.addEventListener("click",()=>{const id=card.id;if(id==="projects-card")activate("projects");if(id==="customers-card")activate("customers");if(id==="knowledge-card")activate("knowledge");}));
