@@ -249,7 +249,7 @@
   $("#module-records").hidden=true;$("#module-search").parentElement.hidden=true;$("#module-message").hidden=true;
   let detail=$("#module-detail");if(!detail){detail=make("section","project-detail");detail.id="module-detail";$("#module-workspace").append(detail);}detail.replaceChildren();detail.hidden=false;
   const back=make("button","back-button","← Back");back.addEventListener("click",()=>{backToAppOr("./projects.html");});detail.append(back);
-  const header=make("div","project-detail-header");header.append(make("span","project-code project-detail-code",p.code||"PROJECT"),make("h2","",p.name),make("p","project-description",p.description||"No description provided."),make("span","project-status",String(p.status||"active").replace("_"," ")));
+  const header=make("div","project-detail-header");header.append(make("span","project-code project-detail-code",p.code||"PROJECT"),make("h2","",p.name),make("p","project-description",p.description||"No description provided."));if((p.tags||[]).length){const projectTagBox=make("div","project-tags");(p.tags||[]).forEach(t=>projectTagBox.append(make("span","project-tag",t)));header.append(projectTagBox);}header.append(make("span","project-status",String(p.status||"active").replace("_"," ")));
   if(user){
    const editButton=make("button","project-open","✎ Edit project");editButton.type="button";editButton.style.marginTop="18px";header.append(editButton);
    const editForm=make("form","record-form project-edit-form");editForm.hidden=true;editForm.style.marginTop="18px";editForm.style.maxWidth="780px";
@@ -467,7 +467,8 @@
     user=sessionResult.data.session?.user||null;
     role=null;
     if(user){
-     const roleResult=await client.from("user_roles").select("role").eq("user_id",user.id).maybeSingle();
+     let roleResult=await client.from("user_roles").select("role").eq("user_id",user.id).maybeSingle();
+     if(roleResult.error){await new Promise(resolve=>setTimeout(resolve,250));roleResult=await client.from("user_roles").select("role").eq("user_id",user.id).maybeSingle();}
      role=roleResult.data?.role||null;
     }
    }
