@@ -13,7 +13,7 @@
 - Static frontend: GitHub Pages.
 - Database: a dedicated Supabase project, subject to quota, privacy approval and RLS tests.
 - Source-file store: approved company folder/network share.
-- Local processor: Python on Windows for PDF, Excel and DOCX extraction; OCR only where required.
+- Document ingestion: retain original files and metadata in the approved private store. Do not add a custom PDF/Office parser or OCR pipeline as a substitute for the selected AI provider's document understanding; any optional preprocessing must be separately approved and must preserve source traceability.
 - AI analysis: manual NotebookLM workflow initially, with structured JSON/CSV import; optional API integration later after reviewing privacy and cost.
 
 ## Initial entities
