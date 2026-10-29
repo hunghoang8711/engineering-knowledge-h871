@@ -281,8 +281,9 @@
     const name=editName.value.trim();if(!name){statusMessage.textContent="Project name is required.";statusMessage.classList.add("error");return;}
     const tags=[...new Set(editTags.value.split(",").map(t=>t.trim()).filter(Boolean))];
     save.disabled=true;cancel.disabled=true;statusMessage.classList.remove("error");statusMessage.textContent="Saving changes…";
-    try{const selectedCustomerId=editCustomer.value;const endUserName=editEndUser.value.trim()||null;const currentLinks=customersForProject.data||[];
-     if(selectedCustomerId){if(currentLinks.some(link=>link.customer_id===selectedCustomerId)){const {error:linkError}=await client.from("project_customers").update({end_user_name:endUserName}).eq("project_id",p.id).eq("customer_id",selectedCustomerId);if(linkError)throw linkError;}else{const {error:deleteError}=await client.from("project_customers").delete().eq("project_id",p.id);if(deleteError)throw deleteError;const {error:insertError}=await client.from("project_customers").insert({project_id:p.id,customer_id:selectedCustomerId,end_user_name:endUserName,created_by:user.id});if(insertError)throw insertError;}}else{const {error:deleteError}=await client.from("project_customers").delete().eq("project_id",p.id);if(deleteError)throw deleteError;}
+    try{const selectedCustomerId=editCustomer.value;const endUserName=editEndUser.value.trim()||null;
+     const {error:deleteLinksError}=await client.from("project_customers").delete().eq("project_id",p.id);if(deleteLinksError)throw deleteLinksError;
+     if(selectedCustomerId){const {error:insertLinkError}=await client.from("project_customers").insert({project_id:p.id,customer_id:selectedCustomerId,end_user_name:endUserName,created_by:user.id});if(insertLinkError)throw insertLinkError;}
      const payload={code:editCode.value.trim()||null,name,description:editDescription.value.trim()||null,status:editStatus.value,tags,updated_at:new Date().toISOString()};
      const {error:updateError}=await client.from("projects").update(payload).eq("id",p.id);if(updateError)throw updateError;
      const {data:refreshed,error:refreshError}=await client.from("projects").select("id,code,name,description,status,tags,main_concept_document_id,created_at,updated_at").eq("id",p.id).single();if(refreshError)throw refreshError;
