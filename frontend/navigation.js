@@ -99,7 +99,7 @@
   if(tab==="projects"){
    const [{data:p,error:pe},{data:d,error:de}]=await Promise.all([
     client.from("projects").select("id,code,name,description,status,tags,created_at,updated_at").order("updated_at",{ascending:false}).limit(300),
-    client.from("documents").select("id,project_id,title,original_filename,file_type,notes,relative_path,status,created_by,updated_by,created_at,updated_at").order("updated_at",{ascending:false}).limit(1000)
+    client.from("documents").select("id,project_id,title,original_filename,file_type,notes,tags,relative_path,status,created_by,updated_by,created_at,updated_at").order("updated_at",{ascending:false}).limit(1000)
    ]);
    if(requestToken!==moduleLoadToken||active!==tab)return;
    if(pe){projects=[];documents=[];renderRows(tab,[]);say("Could not load projects: "+pe.message,true);return;}
@@ -109,7 +109,7 @@
    if(!de)say(projects.length+" projects · documents are grouped within each project.");
   }else if(tab==="customers"){
    await loadCustomers();
-   const [{data:allProjects,error:projectError},{data:allDocuments,error:documentError}]=await Promise.all([client.from("projects").select("id,code,name,description,status,tags,created_at,updated_at").order("created_at",{ascending:false}).limit(500),client.from("documents").select("id,project_id,title,original_filename,file_type,notes,relative_path,status,created_by,updated_by,created_at,updated_at").order("updated_at",{ascending:false}).limit(1000)]);
+   const [{data:allProjects,error:projectError},{data:allDocuments,error:documentError}]=await Promise.all([client.from("projects").select("id,code,name,description,status,tags,created_at,updated_at").order("created_at",{ascending:false}).limit(500),client.from("documents").select("id,project_id,title,original_filename,file_type,notes,tags,relative_path,status,created_by,updated_by,created_at,updated_at").order("updated_at",{ascending:false}).limit(1000)]);
    if(requestToken!==moduleLoadToken||active!==tab)return;
    projects=allProjects||[];documents=documentError?[]:(allDocuments||[]);
    knownTags.clear();projects.forEach(p=>(p.tags||[]).forEach(t=>knownTags.add(t)));populateTagSuggestions();renderRows(tab,customers);loadedModules.add(tab);
@@ -327,7 +327,41 @@
   const addText=(label,value)=>{if(!value)return;const block=make("div","ai-result-block");block.append(make("h4","",label),make("p","",value));output.append(block);};
   const addList=(label,items)=>{if(!Array.isArray(items)||!items.length)return;const block=make("div","ai-result-block");block.append(make("h4","",label));const ul=make("ul","");items.forEach(item=>{const li=make("li","",typeof item==="string"?item:JSON.stringify(item));ul.append(li);});block.append(ul);output.append(block);};
   addText("Summary",result.summary);addText("Technical scope",result.technical_scope);
-  addList("Key equipment",result.key_equipment);addList("Requirements",result.requirements);addList("Risks / constraints",result.risks);addList("Open questions",result.open_questions);addList("Suggested tags",result.suggested_tags);
+  addList("Key equipment",result.key_equipment);addList("Requirements",result.requirements);addList("Risks / constraints",result.risks);addList("Open questions",result.open_questions);
+  if(Array.isArray(result.suggested_tags)&&result.suggested_tags.length&&canWrite()){
+   const block=make("div","ai-result-block ai-tag-editor");block.append(make("h4","","Suggested tags"));
+   const targetLabel=make("label","ai-tag-target-label","Save selected tags to");
+   const target=make("select","ai-tag-target");target.append(new Option("This document","document"),new Option("Project","project"));targetLabel.append(target);block.append(targetLabel);
+   const choices=make("div","ai-suggested-tag-choices");const checks=[];
+   result.suggested_tags.map(t=>String(t).trim()).filter(Boolean).forEach(tag=>{
+    const label=make("label","ai-suggested-tag");const input=make("input");input.type="checkbox";input.value=tag;label.append(input,make("span","",tag));choices.append(label);checks.push({input,tag});
+   });
+   block.append(choices);
+   const custom=make("input","ai-custom-tags");custom.type="text";custom.placeholder="Add other tags, separated by commas";custom.maxLength=500;custom.setAttribute("aria-label","Add custom tags");block.append(custom);
+   const saveTags=make("button","ai-save-tags","Save selected tags");saveTags.type="button";const tagStatus=make("p","form-feedback");tagStatus.setAttribute("role","status");block.append(saveTags,tagStatus);
+   target.addEventListener("change",()=>{const current=target.value==="project"?(projects.find(x=>x.id===doc.project_id)?.tags||[]):(doc.tags||[]);const set=new Set(current.map(t=>String(t).toLowerCase()));checks.forEach(({input,tag})=>input.checked=set.has(tag.toLowerCase()));});
+   saveTags.addEventListener("click",async()=>{
+    const selected=checks.filter(x=>x.input.checked).map(x=>x.tag),additions=custom.value.split(",").map(t=>t.trim()).filter(Boolean);
+    const tags=[...new Map([...selected,...additions].map(t=>[t.toLowerCase(),t])).values()];
+    saveTags.disabled=true;tagStatus.classList.remove("error");tagStatus.textContent="Saving tags…";
+    try{
+     if(target.value==="project"){
+      const current=projects.find(x=>x.id===doc.project_id)?.tags||[];
+      const merged=[...new Map([...current,...tags].map(t=>[String(t).toLowerCase(),String(t)])).values()];
+      const {error}=await client.from("projects").update({tags:merged,updated_at:new Date().toISOString()}).eq("id",doc.project_id);if(error)throw error;
+      const {data:updated,error:readError}=await client.from("projects").select("id,code,name,description,status,tags,created_at,updated_at").eq("id",doc.project_id).single();if(readError)throw readError;
+      projects=[...projects.filter(x=>x.id!==updated.id),updated];selectedProject=updated;
+     }else{
+      const current=doc.tags||[],merged=[...new Map([...current,...tags].map(t=>[String(t).toLowerCase(),String(t)])).values()];
+      const {error}=await client.from("documents").update({tags:merged,updated_by:user.id,updated_by_name:user.email||"H871 user",updated_at:new Date().toISOString()}).eq("id",doc.id);if(error)throw error;
+      documents=documents.map(d=>d.id===doc.id?{...d,tags:merged}:d);doc.tags=merged;
+     }
+     custom.value="";tagStatus.textContent="Tags saved.";knownTags.clear();projects.forEach(p=>(p.tags||[]).forEach(t=>knownTags.add(t)));documents.forEach(d=>(d.tags||[]).forEach(t=>knownTags.add(t)));populateTagSuggestions();
+    }catch(err){tagStatus.textContent="Could not save tags: "+err.message;tagStatus.classList.add("error");}
+    finally{saveTags.disabled=false;}
+   });
+   output.append(block);
+  }else addList("Suggested tags",result.suggested_tags);
   if(Array.isArray(result.source_references)&&result.source_references.length){const block=make("div","ai-result-block");block.append(make("h4","","Source references"));const ul=make("ul");result.source_references.forEach(ref=>{const li=make("li","",[ref.reference,ref.claim].filter(Boolean).join(" — ")||JSON.stringify(ref));ul.append(li);});block.append(ul);output.append(block);}
   if(canWrite()&&result.summary&&options.includeApply!==false){const apply=make("button","ai-apply-button","Set this document as Main Concept");apply.type="button";apply.addEventListener("click",async()=>{if(!confirm("Use the latest successful analysis of this document to replace the project summary and tags? A history snapshot will be saved."))return;apply.disabled=true;apply.textContent="Applying…";try{const {data:historyId,error}=await client.rpc("apply_main_concept",{p_project_id:doc.project_id,p_document_id:doc.id});if(error)throw error;const {data:project,error:projectError}=await client.from("projects").select("id,code,name,description,status,tags,created_at,updated_at").eq("id",doc.project_id).single();if(projectError)throw projectError;projects=[...projects.filter(x=>x.id!==project.id),project];selectedProject=project;const header=$("#module-detail .project-detail-header");if(header){const desc=header.querySelector(".project-description");if(desc)desc.textContent=project.description||"No description provided.";}say("Main Concept applied. Change history saved.");const list=$("#ai-history-list");if(list)await loadProjectAIHistory(doc.project_id,list);apply.textContent="Main Concept applied";}catch(err){say("Could not apply Main Concept: "+err.message,true);apply.disabled=false;apply.textContent="Set this document as Main Concept";}});output.append(apply);}
  }
@@ -452,7 +486,34 @@
   window.addEventListener("popstate",()=>{renderRoute();});
   await sync();await renderRoute();
   document.querySelectorAll("[data-tab]").forEach(a=>a.addEventListener("click",e=>{e.preventDefault();const tab=a.dataset.tab;const pages={overview:"index.html",projects:"projects.html",customers:"customers.html",knowledge:"knowledge.html"};if(pages[tab]){const target="./"+pages[tab];if(location.pathname.split("/").pop()!==pages[tab])location.href=target;else if(location.hash)history.replaceState({h871Route:tab},"",target);activate(tab);return;}history.replaceState({h871Route:tab},"",location.pathname+location.search);activate(tab);}));
-  // Search functionality intentionally disabled while stabilizing list rendering.
+  const globalForm=$("#search-form"),globalInput=$("#global-search"),globalResults=$("#search-results"),globalMessage=$("#search-message");
+  if(globalForm&&globalInput&&globalResults&&!globalForm.dataset.h871Bound){
+   globalForm.dataset.h871Bound="1";
+   globalForm.addEventListener("submit",async e=>{
+    e.preventDefault();const query=globalInput.value.trim().toLowerCase();globalResults.replaceChildren();globalMessage.classList.remove("error");
+    if(!query){globalMessage.textContent="Enter a search term.";return;}
+    if(!client||!user){globalMessage.textContent="Sign in to search workspace records.";return;}
+    globalMessage.textContent="Searching projects, documents and AI analysis…";
+    try{
+     const [{data:ps,error:pe},{data:ds,error:de},{data:as,error:ae},{data:ks,error:ke}]=await Promise.all([
+      client.from("projects").select("id,code,name,description,status,tags").limit(500),
+      client.from("documents").select("id,project_id,title,original_filename,file_type,notes,tags,created_at").limit(1500),
+      client.from("project_ai_analyses").select("id,project_id,document_id,status,summary,result,created_at").eq("status","succeeded").order("created_at",{ascending:false}).limit(500),
+      client.from("knowledge_entries").select("id,title,content,category,review_status").eq("review_status","approved").limit(500)
+     ]);
+     const err=pe||de||ae||ke;if(err)throw err;
+     const projectRows=ps||[],docRows=ds||[],analysisRows=as||[],knowledgeRows=ks||[],matches=[];
+     const includes=value=>String(value??"").toLowerCase().includes(query);
+     projectRows.forEach(p=>{if([p.code,p.name,p.description,(p.tags||[]).join(" ")].some(includes))matches.push({type:"Project",title:(p.code?p.code+" · ":"")+p.name,detail:[p.description,(p.tags||[]).join(", ")].filter(Boolean).join(" · "),href:"./project-detail.html?id="+encodeURIComponent(p.id)});});
+     docRows.forEach(d=>{if([d.title,d.original_filename,d.notes,d.file_type,(d.tags||[]).join(" ")].some(includes)){const p=projectRows.find(x=>x.id===d.project_id);matches.push({type:"Document",title:d.original_filename||d.title,detail:[p?.name,(d.tags||[]).join(", "),d.notes].filter(Boolean).join(" · "),href:d.project_id?"./project-detail.html?id="+encodeURIComponent(d.project_id):null});}});
+     analysisRows.forEach(a=>{const serialized=JSON.stringify(a.result||{});if(includes(a.summary)||includes(serialized)){const d=docRows.find(x=>x.id===a.document_id),p=projectRows.find(x=>x.id===a.project_id);matches.push({type:"AI Analysis",title:a.summary||d?.original_filename||"Saved AI analysis",detail:[p?.name,d?.original_filename,new Date(a.created_at).toLocaleString()].filter(Boolean).join(" · "),href:a.project_id?"./project-detail.html?id="+encodeURIComponent(a.project_id):null});}});
+     knowledgeRows.forEach(k=>{if([k.title,k.content,k.category].some(includes))matches.push({type:"Knowledge",title:k.title,detail:[k.category,k.content].filter(Boolean).join(" · "),href:null});});
+     if(!matches.length){globalMessage.textContent="No matching records found.";return;}
+     globalMessage.textContent=matches.length+" matching records · Includes saved AI analysis results.";
+     matches.slice(0,50).forEach(m=>{const card=make("article","search-result-card");card.append(make("span","search-result-type",m.type),make("strong","",""+m.title),make("p","",m.detail));if(m.href){const link=make("a","search-result-link","Open record →");link.href=m.href;card.append(link);}globalResults.append(card);});
+    }catch(err){globalMessage.textContent="Search failed: "+err.message;globalMessage.classList.add("error");}
+   });
+  }
   document.querySelectorAll("[data-account-action]").forEach(b=>b.addEventListener("click",()=>{const a=b.dataset.accountAction;if(a==="documents")activate("projects");if(a==="profile")activate("profile");if(a==="settings")activate("settings");}));
   document.querySelectorAll(".metric-card").forEach(card=>card.addEventListener("click",()=>{const id=card.id;if(id==="projects-card")activate("projects");if(id==="customers-card")activate("customers");if(id==="knowledge-card")activate("knowledge");}));
  }
