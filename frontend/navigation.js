@@ -340,7 +340,7 @@
     const current=target.value==="project"?(projects.find(x=>x.id===doc.project_id)?.tags||[]):(doc.tags||[]);
     const all=[...new Map([...current,...result.suggested_tags.map(t=>String(t).trim()).filter(Boolean)].map(t=>[String(t).toLowerCase(),String(t)])).values()];
     const existing=new Set(current.map(t=>String(t).toLowerCase()));
-    all.forEach(tag=>{const label=make("label","ai-suggested-tag");const input=make("input");input.type="checkbox";input.value=tag;input.checked=existing.has(tag.toLowerCase());label.append(input,make("span","",tag));choices.append(label);});
+    all.forEach(tag=>{const label=make("label","ai-suggested-tag");const input=make("input");input.type="checkbox";input.value=tag;input.checked=existing.has(tag.toLowerCase());label.classList.toggle("is-selected",input.checked);input.addEventListener("change",()=>label.classList.toggle("is-selected",input.checked));const text=make("span","ai-suggested-tag-text",tag);const indicator=make("span","ai-tag-check",input.checked?"✓":"+");indicator.setAttribute("aria-hidden","true");input.addEventListener("change",()=>{indicator.textContent=input.checked?"✓":"+";});label.append(input,indicator,text);choices.append(label);});
    };
    renderTagChoices();
    target.addEventListener("change",renderTagChoices);
