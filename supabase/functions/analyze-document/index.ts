@@ -118,19 +118,22 @@ Deno.serve(async (req) => {
   if (projectError) return json({ error: "PROJECT_LOOKUP_FAILED" }, 500);
   if (!project) return json({ error: "PROJECT_NOT_FOUND" }, 404);
 
-  const ext = String(document.file_type || document.original_filename || "")
-    .split(".").pop().toLowerCase();
-  const mimeByExt: Record<string, string> = {
-    pdf: "application/pdf",
-    docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    doc: "application/msword",
-    xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    xls: "application/vnd.ms-excel",
-    pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-    ppt: "application/vnd.ms-powerpoint",
-  };
-  const mimeType = mimeByExt[ext] || mimeByExt[String(document.file_type || "").toLowerCase()];
-  if (!mimeType) return json({ error: "UNSUPPORTED_FILE_TYPE" }, 415);
+  // The initial endpoint supports PDF only. Storage also accepts Office formats,
+  // but this Gemini inline document path is not a general-purpose Office-file reader.
+  // Reject them before sending bytes; do not pretend support or add a custom parser.
+  const fileType = String(document.file_type || "").trim().toLowerCase();
+  const originalName = String(document.original_filename || document.title || "").trim().toLowerCase();
+  const isPdf = fileType === "pdf" ||
+    fileType === "application/pdf" ||
+    originalName.endsWith(".pdf");
+  if (!isPdf) {
+    return json({
+      error: "UNSUPPORTED_FILE_TYPE_FOR_INITIAL_AI_FLOW",
+      supportedTypes: ["application/pdf"],
+      message: "The initial AI analysis flow supports PDF files only. Office files remain stored normally but will not be sent to Gemini until their input method is separately verified.",
+    }, 415);
+  }
+  const mimeType = "application/pdf";
 
   // Keep initial free-tier requests conservative. Larger files need a separately
   // verified Gemini model/file limit; never silently switch to a paid service.
