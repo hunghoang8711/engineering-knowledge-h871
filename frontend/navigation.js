@@ -440,7 +440,7 @@
    const btn=e.currentTarget.querySelector('button[type="submit"]');btn.disabled=true;feedback("project","Creating project…");
    try{
     const selectedCustomerId=$("#project-customers").value;
-    const newCustomerName=$("#project-new-customer").value.trim();
+    const newCustomerName=$("#project-new-customer")?.value.trim()||"";
     if(selectedCustomerId&&newCustomerName)throw new Error("Choose an existing customer or enter a new customer name, not both.");
     const tags=$("#project-tags").value.split(",").map(t=>t.trim()).filter(Boolean).filter((t,i,a)=>a.findIndex(x=>x.toLowerCase()===t.toLowerCase())===i);const {data:p,error}=await client.from("projects").insert({code:$("#project-code").value.trim()||null,name:$("#project-name").value.trim(),description:$("#project-description").value.trim()||null,status:$("#project-status").value,tags,created_by:user.id}).select().single();if(error)throw error;
     let customerId=selectedCustomerId||null;
