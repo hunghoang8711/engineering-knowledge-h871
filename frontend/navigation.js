@@ -189,7 +189,7 @@
   }
   if(!c){say("Customer not found. Return to Customers and refresh the list.",true);return;}
   if(navigate){location.href="./customer-detail.html?id="+encodeURIComponent(customerId);return;}
-  $("#module-records").hidden=true;$("#module-search").parentElement.hidden=true;$("#module-message").hidden=true;$("#module-create-toggle").hidden=true;
+  $("#module-records").hidden=true;$("#module-toolbar").hidden=true;$("#module-search").parentElement.hidden=true;$("#module-message").hidden=true;$("#module-create-toggle").hidden=true;
   let detail=$("#customer-detail");if(!detail){detail=make("section","customer-detail");detail.id="customer-detail";$("#module-workspace").append(detail);}detail.replaceChildren();
   const back=make("button","back-button","← All customers");back.addEventListener("click",()=>{backToAppOr("./customers.html");});detail.append(back);
   const header=make("div","project-detail-header");header.append(make("span","customer-type",c.customer_type==="intermediary"?"INTERMEDIARY PARTNER":"END USER"),make("h2","",c.name),make("p","project-description",c.description||c.notes||"No description provided."));if(c.customer_type==="intermediary"&&c.end_user_name)header.append(make("p","customer-enduser","End user: "+c.end_user_name));
