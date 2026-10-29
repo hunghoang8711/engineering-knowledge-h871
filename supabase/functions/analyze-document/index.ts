@@ -25,8 +25,9 @@ function base64FromBytes(bytes: Uint8Array): string {
   for (let i = 0; i < bytes.length; i += chunkSize) {
     const chunk = bytes.subarray(i, Math.min(i + chunkSize, bytes.length));
     let binary = "";
-    for (let j = 0; j < chunk.length; j += 0x4000) {
-      binary += String.fromCharCode(...chunk.subarray(j, Math.min(j + 0x4000, chunk.length)));
+    const binaryChunkSize = 0x3fff; // 16,383 bytes, divisible by 3
+    for (let j = 0; j < chunk.length; j += binaryChunkSize) {
+      binary += String.fromCharCode(...chunk.subarray(j, Math.min(j + binaryChunkSize, chunk.length)));
     }
     encodedChunks.push(btoa(binary));
   }
