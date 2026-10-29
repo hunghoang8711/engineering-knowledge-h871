@@ -300,3 +300,12 @@ body[data-start-tab="customers"] .module-toolbar .filter-icon,body[data-start-ta
 .project-header-actions .project-status{display:inline-flex;align-items:center;justify-content:center;min-height:38px;box-sizing:border-box;padding:8px 13px;margin:0;border:1px solid #31536a;border-radius:9px;background:#10283a;color:#8be9f4;font-size:12px;font-weight:800;line-height:1.35;text-transform:capitalize}
 .project-header-actions .project-edit-toggle{display:inline-flex;align-items:center;justify-content:center;min-height:38px;box-sizing:border-box;margin:0;padding:8px 13px;border-radius:9px;font-size:12px;line-height:1.35;white-space:nowrap}
 @media(max-width:600px){.project-header-actions{gap:8px}.project-header-actions .project-status,.project-header-actions .project-edit-toggle{min-height:36px;padding:7px 11px}}
+
+
+/* Linked customer/end-user card beside the project summary. */
+.project-customer-cards{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0 12px;align-items:stretch}
+.project-customer-card{display:flex;flex-direction:column;align-items:flex-start;gap:5px;min-width:220px;max-width:100%;padding:12px 15px;border:1px solid #34465d;border-radius:12px;background:linear-gradient(135deg,#14243a,#101a2b);color:#e5edf7;text-align:left;cursor:pointer;transition:border-color .15s ease,background .15s ease,transform .15s ease}
+.project-customer-card:hover,.project-customer-card:focus-visible{border-color:#67e8f9;background:linear-gradient(135deg,#19324a,#132238);transform:translateY(-1px);outline:none}
+.project-customer-meta{font-size:10px;font-weight:800;letter-spacing:.08em;color:#67e8f9}
+.project-customer-title{font-size:14px;line-height:1.4;overflow-wrap:anywhere}
+.project-customer-enduser{font-size:12px;line-height:1.45;color:#a9b9cc;overflow-wrap:anywhere}
