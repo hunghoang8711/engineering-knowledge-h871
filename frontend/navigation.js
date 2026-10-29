@@ -216,7 +216,7 @@
      customers=[...customers.filter(x=>x.id!==c.id),refreshed];populateCustomerChoices();populateCustomerSuggestions();await openCustomer(c.id,false);
     }catch(err){status.textContent="Could not update customer: "+err.message;status.classList.add("error");save.disabled=false;cancel.disabled=false;}
    });
-   projectMain.append(editForm);
+   header.append(editForm);
   }
   detail.append(header);
   const {data:links,error}=await client.from("project_customers").select("project_id").eq("customer_id",c.id);
