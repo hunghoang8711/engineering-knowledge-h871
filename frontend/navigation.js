@@ -256,7 +256,7 @@
   }
   if(!p){say("Project not found. Return to Projects and refresh the list.",true);return;}
   if(navigate){location.href="./project-detail.html?id="+encodeURIComponent(projectId);return;}selectedProject=p;
-  $("#module-records").hidden=true;$("#module-search").parentElement.hidden=true;$("#module-message").hidden=true;
+  $("#module-records").hidden=true;$("#module-toolbar").hidden=true;$("#module-search").parentElement.hidden=true;$("#module-message").hidden=true;
   let detail=$("#module-detail");if(!detail){detail=make("section","project-detail");detail.id="module-detail";$("#module-workspace").append(detail);}detail.replaceChildren();detail.hidden=false;
   const back=make("button","back-button","← Back");back.addEventListener("click",()=>{backToAppOr("./projects.html");});detail.append(back);
   let customersForProject=await client.from("project_customers").select("customer_id,end_user_name,customers(id,name,customer_type,end_user_name)").eq("project_id",p.id);let projectCustomerSchemaReady=true;
