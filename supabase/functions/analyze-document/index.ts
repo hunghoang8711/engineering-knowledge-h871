@@ -212,18 +212,28 @@ Deno.serve(async (req) => {
       durationMs: Date.now() - base64StartedAt,
     });
     const prompt = `You are an engineering document analyst for H871, an industrial automation engineering workspace.
-Analyze the supplied original document directly. Do not invent facts. Use concise technical English.
+Analyze the supplied original document directly. Do not invent facts. Produce BOTH English and Vietnamese versions, with Vietnamese as the default display language. Vietnamese must use accurate industrial automation engineering terminology; English must be concise technical English. Keep the same facts, technical values, units, risks, requirements and source references in both languages.
 Project: ${cleanText(project.name, 300)} (${cleanText(project.code, 100)}).
 Document title: ${cleanText(document.title, 500)}.
 Return ONLY valid JSON with this exact shape:
 {
- "summary": "short project-description-ready summary",
- "technical_scope": "scope and process description",
- "key_equipment": ["equipment/components stated in the file"],
- "requirements": ["explicit technical requirements/specifications"],
- "risks": ["risks, constraints, assumptions; label assumptions clearly"],
- "open_questions": ["unresolved questions"],
- "suggested_tags": ["short engineering tags"],
+ "vi": {
+  "summary": "tóm tắt ngắn gọn có thể dùng làm mô tả dự án",
+  "technical_scope": "phạm vi kỹ thuật và mô tả quy trình",
+  "key_equipment": ["thiết bị/linh kiện được nêu trong tài liệu"],
+  "requirements": ["yêu cầu/thông số kỹ thuật được nêu rõ"],
+  "risks": ["rủi ro, giới hạn, giả định; ghi rõ đâu là giả định"],
+  "open_questions": ["các câu hỏi chưa được giải quyết"]
+ },
+ "en": {
+  "summary": "short project-description-ready summary",
+  "technical_scope": "scope and process description",
+  "key_equipment": ["equipment/components stated in the file"],
+  "requirements": ["explicit technical requirements/specifications"],
+  "risks": ["risks, constraints, assumptions; label assumptions clearly"],
+  "open_questions": ["unresolved questions"]
+ },
+ "suggested_tags": ["short engineering tags, preferably English technical terms"],
  "source_references": [{"reference":"page/section/sheet if identifiable","claim":"fact supported by that source"}]
 }
 Use empty arrays when no evidence is available. Do not fabricate page numbers, specifications, equipment, risks or requirements. Distinguish stated facts from inferred assumptions. Keep source references grounded in the supplied file.`;
