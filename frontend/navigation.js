@@ -332,31 +332,33 @@
    const block=make("div","ai-result-block ai-tag-editor");block.append(make("h4","","Suggested tags"));
    const targetLabel=make("label","ai-tag-target-label","Save selected tags to");
    const target=make("select","ai-tag-target");target.append(new Option("This document","document"),new Option("Project","project"));targetLabel.append(target);block.append(targetLabel);
-   const choices=make("div","ai-suggested-tag-choices");const checks=[];
-   result.suggested_tags.map(t=>String(t).trim()).filter(Boolean).forEach(tag=>{
-    const label=make("label","ai-suggested-tag");const input=make("input");input.type="checkbox";input.value=tag;label.append(input,make("span","",tag));choices.append(label);checks.push({input,tag});
-   });
-   block.append(choices);
+   const choices=make("div","ai-suggested-tag-choices");block.append(choices);
    const custom=make("input","ai-custom-tags");custom.type="text";custom.placeholder="Add other tags, separated by commas";custom.maxLength=500;custom.setAttribute("aria-label","Add custom tags");block.append(custom);
    const saveTags=make("button","ai-save-tags","Save selected tags");saveTags.type="button";const tagStatus=make("p","form-feedback");tagStatus.setAttribute("role","status");block.append(saveTags,tagStatus);
-   target.addEventListener("change",()=>{const current=target.value==="project"?(projects.find(x=>x.id===doc.project_id)?.tags||[]):(doc.tags||[]);const set=new Set(current.map(t=>String(t).toLowerCase()));checks.forEach(({input,tag})=>input.checked=set.has(tag.toLowerCase()));});
+   const renderTagChoices=()=>{
+    choices.replaceChildren();
+    const current=target.value==="project"?(projects.find(x=>x.id===doc.project_id)?.tags||[]):(doc.tags||[]);
+    const all=[...new Map([...current,...result.suggested_tags.map(t=>String(t).trim()).filter(Boolean)].map(t=>[String(t).toLowerCase(),String(t)])).values()];
+    const existing=new Set(current.map(t=>String(t).toLowerCase()));
+    all.forEach(tag=>{const label=make("label","ai-suggested-tag");const input=make("input");input.type="checkbox";input.value=tag;input.checked=existing.has(tag.toLowerCase());label.append(input,make("span","",tag));choices.append(label);});
+   };
+   renderTagChoices();
+   target.addEventListener("change",renderTagChoices);
    saveTags.addEventListener("click",async()=>{
-    const selected=checks.filter(x=>x.input.checked).map(x=>x.tag),additions=custom.value.split(",").map(t=>t.trim()).filter(Boolean);
+    const selected=[...choices.querySelectorAll('input[type="checkbox"]:checked')].map(input=>input.value);
+    const additions=custom.value.split(",").map(t=>t.trim()).filter(Boolean);
     const tags=[...new Map([...selected,...additions].map(t=>[t.toLowerCase(),t])).values()];
     saveTags.disabled=true;tagStatus.classList.remove("error");tagStatus.textContent="Saving tags…";
     try{
      if(target.value==="project"){
-      const current=projects.find(x=>x.id===doc.project_id)?.tags||[];
-      const merged=[...new Map([...current,...tags].map(t=>[String(t).toLowerCase(),String(t)])).values()];
-      const {error}=await client.from("projects").update({tags:merged,updated_at:new Date().toISOString()}).eq("id",doc.project_id);if(error)throw error;
+      const {error}=await client.from("projects").update({tags,updated_at:new Date().toISOString()}).eq("id",doc.project_id);if(error)throw error;
       const {data:updated,error:readError}=await client.from("projects").select("id,code,name,description,status,tags,created_at,updated_at").eq("id",doc.project_id).single();if(readError)throw readError;
       projects=[...projects.filter(x=>x.id!==updated.id),updated];selectedProject=updated;
      }else{
-      const current=doc.tags||[],merged=[...new Map([...current,...tags].map(t=>[String(t).toLowerCase(),String(t)])).values()];
-      const {error}=await client.from("documents").update({tags:merged,updated_by:user.id,updated_by_name:user.email||"H871 user",updated_at:new Date().toISOString()}).eq("id",doc.id);if(error)throw error;
-      documents=documents.map(d=>d.id===doc.id?{...d,tags:merged}:d);doc.tags=merged;
+      const {error}=await client.from("documents").update({tags,updated_by:user.id,updated_by_name:user.email||"H871 user",updated_at:new Date().toISOString()}).eq("id",doc.id);if(error)throw error;
+      documents=documents.map(d=>d.id===doc.id?{...d,tags}:d);doc.tags=tags;
      }
-     custom.value="";tagStatus.textContent="Tags saved.";knownTags.clear();projects.forEach(p=>(p.tags||[]).forEach(t=>knownTags.add(t)));documents.forEach(d=>(d.tags||[]).forEach(t=>knownTags.add(t)));populateTagSuggestions();
+     custom.value="";tagStatus.textContent="Tags saved.";knownTags.clear();projects.forEach(p=>(p.tags||[]).forEach(t=>knownTags.add(t)));documents.forEach(d=>(d.tags||[]).forEach(t=>knownTags.add(t)));populateTagSuggestions();renderTagChoices();
     }catch(err){tagStatus.textContent="Could not save tags: "+err.message;tagStatus.classList.add("error");}
     finally{saveTags.disabled=false;}
    });
