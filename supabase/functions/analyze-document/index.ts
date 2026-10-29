@@ -288,13 +288,34 @@ Use empty arrays when no evidence is available. Do not fabricate page numbers, s
       ?.map((part: { text?: string }) => part.text || "").join("");
     if (!responseText) throw new Error("MODEL_OUTPUT_EMPTY");
     const parsed = parseJsonResponse(responseText);
+    const vi = (parsed.vi && typeof parsed.vi === "object" && !Array.isArray(parsed.vi))
+      ? parsed.vi as Record<string, unknown> : parsed;
+    const en = (parsed.en && typeof parsed.en === "object" && !Array.isArray(parsed.en))
+      ? parsed.en as Record<string, unknown> : parsed;
     const result = {
-      summary: cleanText(parsed.summary),
-      technical_scope: cleanText(parsed.technical_scope),
-      key_equipment: asStringArray(parsed.key_equipment),
-      requirements: asStringArray(parsed.requirements),
-      risks: asStringArray(parsed.risks),
-      open_questions: asStringArray(parsed.open_questions),
+      // Root fields remain Vietnamese for backwards compatibility and default display.
+      summary: cleanText(vi.summary),
+      technical_scope: cleanText(vi.technical_scope),
+      key_equipment: asStringArray(vi.key_equipment),
+      requirements: asStringArray(vi.requirements),
+      risks: asStringArray(vi.risks),
+      open_questions: asStringArray(vi.open_questions),
+      vi: {
+        summary: cleanText(vi.summary),
+        technical_scope: cleanText(vi.technical_scope),
+        key_equipment: asStringArray(vi.key_equipment),
+        requirements: asStringArray(vi.requirements),
+        risks: asStringArray(vi.risks),
+        open_questions: asStringArray(vi.open_questions),
+      },
+      en: {
+        summary: cleanText(en.summary),
+        technical_scope: cleanText(en.technical_scope),
+        key_equipment: asStringArray(en.key_equipment),
+        requirements: asStringArray(en.requirements),
+        risks: asStringArray(en.risks),
+        open_questions: asStringArray(en.open_questions),
+      },
       suggested_tags: asStringArray(parsed.suggested_tags, 30),
       source_references: Array.isArray(parsed.source_references)
         ? parsed.source_references.filter((x: unknown) => x && typeof x === "object").slice(0, 80)
