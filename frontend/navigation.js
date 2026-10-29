@@ -345,7 +345,7 @@
   // New analyses store Vietnamese directly at the root. Existing bilingual records
   // remain readable by preferring their Vietnamese object when it is present.
   const localized=result.vi&&typeof result.vi==="object"?result.vi:result;
-  const title=make("div","ai-result-title");title.append(make("span","ai-status","Phân tích thành công"),make("strong","",doc.original_filename||doc.title||"PDF"));output.append(title);
+  const title=make("div","ai-result-title");title.append(make("span","ai-status","Analysis Successful"),make("strong","",doc.original_filename||doc.title||"PDF"));output.append(title);
   const addText=(label,value)=>{if(!value)return;const block=make("div","ai-result-block");block.append(make("h4","",label),make("p","",value));output.append(block);};
   const addList=(label,items)=>{if(!Array.isArray(items)||!items.length)return;const block=make("div","ai-result-block");block.append(make("h4","",label));const ul=make("ul","");items.forEach(item=>{const li=make("li","",typeof item==="string"?item:JSON.stringify(item));ul.append(li);});block.append(ul);output.append(block);};
   addText("Summary",localized.summary||result.summary);addText("Technical Scope",localized.technical_scope||result.technical_scope);
@@ -360,7 +360,16 @@
    const renderTagChoices=()=>{
     choices.replaceChildren();
     const current=target.value==="project"?(projects.find(x=>x.id===doc.project_id)?.tags||[]):(doc.tags||[]);
-    const all=[...new Map([...current,...result.suggested_tags.map(t=>String(t).trim()).filter(Boolean)].map(t=>[String(t).toLowerCase(),String(t)])).values()];
+    const englishAliases={
+     "tu dong hoa":"Automation","thiet ke co khi":"Mechanical Design","robot cong nghiep":"Industrial Robot","thi giac may":"Machine Vision","camera kiem tra":"Inspection Camera","thoi gian chu ky":"Cycle Time","do ga":"Fixture","khi nen":"Pneumatics","dien dieu khien":"Control Systems","ban ve ky thuat":"Technical Drawings","phan tich rui ro":"Risk Analysis","yeu cau ky thuat":"Technical Requirements","kiem soat chat luong":"Quality Control","dung sai":"Tolerance","bang tai":"Conveyor","may khoan":"Drilling Machine","tam substrate":"Substrate Panel","lap rap":"Assembly","bao tri":"Maintenance","an toan may":"Machine Safety","he thong cap lieu":"Feeding System","kiem tra ngoai quan":"Visual Inspection","thiet ke may":"Machine Design","linh kien co khi":"Mechanical Components","he thong khi nen":"Pneumatic System"
+    };
+    const normalizeTag=t=>String(t).normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/đ/g,"d").replace(/[^a-z0-9]+/g," ").trim();
+    const englishFirst=tags=>[...tags].sort((a,b)=>{
+     const aEnglish=!/[\u00C0-\u024F]/.test(a),bEnglish=!/[\u00C0-\u024F]/.test(b);
+     return Number(bEnglish)-Number(aEnglish);
+    });
+    const preferredSuggestions=result.suggested_tags.map(t=>{const raw=String(t).trim();return englishAliases[normalizeTag(raw)]||raw;}).filter(Boolean);
+    const all=englishFirst([...new Map([...current,...preferredSuggestions].map(t=>[String(t).toLowerCase(),String(t)])).values()]);
     const existing=new Set(current.map(t=>String(t).toLowerCase()));
     all.forEach(tag=>{const chip=make("button","ai-suggested-tag", "");chip.type="button";chip.setAttribute("aria-pressed",String(existing.has(tag.toLowerCase())));chip.classList.toggle("is-selected",existing.has(tag.toLowerCase()));const text=make("span","ai-suggested-tag-text",tag);chip.append(text);chip.addEventListener("click",()=>{const selected=chip.getAttribute("aria-pressed")!=="true";chip.setAttribute("aria-pressed",String(selected));chip.classList.toggle("is-selected",selected);});choices.append(chip);});
    };
