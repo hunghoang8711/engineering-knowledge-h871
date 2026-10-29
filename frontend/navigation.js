@@ -464,13 +464,16 @@
    // A newly loaded detail page can race Supabase's initial session event.
    // Resolve the session here before loading records; otherwise openProject/openCustomer
    // can run with user=null and leave the list page visible until a hard refresh.
-   if((route==="project"||route==="customer")&&!user){
-    const sessionResult=await client.auth.getSession();
-    user=sessionResult.data.session?.user||null;
-    role=null;
-    if(user){
+   if(route==="project"||route==="customer"){
+    if(!user){
+     const sessionResult=await client.auth.getSession();
+     user=sessionResult.data.session?.user||null;
+     role=null;
+    }
+    // A transient role lookup failure during initial auth sync must not hide editor controls.
+    if(user&&!role){
      let roleResult=await client.from("user_roles").select("role").eq("user_id",user.id).maybeSingle();
-     if(roleResult.error){await new Promise(resolve=>setTimeout(resolve,250));roleResult=await client.from("user_roles").select("role").eq("user_id",user.id).maybeSingle();}
+     if(roleResult.error||!roleResult.data?.role){await new Promise(resolve=>setTimeout(resolve,300));roleResult=await client.from("user_roles").select("role").eq("user_id",user.id).maybeSingle();}
      role=roleResult.data?.role||null;
     }
    }
