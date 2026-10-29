@@ -53,7 +53,14 @@ select
   ) as private_note_column_exists,
   to_regclass('public.project_ai_analyses') is not null as analyses_table_exists,
   to_regclass('public.project_change_history') is not null as history_table_exists,
-  to_regclass('public.projects_validate_main_concept_document') is not null as trigger_name_relation_exists;
+  exists (
+    select 1 from pg_trigger t
+    join pg_class c on c.oid = t.tgrelid
+    join pg_namespace n on n.oid = c.relnamespace
+    where n.nspname='public' and c.relname='projects'
+      and t.tgname='projects_validate_main_concept_document'
+      and not t.tgisinternal
+  ) as main_concept_trigger_exists;
 
 -- This script does not prove the migration is safe to apply by itself.
 -- Compare results with 0004, investigate any partial objects/schema differences,
