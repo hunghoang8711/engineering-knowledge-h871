@@ -79,18 +79,13 @@ drop policy if exists "editors manage project AI analyses" on public.project_ai_
 drop policy if exists "authenticated read project change history" on public.project_change_history;
 drop policy if exists "editors manage project change history" on public.project_change_history;
 
+-- The browser only reads analysis/history. Writes are performed by the trusted
+-- Edge Function (service role) and SECURITY DEFINER RPCs. Do not grant editors
+-- direct UPDATE/DELETE access: history must remain append-only through the UI.
 create policy "authenticated read project AI analyses"
   on public.project_ai_analyses for select to authenticated using (true);
-create policy "editors manage project AI analyses"
-  on public.project_ai_analyses for all to authenticated
-  using (public.has_hub_role(array['admin','editor']))
-  with check (public.has_hub_role(array['admin','editor']));
 create policy "authenticated read project change history"
   on public.project_change_history for select to authenticated using (true);
-create policy "editors manage project change history"
-  on public.project_change_history for all to authenticated
-  using (public.has_hub_role(array['admin','editor']))
-  with check (public.has_hub_role(array['admin','editor']));
 
 -- Ensure Main Concept document is attached to the same project. A plain FK
 -- only validates document ID, not the project/document relationship.
