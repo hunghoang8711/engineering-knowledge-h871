@@ -73,6 +73,7 @@ Confirmed columns:
 - `projects`: `id`, `code`, `name`, `description`, `status`, `created_by`, `created_at`, `updated_at`, `tags`.
 - `documents`: `id`, `project_id`, `customer_id`, `title`, `original_filename`, `file_type`, `relative_path`, `sha256`, `version_label`, `source_kind`, `source_uri`, `extracted_text`, `summary`, `status`, audit fields, and timestamps.
 - `user_roles`: `user_id`, `role`, `created_at`.
+- `customers`: `id`, `name`, `industry`, `notes`, `created_by`, `created_at`, `updated_at`, `customer_type`, `end_user_name`, and `description` (confirmed by a user-provided read-only query on 2026-10-29).
 - The query returned no rows for `project_ai_analyses` or `project_change_history`, so those tables were not found under those names in the queried public schema.
 
 Reported RLS policies:
