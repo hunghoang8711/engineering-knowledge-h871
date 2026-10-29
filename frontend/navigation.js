@@ -320,7 +320,7 @@
   if(canWrite()){const noteBtn=make("button","edit-note","Edit note");noteBtn.type="button";noteBtn.addEventListener("click",()=>{const form=make("form","edit-file-note");const area=make("textarea");area.value=d.notes||"";area.rows=2;const save=make("button","","Save note");save.type="submit";form.append(area,save);noteBtn.replaceWith(form);form.addEventListener("submit",async e=>{e.preventDefault();const {error}=await client.from("documents").update({notes:area.value.trim()||null,updated_by:user.id,updated_by_name:user.email||"H871 user"}).eq("id",d.id);if(error){say(error.message,true);return;}loadedModules.delete("projects");await loadModule("projects",true);await openProject(selectedProject.id);});});card.append(noteBtn);}
   return card;
  }
- function renderProjectAIResult(output,doc,data){
+ function renderProjectAIResult(output,doc,data,options={}){
   output.replaceChildren();
   const result=data?.result||{};
   const title=make("div","ai-result-title");title.append(make("span","ai-status","Analysis succeeded"),make("strong","",doc.original_filename||doc.title||"PDF"));output.append(title);
@@ -329,16 +329,42 @@
   addText("Summary",result.summary);addText("Technical scope",result.technical_scope);
   addList("Key equipment",result.key_equipment);addList("Requirements",result.requirements);addList("Risks / constraints",result.risks);addList("Open questions",result.open_questions);addList("Suggested tags",result.suggested_tags);
   if(Array.isArray(result.source_references)&&result.source_references.length){const block=make("div","ai-result-block");block.append(make("h4","","Source references"));const ul=make("ul");result.source_references.forEach(ref=>{const li=make("li","",[ref.reference,ref.claim].filter(Boolean).join(" — ")||JSON.stringify(ref));ul.append(li);});block.append(ul);output.append(block);}
-  if(canWrite()&&result.summary){const apply=make("button","ai-apply-button","Set this document as Main Concept");apply.type="button";apply.addEventListener("click",async()=>{if(!confirm("Use the latest successful analysis of this document to replace the project summary and tags? A history snapshot will be saved."))return;apply.disabled=true;apply.textContent="Applying…";try{const {data:historyId,error}=await client.rpc("apply_main_concept",{p_project_id:doc.project_id,p_document_id:doc.id});if(error)throw error;const {data:project,error:projectError}=await client.from("projects").select("id,code,name,description,status,tags,created_at,updated_at").eq("id",doc.project_id).single();if(projectError)throw projectError;projects=[...projects.filter(x=>x.id!==project.id),project];selectedProject=project;const header=$("#module-detail .project-detail-header");if(header){const desc=header.querySelector(".project-description");if(desc)desc.textContent=project.description||"No description provided.";}say("Main Concept applied. Change history saved.");const list=$("#ai-history-list");if(list)await loadProjectAIHistory(doc.project_id,list);apply.textContent="Main Concept applied";}catch(err){say("Could not apply Main Concept: "+err.message,true);apply.disabled=false;apply.textContent="Set this document as Main Concept";}});output.append(apply);}
+  if(canWrite()&&result.summary&&options.includeApply!==false){const apply=make("button","ai-apply-button","Set this document as Main Concept");apply.type="button";apply.addEventListener("click",async()=>{if(!confirm("Use the latest successful analysis of this document to replace the project summary and tags? A history snapshot will be saved."))return;apply.disabled=true;apply.textContent="Applying…";try{const {data:historyId,error}=await client.rpc("apply_main_concept",{p_project_id:doc.project_id,p_document_id:doc.id});if(error)throw error;const {data:project,error:projectError}=await client.from("projects").select("id,code,name,description,status,tags,created_at,updated_at").eq("id",doc.project_id).single();if(projectError)throw projectError;projects=[...projects.filter(x=>x.id!==project.id),project];selectedProject=project;const header=$("#module-detail .project-detail-header");if(header){const desc=header.querySelector(".project-description");if(desc)desc.textContent=project.description||"No description provided.";}say("Main Concept applied. Change history saved.");const list=$("#ai-history-list");if(list)await loadProjectAIHistory(doc.project_id,list);apply.textContent="Main Concept applied";}catch(err){say("Could not apply Main Concept: "+err.message,true);apply.disabled=false;apply.textContent="Set this document as Main Concept";}});output.append(apply);}
  }
  async function loadProjectAIHistory(projectId,container){
   if(!container||!client||!user||!canWrite())return;
   container.replaceChildren(make("p","muted-copy","Loading analysis history…"));
-  const {data:analyses,error}=await client.from("project_ai_analyses").select("id,document_id,provider,model,status,summary,error_message,created_at,completed_at").eq("project_id",projectId).order("created_at",{ascending:false}).limit(10);
+  const {data:analyses,error}=await client.from("project_ai_analyses").select("id,document_id,provider,model,status,summary,result,error_message,created_at,completed_at").eq("project_id",projectId).order("created_at",{ascending:false}).limit(10);
   if(error){container.replaceChildren(make("p","form-feedback error","Could not load analysis history: "+error.message));return;}
   container.replaceChildren();
   if(!analyses?.length){container.append(make("p","muted-copy","No AI analyses recorded yet."));return;}
-  analyses.forEach(item=>{const row=make("article","ai-history-item");const top=make("div","ai-history-top");top.append(make("strong","",item.summary||"Document analysis"),make("span","ai-history-status ai-status-"+String(item.status||"unknown"),String(item.status||"unknown").replaceAll("_"," ")));row.append(top);row.append(make("p","document-meta",new Date(item.created_at).toLocaleString()+" · "+item.provider+" / "+item.model));if(item.error_message)row.append(make("p","form-feedback error",item.error_message));if(item.status==="succeeded"){const doc=documents.find(d=>d.id===item.document_id);row.append(make("p","muted-copy","Source: "+(doc?.original_filename||doc?.title||"document")));}container.append(row);});
+  analyses.forEach(item=>{
+   const row=make("article","ai-history-item");
+   const top=make("div","ai-history-top");
+   top.append(make("strong","",item.summary||"Document analysis"),make("span","ai-history-status ai-status-"+String(item.status||"unknown"),String(item.status||"unknown").replaceAll("_"," ")));
+   row.append(top);
+   row.append(make("p","document-meta",new Date(item.created_at).toLocaleString()+" · "+item.provider+" / "+item.model));
+   if(item.error_message)row.append(make("p","form-feedback error",item.error_message));
+   if(item.status==="succeeded"){
+    const doc=documents.find(d=>d.id===item.document_id);
+    row.append(make("p","muted-copy","Source: "+(doc?.original_filename||doc?.title||"document")));
+    const savedResult=make("div","ai-history-saved-result");savedResult.hidden=true;
+    const more=make("button","ai-history-more","See more");more.type="button";more.setAttribute("aria-expanded","false");
+    more.addEventListener("click",()=>{
+     const expand=savedResult.hidden;
+     savedResult.hidden=!expand;
+     more.textContent=expand?"See less":"See more";
+     more.setAttribute("aria-expanded",String(expand));
+     if(expand&&!savedResult.dataset.rendered){
+      if(item.result&&doc){renderProjectAIResult(savedResult,doc,{result:item.result},{includeApply:false});}
+      else savedResult.append(make("p","muted-copy","Saved detailed result is unavailable for this record."));
+      savedResult.dataset.rendered="true";
+     }
+    });
+    row.append(more,savedResult);
+   }
+   container.append(row);
+  });
   const {data:changes,error:historyError}=await client.from("project_change_history").select("id,event_type,source_document_id,previous_description,new_description,previous_tags,new_tags,created_at,restored_from_history_id").eq("project_id",projectId).order("created_at",{ascending:false}).limit(10);
   if(historyError){container.append(make("p","form-feedback error","Could not load project change history: "+historyError.message));return;}
   if(changes?.length){container.append(make("h4","ai-history-title","Main Concept change history"));changes.forEach(change=>{const row=make("article","ai-history-item");row.append(make("div","ai-history-top",String(change.event_type||"change").replaceAll("_"," ")),make("p","document-meta",new Date(change.created_at).toLocaleString()));row.append(make("p","ai-history-description","Description: "+(change.new_description||"—")));row.append(make("p","ai-history-description","Tags: "+((change.new_tags||[]).join(", ")||"—")));if(change.restored_from_history_id)row.append(make("p","muted-copy","Restored from a previous snapshot."));container.append(row);});}
