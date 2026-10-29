@@ -235,3 +235,12 @@ body[data-start-tab="customers"] .module-toolbar .filter-icon,body[data-start-ta
 .ai-status-failed,.ai-status-quota-exhausted{background:#3b2025;color:#fda4af;border:1px solid #6e3039}
 .ai-history-description{font-size:10px;line-height:1.6;color:#9fb1c7;margin:8px 0 0;overflow-wrap:anywhere}
 @media(max-width:760px){.ai-analyze-button{white-space:normal}.ai-result-title,.ai-history-top{display:grid;justify-content:stretch}}
+
+
+/* Expand saved AI analysis results from project history */
+.ai-history-more{justify-self:start;width:max-content;margin-top:9px;padding:7px 11px;border:1px solid #35536c;border-radius:8px;background:#172a40;color:#a5e9f5;font:inherit;font-size:10px;font-weight:800;cursor:pointer}
+.ai-history-more:hover{border-color:#4a91a7;background:#1b354e}
+.ai-history-saved-result{display:grid;gap:12px;margin-top:12px;padding-top:12px;border-top:1px solid #26394f;min-width:0}
+.ai-history-saved-result[hidden]{display:none}
+.ai-history-saved-result .ai-result-block{background:#0b1625}
+.ai-history-saved-result .ai-result-title{justify-content:flex-start}
