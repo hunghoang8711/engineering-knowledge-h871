@@ -21,6 +21,7 @@
  function backToAppOr(path){try{const ref=document.referrer?new URL(document.referrer):null;const here=new URL(location.href);if(ref&&ref.origin===here.origin&&ref.pathname.startsWith(here.pathname.slice(0,here.pathname.lastIndexOf("/")+1))){history.back();return;}}catch{}location.href=path;}
  function hideOverview(hide){document.querySelectorAll(".main-content > section,.main-content > footer").forEach(el=>{if(!["module-workspace","profile-workspace"].includes(el.id))el.hidden=hide;});const auth=$("#auth-panel");if(auth)auth.hidden=hide||!!user;}
  function activate(tab){
+  if(document.body)document.body.dataset.startTab=tab;
   active=tab;selectedProject=null;
   $("#module-records").hidden=false;$("#module-toolbar").hidden=!(tab==="projects"||tab==="customers");$("#module-message").hidden=false;$("#module-detail")?.remove();$("#customer-detail")?.remove();
   document.querySelectorAll("[data-tab]").forEach(a=>a.classList.toggle("active",a.dataset.tab===tab));
