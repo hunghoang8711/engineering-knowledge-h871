@@ -262,3 +262,13 @@ body[data-start-tab="customers"] .module-toolbar .filter-icon,body[data-start-ta
 .search-result-link:hover{text-decoration:underline}
 
 .search-highlight{background:#facc15;color:#172033;border-radius:3px;padding:0 2px;font-weight:800;box-decoration-break:clone;-webkit-box-decoration-break:clone}
+
+/* Refined AI tag chips and readable analysis text */
+.ai-suggested-tag{position:relative;gap:7px;padding:7px 11px;border-radius:999px;border:1px solid #34465d;background:#101c2d;color:#c8d5e3;font-size:12px;line-height:1.35;transition:background .15s,border-color .15s,color .15s,box-shadow .15s}
+.ai-suggested-tag:hover{border-color:#4b8499;background:#15283b}
+.ai-suggested-tag input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.ai-suggested-tag:focus-within{outline:2px solid #67e8f9;outline-offset:2px}
+.ai-suggested-tag.is-selected{background:#123b4b;border-color:#38b9d1;color:#e0fbff;box-shadow:inset 0 0 0 1px #38b9d133}
+.ai-tag-check{display:inline-grid;place-items:center;width:16px;height:16px;border-radius:50%;background:#26374b;color:#9fb4c8;font-size:11px;font-weight:800;flex:0 0 16px}
+.ai-suggested-tag.is-selected .ai-tag-check{background:#67e8f9;color:#08202c}
+.ai-tag-editor .ai-result-block p,.ai-result-block p,.ai-result-block li{font-size:12px;line-height:1.75}
