@@ -340,7 +340,7 @@
     const current=target.value==="project"?(projects.find(x=>x.id===doc.project_id)?.tags||[]):(doc.tags||[]);
     const all=[...new Map([...current,...result.suggested_tags.map(t=>String(t).trim()).filter(Boolean)].map(t=>[String(t).toLowerCase(),String(t)])).values()];
     const existing=new Set(current.map(t=>String(t).toLowerCase()));
-    all.forEach(tag=>{const chip=make("button","ai-suggested-tag", "");chip.type="button";chip.setAttribute("aria-pressed",String(existing.has(tag.toLowerCase())));chip.classList.toggle("is-selected",existing.has(tag.toLowerCase()));const indicator=make("span","ai-tag-check",existing.has(tag.toLowerCase())?"✓":"+");indicator.setAttribute("aria-hidden","true");const text=make("span","ai-suggested-tag-text",tag);chip.append(indicator,text);chip.addEventListener("click",()=>{const selected=chip.getAttribute("aria-pressed")!=="true";chip.setAttribute("aria-pressed",String(selected));chip.classList.toggle("is-selected",selected);indicator.textContent=selected?"✓":"+";});choices.append(chip);});
+    all.forEach(tag=>{const chip=make("button","ai-suggested-tag", "");chip.type="button";chip.setAttribute("aria-pressed",String(existing.has(tag.toLowerCase())));chip.classList.toggle("is-selected",existing.has(tag.toLowerCase()));const text=make("span","ai-suggested-tag-text",tag);chip.append(text);chip.addEventListener("click",()=>{const selected=chip.getAttribute("aria-pressed")!=="true";chip.setAttribute("aria-pressed",String(selected));chip.classList.toggle("is-selected",selected);});choices.append(chip);});
    };
    renderTagChoices();
    target.addEventListener("change",renderTagChoices);
