@@ -1,4 +1,12 @@
 # Supabase CLI project configuration.
-# This setting requires a valid Supabase user JWT at the Edge Function boundary.
 [functions.analyze-document]
 verify_jwt = true
+
+# Enqueue endpoint verifies the caller JWT and admin/editor role itself.
+[functions.enqueue-analysis]
+verify_jwt = true
+
+# Internal worker authenticates with a high-entropy server-side shared secret.
+# Keep this endpoint disabled until H871_QUEUE_WORKER_SECRET is configured.
+[functions.process-analysis-queue]
+verify_jwt = false
