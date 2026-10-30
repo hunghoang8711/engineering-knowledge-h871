@@ -328,10 +328,10 @@
    if(history)setTimeout(()=>{if(history.isConnected)loadProjectAIHistory(d.project_id,history);},1500);
    (async()=>{
     try{
-     const {data,error}=await client.functions.invoke("analyze-document",{body:{documentId:d.id,projectId:d.project_id}});
+     const {data,error}=await client.functions.invoke("enqueue-analysis",{body:{documentId:d.id,projectId:d.project_id,idempotencyKey:crypto.randomUUID()}});
      if(error){let detail=error.message||"Function request failed";try{const ctx=error.context;if(ctx&&typeof ctx.json==="function"){const body=await ctx.json();detail=body.message||body.error||detail;}}catch{}throw new Error(detail);}
      if(data?.error)throw new Error(data.message||data.error);
-     if(output.isConnected)renderProjectAIResult(output,d,data);
+     if(output.isConnected)output.replaceChildren(make("p","muted-copy","Analysis job accepted. Job ID: "+data.jobId+". The worker will process it in the background; you can leave this page and return later."));
      if(history?.isConnected)await loadProjectAIHistory(d.project_id,history);
     }catch(err){if(output.isConnected){output.replaceChildren(make("p","form-feedback error","AI analysis request failed: "+(err.message||"Unknown error")+". If the run was recorded, check its status in analysis history."));}if(history?.isConnected)await loadProjectAIHistory(d.project_id,history);}
     finally{if(analyze.isConnected){analyze.disabled=false;analyze.textContent="✦ Analyze PDF";}}
@@ -436,8 +436,18 @@
   const pending=(analyses||[]).some(a=>["queued","processing"].includes(a.status));
   if(pending&&!container.dataset.polling){
    container.dataset.polling="true";
-   const poll=async()=>{if(!container.isConnected){container.dataset.polling="";clearInterval(timer);return;}const {data:latest,error:pollError}=await client.from("project_ai_analyses").select("status").eq("project_id",projectId).in("status",["queued","processing"]).limit(1);if(pollError||!latest?.length){container.dataset.polling="";clearInterval(timer);await loadProjectAIHistory(projectId,container);}};
-   const timer=setInterval(poll,2500);
+   let attempts=0;
+   const poll=async()=>{
+    if(!container.isConnected){container.dataset.polling="";return;}
+    attempts++;
+    const {data:latest,error:pollError}=await client.from("project_ai_analyses").select("id,status").eq("project_id",projectId).in("status",["queued","processing"]).limit(10);
+    if(pollError){container.dataset.polling="";container.append(make("p","muted-copy","Live status refresh paused. Reopen this project to refresh the saved job status."));return;}
+    if(!latest?.length){container.dataset.polling="";await loadProjectAIHistory(projectId,container);return;}
+    if(attempts>=120){container.dataset.polling="";container.append(make("p","muted-copy","Background analysis is still running. Its state is saved; reopen this project later to refresh."));return;}
+    const delay=Math.min(15000,2500*Math.ceil(attempts/8));
+    setTimeout(poll,delay);
+   };
+   setTimeout(poll,2500);
   }
   const {data:changes,error:historyError}=await client.from("project_change_history").select("id,event_type,source_document_id,previous_description,new_description,previous_tags,new_tags,created_at,restored_from_history_id").eq("project_id",projectId).order("created_at",{ascending:false}).limit(10);
   if(historyError){container.append(make("p","form-feedback error","Could not load project change history: "+historyError.message));return;}
