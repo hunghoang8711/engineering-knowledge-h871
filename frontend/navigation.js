@@ -324,17 +324,46 @@
   const isPdf=(d.file_type||"").toLowerCase()==="pdf"||(d.original_filename||d.title||"").toLowerCase().endsWith(".pdf");
   if(canWrite()&&isPdf){const mainBtn=make("button","ai-apply-button",isMainConcept?"✓ Main Concept":"Set as Main Concept");mainBtn.type="button";mainBtn.disabled=isMainConcept;mainBtn.title=isMainConcept?"This document is already the project's Main Concept":"Use the latest successful AI analysis of this PDF as the project's Main Concept";mainBtn.addEventListener("click",async()=>{if(!confirm("Set this PDF as the project's Main Concept using its latest successful AI analysis? The project description and tags will be updated and a history snapshot saved."))return;mainBtn.disabled=true;mainBtn.textContent="Applying…";try{const {error}=await client.rpc("apply_main_concept",{p_project_id:d.project_id,p_document_id:d.id});if(error)throw error;loadedModules.delete("projects");await loadModule("projects",true);await openProject(d.project_id);say("Main Concept applied. Project description and tags updated; change history saved.");}catch(err){say("Could not set Main Concept: "+(err.message||"Unknown error")+". Ensure this PDF has a successful AI analysis first.",true);mainBtn.disabled=false;mainBtn.textContent="Set as Main Concept";}});card.append(mainBtn);const analyze=make("button","ai-analyze-button","✦ Analyze PDF");analyze.type="button";analyze.addEventListener("click",()=>{
    const output=$("#ai-analysis-output"),history=$("#ai-history-list");if(!output){say("Open project details to run AI analysis.",true);return;}
-   analyze.disabled=true;analyze.textContent="Queued…";output.replaceChildren(make("p","muted-copy","Analysis request sent. The server will continue processing if you navigate to another page; this panel and history will update when the result is saved."));
-   if(history)setTimeout(()=>{if(history.isConnected)loadProjectAIHistory(d.project_id,history);},1500);
+   analyze.disabled=true;analyze.textContent="Queued…";
+   output.replaceChildren(make("p","muted-copy","Submitting this selected PDF to the H871 analysis queue…"));
    (async()=>{
     try{
-     const {data,error}=await client.functions.invoke("analyze-document",{body:{documentId:d.id,projectId:d.project_id}});
-     if(error){let detail=error.message||"Function request failed";try{const ctx=error.context;if(ctx&&typeof ctx.json==="function"){const body=await ctx.json();detail=body.message||body.error||detail;}}catch{}throw new Error(detail);}
+     const idempotencyKey=crypto.randomUUID();
+     const {data,error}=await client.functions.invoke("enqueue-analysis",{body:{documentId:d.id,projectId:d.project_id,idempotencyKey}});
+     if(error){let detail=error.message||"Queue request failed";try{const ctx=error.context;if(ctx&&typeof ctx.json==="function"){const body=await ctx.json();detail=body.message||body.error||detail;}}catch{}throw new Error(detail);}
      if(data?.error)throw new Error(data.message||data.error);
-     if(output.isConnected)renderProjectAIResult(output,d,data);
+     if(!data?.analysisId)throw new Error("The server did not return an analysis ID.");
+     output.replaceChildren(make("p","muted-copy","Request accepted. Status: "+(data.status||"queued")+". Waiting for the background worker…"));
+     let latest=null;
+     for(let attempt=0;attempt<60;attempt++){
+      await new Promise(resolve=>setTimeout(resolve,5000));
+      const {data:row,error:readError}=await client.from("project_ai_analyses")
+       .select("id,document_id,status,summary,result,error_code,error_message,created_at,completed_at")
+       .eq("id",data.analysisId).maybeSingle();
+      if(readError)throw new Error("Could not check analysis status: "+readError.message);
+      latest=row;
+      if(!row)throw new Error("The analysis record could not be found.");
+      if(row.status==="succeeded"){
+       if(output.isConnected)renderProjectAIResult(output,d,{result:row.result});
+       if(history?.isConnected)await loadProjectAIHistory(d.project_id,history);
+       return;
+      }
+      if(["failed","quota_exhausted","cancelled"].includes(row.status)){
+       const statusText=row.status==="quota_exhausted"?"Gemini free quota/rate limit reached; no paid fallback was used.":(row.error_message||row.error_code||"Analysis failed.");
+       if(output.isConnected)output.replaceChildren(make("p","form-feedback error","Analysis "+row.status+": "+statusText));
+       if(history?.isConnected)await loadProjectAIHistory(d.project_id,history);
+       return;
+      }
+      if(output.isConnected)output.replaceChildren(make("p","muted-copy","Analysis status: "+(row.status||"queued")+". The background worker is processing the selected PDF."));
+     }
+     if(output.isConnected)output.replaceChildren(make("p","muted-copy","The request remains "+(latest?.status||"queued")+". Background processing may take longer; reopen this project to view the saved status and result."));
      if(history?.isConnected)await loadProjectAIHistory(d.project_id,history);
-    }catch(err){if(output.isConnected){output.replaceChildren(make("p","form-feedback error","AI analysis request failed: "+(err.message||"Unknown error")+". If the run was recorded, check its status in analysis history."));}if(history?.isConnected)await loadProjectAIHistory(d.project_id,history);}
-    finally{if(analyze.isConnected){analyze.disabled=false;analyze.textContent="✦ Analyze PDF";}}
+    }catch(err){
+     if(output.isConnected)output.replaceChildren(make("p","form-feedback error","AI analysis request failed: "+(err.message||"Unknown error")));
+     if(history?.isConnected)await loadProjectAIHistory(d.project_id,history);
+    }finally{
+     if(analyze.isConnected){analyze.disabled=false;analyze.textContent="✦ Analyze PDF";}
+    }
    })();
   });card.append(analyze);}
   if(canWrite()){const noteBtn=make("button","edit-note","Edit note");noteBtn.type="button";noteBtn.addEventListener("click",()=>{const form=make("form","edit-file-note");const area=make("textarea");area.value=d.notes||"";area.rows=2;const save=make("button","","Save note");save.type="submit";form.append(area,save);noteBtn.replaceWith(form);form.addEventListener("submit",async e=>{e.preventDefault();const {error}=await client.from("documents").update({notes:area.value.trim()||null,updated_by:user.id,updated_by_name:user.email||"H871 user"}).eq("id",d.id);if(error){say(error.message,true);return;}loadedModules.delete("projects");await loadModule("projects",true);await openProject(selectedProject.id);});});card.append(noteBtn);}
