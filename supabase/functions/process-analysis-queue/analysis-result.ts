@@ -4,8 +4,11 @@ export const clean = (value: unknown, max = 12000): string =>
 
 export const strings = (value: unknown, max = 40): string[] =>
   Array.isArray(value)
-    ? value.filter((x): x is string => typeof x === "string")
-      .map((x) => x.trim().slice(0, 500)).filter(Boolean).slice(0, max)
+    ? value
+      .filter((x): x is string => typeof x === "string")
+      .map((x) => x.trim().slice(0, 500))
+      .filter(Boolean)
+      .slice(0, max)
     : [];
 
 export function parseModelJson(text: string): Record<string, unknown> {
