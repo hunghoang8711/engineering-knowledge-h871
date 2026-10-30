@@ -86,10 +86,10 @@ select
   count(*) as object_count,
   count(*) filter (where metadata ? 'size') as objects_with_size_metadata,
   count(*) filter (
-    where coalesce(metadata->>'size', '') ~ '^[0-9]+(\\.[0-9]+)?$'
+    where coalesce(metadata->>'size', '') ~ '^[0-9]+([.][0-9]+)?$'
   ) as objects_with_numeric_size_metadata,
   max(case
-    when coalesce(metadata->>'size', '') ~ '^[0-9]+(\\.[0-9]+)?$'
+    when coalesce(metadata->>'size', '') ~ '^[0-9]+([.][0-9]+)?$'
       then (metadata->>'size')::numeric
     else null
   end) as largest_metadata_size_bytes
