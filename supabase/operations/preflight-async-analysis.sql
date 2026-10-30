@@ -23,7 +23,8 @@ where n.nspname = 'public'
   and p.proname in (
     'has_hub_role','apply_main_concept','restore_project_history',
     'claim_project_ai_analysis_job','heartbeat_project_ai_analysis_job',
-    'finish_project_ai_analysis_job','enqueue_project_ai_analysis_job'
+    'finish_project_ai_analysis_job','enqueue_project_ai_analysis_job',
+    'get_h871_project_document_size'
   )
 order by p.proname, arguments;
 
@@ -79,7 +80,13 @@ select
   has_function_privilege('authenticated', 'public.claim_project_ai_analysis_job(integer)', 'execute') as authenticated_can_claim,
   has_function_privilege('service_role', 'public.claim_project_ai_analysis_job(integer)', 'execute') as service_role_can_claim;
 
--- 8) Storage object metadata shape for the private H871 bucket.
+-- 8) Worker-only Storage metadata RPC privileges (after migration 0007).
+select
+  has_function_privilege('anon', 'public.get_h871_project_document_size(text)', 'execute') as anon_can_read_object_size,
+  has_function_privilege('authenticated', 'public.get_h871_project_document_size(text)', 'execute') as authenticated_can_read_object_size,
+  has_function_privilege('service_role', 'public.get_h871_project_document_size(text)', 'execute') as service_role_can_read_object_size;
+
+-- 9) Storage object metadata shape for the private H871 bucket.
 -- Aggregates only; no object names, paths, or file contents are returned.
 -- Confirms whether the worker's pre-download metadata.size guard can operate.
 select
