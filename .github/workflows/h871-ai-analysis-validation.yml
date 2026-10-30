@@ -32,7 +32,7 @@ jobs:
           deno-version: v2.x
 
       - name: Type-check worker and pure result module
-        run: deno check supabase/functions/process-analysis-queue/index.ts supabase/functions/process-analysis-queue/analysis-result.ts supabase/functions/process-analysis-queue/analysis-result_test.ts
+        run: deno check supabase/functions/process-analysis-queue/index.ts supabase/functions/process-analysis-queue/analysis-result.ts supabase/functions/process-analysis-queue/analysis-result_test.ts supabase/functions/process-analysis-queue/storage-path.ts supabase/functions/process-analysis-queue/storage-path_test.ts
 
       - name: Run unit tests
-        run: deno test --allow-net supabase/functions/process-analysis-queue/analysis-result_test.ts
+        run: deno test --allow-net supabase/functions/process-analysis-queue/analysis-result_test.ts supabase/functions/process-analysis-queue/storage-path_test.ts
