@@ -133,8 +133,17 @@ Deno.serve(async (req) => {
     const { data: blob, error: downloadError } = await admin.storage
       .from("h871-project-documents").download(path);
     if (downloadError || !blob) {
-      await finish("failed", null, "PRIVATE_FILE_DOWNLOAD_FAILED", "The private PDF could not be downloaded.", 30);
-      return json({ jobId, status: "queued", error: "PRIVATE_FILE_DOWNLOAD_FAILED" }, 202);
+      const finalStatus = await finish(
+        "failed",
+        null,
+        "PRIVATE_FILE_DOWNLOAD_FAILED",
+        "The private PDF could not be downloaded.",
+        30,
+      );
+      return json(
+        { jobId, status: finalStatus, error: "PRIVATE_FILE_DOWNLOAD_FAILED" },
+        finalStatus === "queued" ? 202 : 200,
+      );
     }
     const MAX_BYTES = 5 * 1024 * 1024;
     if (blob.size <= 0 || blob.size > MAX_BYTES) {
