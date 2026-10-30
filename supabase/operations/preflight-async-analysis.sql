@@ -118,7 +118,8 @@ order by r.table_name, r.column_name;
 select p.proname as function_name,
        pg_get_userbyid(p.proowner) as function_owner,
        p.prosecdef as security_definer,
-       p.proconfig as function_settings
+       p.proconfig as function_settings,
+       coalesce(p.proconfig @> array['search_path=""'], false) as empty_search_path
 from pg_proc p
 join pg_namespace n on n.oid = p.pronamespace
 where n.nspname = 'public'
