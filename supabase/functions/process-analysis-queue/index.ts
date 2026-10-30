@@ -50,6 +50,13 @@ Deno.serve(async (req) => {
     return json({ error: "WORKER_CONFIGURATION_INCOMPLETE" }, 503);
   }
 
+  // Explicit owner-controlled gate: storing a Gemini key or deploying the
+  // worker does not by itself authorize sending company/customer documents to
+  // an external AI provider. Check before claiming a job so it remains queued.
+  if (Deno.env.get("H871_GEMINI_DATA_PROCESSING_APPROVED") !== "true") {
+    return json({ error: "AI_DATA_PROCESSING_NOT_APPROVED" }, 503);
+  }
+
   const admin = createClient(url, serviceKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
