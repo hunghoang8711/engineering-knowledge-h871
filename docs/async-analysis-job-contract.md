@@ -1,0 +1,78 @@
+# H871 asynchronous document analysis — implementation contract
+
+Status: design contract only; no production resources or database changes have been created.
+
+## Why this change is needed
+
+The current `analyze-document` Edge Function performs the complete operation in one HTTP request: authorization, Storage download, PDF-to-Base64 conversion, Gemini request, response validation, and result persistence. The browser waits for that request. This makes the user experience depend on one finite Edge Function invocation and makes interrupted requests difficult to recover.
+
+The current implementation also has an application-level 5 MiB PDF limit. Raising that limit alone is unsafe: the function temporarily holds the PDF bytes, Base64 representation, and outgoing JSON request in memory, while provider latency can exceed the Edge Function execution window.
+
+## Target behavior
+
+1. The browser uploads the original file to the existing private `h871-project-documents` bucket.
+2. The browser requests creation of an analysis job. The server validates the signed-in user and admin/editor role, confirms that the document belongs to the project, and records a durable job.
+3. The browser receives a job/analysis identifier promptly and does not wait for Gemini to finish.
+4. A separately deployed worker claims a job, downloads the file from private Storage, calls only the explicitly configured Gemini model, validates the structured result, and persists success or a safe failure.
+5. The browser polls the job status with bounded backoff and can leave/reopen the project without losing the job state.
+6. Retry is explicit and bounded. A retry must not create duplicate successful results for the same document content and requested analysis version.
+7. The Main Concept apply/restore flow remains separate from analysis execution. A successful analysis does not silently overwrite project description or tags until the user applies it as Main Concept.
+
+## Job lifecycle
+
+Allowed states:
+
+- `queued`: accepted and waiting for a worker.
+- `processing`: leased by a worker.
+- `succeeded`: validated result persisted.
+- `failed`: non-retryable or exhausted failure.
+- `quota_exhausted`: Gemini free quota/rate limit reached; no paid fallback.
+- `cancelled`: cancelled before completion.
+
+A worker claim must be atomic. Each claim has a lease token, lease expiry, attempt count, and heartbeat/update timestamp. Expired leases become eligible for recovery; a worker may only complete a job while it still owns the active lease. This prevents two workers from overwriting each other's results.
+
+## Security boundaries
+
+- Keep `GEMINI_API_KEY` and `SUPABASE_SERVICE_ROLE_KEY` server-side only.
+- Authenticate the initiating user and check the existing admin/editor role before enqueueing.
+- Verify document/project ownership before creating a job and again before processing.
+- Keep the Storage bucket private. Workers download only by the stored object path after validating it.
+- Do not log document names, file contents, Base64, user tokens, or API keys.
+- Do not weaken existing RLS policies. Any new table must enable RLS and define explicit read access; trusted worker writes use server-side credentials only.
+- Never send customer/company files to an external AI provider until the workspace owner has confirmed the applicable company data policy.
+
+## Free-first runtime decision gate
+
+A durable queue is not itself a compute runtime. The worker must execute somewhere, and a queue does not remove provider latency or compute cost.
+
+Before selecting a worker runtime, verify all of the following from current official pricing and account configuration:
+
+- no Billing Account or payment method needs to be added;
+- the chosen region and service are actually covered by a no-cost allowance;
+- the allowance covers the expected CPU, memory, storage, network egress, scheduling, and invocation pattern;
+- the service will not automatically scale into billable usage;
+- hard spending limits exist, or the service can be kept disabled when the free allowance is exhausted.
+
+Budget alerts are not hard spending caps. A runtime that merely has a Free Tier allowance but requires Billing activation is not acceptable under the current H871 requirement. If no suitable runtime passes these checks, stop at the durable queue/API design and do not deploy a paid fallback.
+
+## Planned repository implementation sequence
+
+1. **Schema reconciliation (read-only):** compare the deployed database with migration `0004_ai_project_intelligence.sql`; confirm whether the analysis/history tables and columns exist. Do not replay migration 0004 blindly.
+2. **Queue schema (additive draft):** add durable claim/lease/retry metadata only after step 1. Prefer extending the analysis-run record if its semantics remain clear; otherwise use a dedicated job table with a unique idempotency key.
+3. **Enqueue API:** add a small authenticated endpoint that validates and creates a queued job, returning its identifier without calling Gemini.
+4. **Worker contract:** implement atomic claim, lease renewal, bounded retry, timeout handling, and result persistence. Worker deployment remains blocked until the runtime passes the free-first decision gate.
+5. **Frontend:** replace the long synchronous wait with job creation, status polling, refresh recovery, and explicit retry messaging.
+6. **Verification:** test with synthetic PDFs and editor/viewer accounts. Verify duplicate submissions, expired leases, worker interruption, quota exhaustion, malformed model output, and Main Concept apply/restore.
+
+## Current constraints and non-goals
+
+- Do not raise the current 5 MiB synchronous endpoint limit as a workaround.
+- Do not create a local-PC worker; the required design is cloud-based.
+- Do not activate Google Cloud Billing, add a payment method, or create billable resources.
+- Do not change production Supabase schema, RLS, secrets, or deployed functions as part of this design-only increment.
+- Do not claim that a job is queued until a durable job record has actually been committed.
+- Do not report an analysis as successful until its validated result has been persisted.
+
+## Repository state at this increment
+
+This document is a design/contract checkpoint. It does not change the live website, Supabase database, Storage bucket, Edge Function deployment, secrets, or Google Cloud project.
