@@ -69,7 +69,6 @@ Deno.serve(async (req) => {
 
   const jobId = String(job.job_id);
   const leaseToken = String(job.lease_token);
-  const analysisId = String(job.analysis_id);
   const finish = async (
     status: "succeeded" | "failed" | "quota_exhausted",
     result: Record<string, unknown> | null,
