@@ -185,4 +185,151 @@ grant execute on function public.claim_project_ai_analysis_job(integer)
 grant execute on function public.heartbeat_project_ai_analysis_job(uuid, uuid, integer)
   to service_role;
 
+
+-- Finalize only while the caller still owns an unexpired lease.
+-- A positive retry delay requeues ordinary failures while attempts remain.
+-- Quota exhaustion is terminal: there is deliberately no paid-provider fallback.
+create or replace function public.finish_project_ai_analysis_job(
+  p_job_id uuid,
+  p_lease_token uuid,
+  p_status text,
+  p_result jsonb default null,
+  p_error_code text default null,
+  p_error_message text default null,
+  p_retry_delay_seconds integer default 0
+)
+returns text
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $
+declare
+  v_job public.project_ai_analysis_jobs%rowtype;
+  v_analysis_id uuid;
+  v_next_job_status text;
+  v_next_analysis_status text;
+  v_now timestamptz := now();
+begin
+  if current_setting('request.jwt.claim.role', true) is distinct from 'service_role' then
+    raise exception 'SERVICE_ROLE_REQUIRED';
+  end if;
+
+  if p_status not in ('succeeded', 'failed', 'quota_exhausted') then
+    raise exception 'INVALID_FINAL_STATUS';
+  end if;
+  if p_retry_delay_seconds is null or p_retry_delay_seconds < 0
+     or p_retry_delay_seconds > 86400 then
+    raise exception 'INVALID_RETRY_DELAY';
+  end if;
+
+  select j.* into v_job
+  from public.project_ai_analysis_jobs j
+  where j.id = p_job_id
+  for update;
+
+  if not found
+     or v_job.status <> 'processing'
+     or v_job.lease_token is distinct from p_lease_token
+     or v_job.lease_expires_at is null
+     or v_job.lease_expires_at <= v_now then
+    raise exception 'JOB_LEASE_NOT_OWNED_OR_EXPIRED';
+  end if;
+
+  if p_status = 'succeeded' then
+    if p_result is null or jsonb_typeof(p_result) <> 'object'
+       or nullif(btrim(p_result->>'summary'), '') is null then
+      raise exception 'INVALID_ANALYSIS_RESULT';
+    end if;
+
+    if (p_result ? 'key_equipment' and jsonb_typeof(p_result->'key_equipment') <> 'array')
+       or (p_result ? 'requirements' and jsonb_typeof(p_result->'requirements') <> 'array')
+       or (p_result ? 'risks' and jsonb_typeof(p_result->'risks') <> 'array')
+       or (p_result ? 'open_questions' and jsonb_typeof(p_result->'open_questions') <> 'array')
+       or (p_result ? 'source_references' and jsonb_typeof(p_result->'source_references') <> 'array')
+       or (p_result ? 'suggested_tags' and jsonb_typeof(p_result->'suggested_tags') <> 'array') then
+      raise exception 'INVALID_ANALYSIS_RESULT_ARRAY_FIELDS';
+    end if;
+
+    update public.project_ai_analyses
+    set status = 'succeeded',
+        result = p_result,
+        summary = p_result->>'summary',
+        technical_scope = p_result->>'technical_scope',
+        key_equipment = coalesce(p_result->'key_equipment', '[]'::jsonb),
+        requirements = coalesce(p_result->'requirements', '[]'::jsonb),
+        risks = coalesce(p_result->'risks', '[]'::jsonb),
+        open_questions = coalesce(p_result->'open_questions', '[]'::jsonb),
+        suggested_tags = coalesce(
+          array(select jsonb_array_elements_text(coalesce(p_result->'suggested_tags','[]'::jsonb))),
+          '{}'::text[]
+        ),
+        source_references = coalesce(p_result->'source_references', '[]'::jsonb),
+        error_code = null,
+        error_message = null,
+        completed_at = v_now
+    where id = v_job.analysis_id;
+
+    if not found then raise exception 'ANALYSIS_RECORD_NOT_FOUND'; end if;
+    v_next_job_status := 'succeeded';
+    v_next_analysis_status := 'succeeded';
+
+  elsif p_status = 'quota_exhausted' then
+    update public.project_ai_analyses
+    set status = 'quota_exhausted',
+        error_code = left(coalesce(p_error_code, 'GEMINI_QUOTA_EXHAUSTED'), 120),
+        error_message = left(coalesce(p_error_message, 'Gemini free quota or rate limit was reached.'), 2000),
+        completed_at = v_now
+    where id = v_job.analysis_id;
+
+    if not found then raise exception 'ANALYSIS_RECORD_NOT_FOUND'; end if;
+    v_next_job_status := 'quota_exhausted';
+    v_next_analysis_status := 'quota_exhausted';
+
+  else
+    if v_job.attempt_count < v_job.max_attempts and p_retry_delay_seconds > 0 then
+      v_next_job_status := 'queued';
+      v_next_analysis_status := 'queued';
+    else
+      v_next_job_status := 'failed';
+      v_next_analysis_status := 'failed';
+    end if;
+
+    update public.project_ai_analyses
+    set status = v_next_analysis_status,
+        error_code = left(coalesce(p_error_code, 'ANALYSIS_FAILED'), 120),
+        error_message = left(coalesce(p_error_message, 'Document analysis failed.'), 2000),
+        completed_at = case when v_next_analysis_status = 'failed' then v_now else null end
+    where id = v_job.analysis_id;
+
+    if not found then raise exception 'ANALYSIS_RECORD_NOT_FOUND'; end if;
+  end if;
+
+  update public.project_ai_analysis_jobs
+  set status = v_next_job_status,
+      available_at = case
+        when v_next_job_status = 'queued'
+          then v_now + make_interval(secs => p_retry_delay_seconds)
+        else available_at
+      end,
+      lease_token = null,
+      lease_expires_at = null,
+      heartbeat_at = null,
+      last_error_code = case when p_status = 'succeeded' then null
+        else left(coalesce(p_error_code, p_status), 120) end,
+      last_error_message = case when p_status = 'succeeded' then null
+        else left(coalesce(p_error_message, p_status), 2000) end,
+      completed_at = case when v_next_job_status in ('succeeded','failed','quota_exhausted')
+        then v_now else null end,
+      updated_at = v_now
+  where id = p_job_id;
+
+  return v_next_job_status;
+end;
+$;
+
+revoke all on function public.finish_project_ai_analysis_job(uuid, uuid, text, jsonb, text, text, integer)
+  from public, anon, authenticated;
+grant execute on function public.finish_project_ai_analysis_job(uuid, uuid, text, jsonb, text, text, integer)
+  to service_role;
+
 commit;
