@@ -130,54 +130,49 @@ where n.nspname = 'public'
   )
 order by p.proname;
 
--- 9) Queue privilege boundary (after migration 0007 is applied).
--- Expected: anon/authenticated cannot access the queue table or execute worker RPCs;
--- service_role can. This is diagnostic only and does not alter grants.
+-- 9) Queue privilege boundary (safe before or after migration 0007).
+-- Missing objects/functions return NULL rather than stopping this read-only script.
 select
-  has_table_privilege('anon', 'public.project_ai_analysis_jobs', 'select') as anon_can_read_jobs,
-  has_table_privilege('authenticated', 'public.project_ai_analysis_jobs', 'select') as authenticated_can_read_jobs,
-  has_table_privilege('service_role', 'public.project_ai_analysis_jobs', 'select') as service_role_can_read_jobs,
-  has_function_privilege('anon', 'public.claim_project_ai_analysis_job(integer)', 'execute') as anon_can_claim,
-  has_function_privilege('authenticated', 'public.claim_project_ai_analysis_job(integer)', 'execute') as authenticated_can_claim,
-  has_function_privilege('service_role', 'public.claim_project_ai_analysis_job(integer)', 'execute') as service_role_can_claim;
+  has_table_privilege('anon', to_regclass('public.project_ai_analysis_jobs'), 'select') as anon_can_read_jobs,
+  has_table_privilege('authenticated', to_regclass('public.project_ai_analysis_jobs'), 'select') as authenticated_can_read_jobs,
+  has_table_privilege('service_role', to_regclass('public.project_ai_analysis_jobs'), 'select') as service_role_can_read_jobs,
+  has_function_privilege('anon', to_regprocedure('public.claim_project_ai_analysis_job(integer)'), 'execute') as anon_can_claim,
+  has_function_privilege('authenticated', to_regprocedure('public.claim_project_ai_analysis_job(integer)'), 'execute') as authenticated_can_claim,
+  has_function_privilege('service_role', to_regprocedure('public.claim_project_ai_analysis_job(integer)'), 'execute') as service_role_can_claim;
 
--- 9b) Full queue RPC execution matrix (after migration 0007).
--- Expected: anon/authenticated false and service_role true for every RPC.
-with functions(function_name, identity_args) as (
+-- 9b) Full queue RPC execution matrix (safe before or after migration 0007).
+-- Expected after migration: anon/authenticated false and service_role true.
+with functions(function_name, identity_args, signature) as (
   values
-    ('claim_project_ai_analysis_job', 'integer'),
-    ('heartbeat_project_ai_analysis_job', 'uuid, uuid, integer'),
-    ('finish_project_ai_analysis_job', 'uuid, uuid, text, jsonb, text, text, integer'),
-    ('enqueue_project_ai_analysis_job', 'uuid, uuid, uuid, text, text, integer'),
-    ('get_h871_project_document_size', 'text')
+    ('claim_project_ai_analysis_job', 'integer', 'public.claim_project_ai_analysis_job(integer)'),
+    ('heartbeat_project_ai_analysis_job', 'uuid, uuid, integer', 'public.heartbeat_project_ai_analysis_job(uuid, uuid, integer)'),
+    ('finish_project_ai_analysis_job', 'uuid, uuid, text, jsonb, text, text, integer', 'public.finish_project_ai_analysis_job(uuid, uuid, text, jsonb, text, text, integer)'),
+    ('enqueue_project_ai_analysis_job', 'uuid, uuid, uuid, text, text, integer', 'public.enqueue_project_ai_analysis_job(uuid, uuid, uuid, text, text, integer)'),
+    ('get_h871_project_document_size', 'text', 'public.get_h871_project_document_size(text)')
 ), roles(role_name) as (
   values ('anon'), ('authenticated'), ('service_role')
 )
 select f.function_name, r.role_name,
-       has_function_privilege(
-         r.role_name,
-         format('public.%I(%s)', f.function_name, f.identity_args),
-         'execute'
-       ) as can_execute
+       has_function_privilege(r.role_name, to_regprocedure(f.signature), 'execute') as can_execute
 from functions f
 cross join roles r
 order by f.function_name, r.role_name;
 
 -- 9c) Queue table mutation privileges and structural invariants.
 select
-  has_table_privilege('anon', 'public.project_ai_analysis_jobs', 'insert') as anon_can_insert_jobs,
-  has_table_privilege('anon', 'public.project_ai_analysis_jobs', 'update') as anon_can_update_jobs,
-  has_table_privilege('anon', 'public.project_ai_analysis_jobs', 'delete') as anon_can_delete_jobs,
-  has_table_privilege('authenticated', 'public.project_ai_analysis_jobs', 'insert') as authenticated_can_insert_jobs,
-  has_table_privilege('authenticated', 'public.project_ai_analysis_jobs', 'update') as authenticated_can_update_jobs,
-  has_table_privilege('authenticated', 'public.project_ai_analysis_jobs', 'delete') as authenticated_can_delete_jobs,
-  has_table_privilege('service_role', 'public.project_ai_analysis_jobs', 'insert') as service_role_can_insert_jobs,
-  has_table_privilege('service_role', 'public.project_ai_analysis_jobs', 'update') as service_role_can_update_jobs,
-  has_table_privilege('service_role', 'public.project_ai_analysis_jobs', 'delete') as service_role_can_delete_jobs;
+  has_table_privilege('anon', to_regclass('public.project_ai_analysis_jobs'), 'insert') as anon_can_insert_jobs,
+  has_table_privilege('anon', to_regclass('public.project_ai_analysis_jobs'), 'update') as anon_can_update_jobs,
+  has_table_privilege('anon', to_regclass('public.project_ai_analysis_jobs'), 'delete') as anon_can_delete_jobs,
+  has_table_privilege('authenticated', to_regclass('public.project_ai_analysis_jobs'), 'insert') as authenticated_can_insert_jobs,
+  has_table_privilege('authenticated', to_regclass('public.project_ai_analysis_jobs'), 'update') as authenticated_can_update_jobs,
+  has_table_privilege('authenticated', to_regclass('public.project_ai_analysis_jobs'), 'delete') as authenticated_can_delete_jobs,
+  has_table_privilege('service_role', to_regclass('public.project_ai_analysis_jobs'), 'insert') as service_role_can_insert_jobs,
+  has_table_privilege('service_role', to_regclass('public.project_ai_analysis_jobs'), 'update') as service_role_can_update_jobs,
+  has_table_privilege('service_role', to_regclass('public.project_ai_analysis_jobs'), 'delete') as service_role_can_delete_jobs;
 
 select conname, pg_get_constraintdef(oid) as constraint_definition
 from pg_constraint
-where conrelid = 'public.project_ai_analysis_jobs'::regclass
+where conrelid = to_regclass('public.project_ai_analysis_jobs')
 order by conname;
 
 select indexname, indexdef
@@ -186,11 +181,11 @@ where schemaname = 'public'
   and tablename = 'project_ai_analysis_jobs'
 order by indexname;
 
--- 10) Worker-only Storage metadata RPC privileges (after migration 0007).
+-- 10) Worker-only Storage metadata RPC privileges (safe before or after migration 0007).
 select
-  has_function_privilege('anon', 'public.get_h871_project_document_size(text)', 'execute') as anon_can_read_object_size,
-  has_function_privilege('authenticated', 'public.get_h871_project_document_size(text)', 'execute') as authenticated_can_read_object_size,
-  has_function_privilege('service_role', 'public.get_h871_project_document_size(text)', 'execute') as service_role_can_read_object_size;
+  has_function_privilege('anon', to_regprocedure('public.get_h871_project_document_size(text)'), 'execute') as anon_can_read_object_size,
+  has_function_privilege('authenticated', to_regprocedure('public.get_h871_project_document_size(text)'), 'execute') as authenticated_can_read_object_size,
+  has_function_privilege('service_role', to_regprocedure('public.get_h871_project_document_size(text)'), 'execute') as service_role_can_read_object_size;
 
 -- 11) Storage object metadata shape for the private H871 bucket.
 -- Aggregates only; no object names, paths, or file contents are returned.
