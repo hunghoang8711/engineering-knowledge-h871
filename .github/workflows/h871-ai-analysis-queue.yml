@@ -16,6 +16,8 @@ concurrency:
 
 jobs:
   process-one-job:
+    # Keep scheduling inert until the owner explicitly enables this repository variable.
+    if: vars.H871_QUEUE_WORKER_ENABLED == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 3
     steps:
