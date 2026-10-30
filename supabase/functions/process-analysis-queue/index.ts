@@ -130,6 +130,26 @@ Deno.serve(async (req) => {
       return json({ jobId, status: "failed", error: "INVALID_STORAGE_PATH" });
     }
 
+    const MAX_BYTES = 5 * 1024 * 1024;
+    // Check Storage object metadata before downloading. The bucket permits files
+    // up to 50 MiB, but this worker intentionally processes only PDFs <= 5 MiB;
+    // rejecting from metadata avoids loading an oversized object into Edge memory.
+    const { data: objectRow, error: objectError } = await admin.schema("storage")
+      .from("objects")
+      .select("metadata")
+      .eq("bucket_id", "h871-project-documents")
+      .eq("name", path)
+      .maybeSingle();
+    const metadataSize = Number(objectRow?.metadata?.size);
+    if (objectError || !objectRow || !Number.isFinite(metadataSize) || metadataSize <= 0) {
+      await finish("failed", null, "FILE_METADATA_UNAVAILABLE", "The stored PDF metadata could not be verified.", 0);
+      return json({ jobId, status: "failed", error: "FILE_METADATA_UNAVAILABLE" });
+    }
+    if (metadataSize > MAX_BYTES) {
+      await finish("failed", null, "FILE_SIZE_OUT_OF_RANGE", "The PDF exceeds the initial 5 MiB processing limit.", 0);
+      return json({ jobId, status: "failed", error: "FILE_SIZE_OUT_OF_RANGE" });
+    }
+
     const { data: blob, error: downloadError } = await admin.storage
       .from("h871-project-documents").download(path);
     if (downloadError || !blob) {
@@ -145,7 +165,6 @@ Deno.serve(async (req) => {
         finalStatus === "queued" ? 202 : 200,
       );
     }
-    const MAX_BYTES = 5 * 1024 * 1024;
     if (blob.size <= 0 || blob.size > MAX_BYTES) {
       await finish("failed", null, "FILE_SIZE_OUT_OF_RANGE", "The PDF exceeds the initial 5 MiB processing limit.", 0);
       return json({ jobId, status: "failed", error: "FILE_SIZE_OUT_OF_RANGE" });
