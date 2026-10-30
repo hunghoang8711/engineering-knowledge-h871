@@ -43,19 +43,19 @@ Deno.serve(async (req) => {
   const supplied = req.headers.get("x-h871-worker-secret") || "";
   if (secret.length < 32 || supplied !== secret) return json({ error: "WORKER_AUTHENTICATION_FAILED" }, 401);
 
+  // Explicit owner-controlled gate comes before Gemini configuration. A
+  // deployed worker must remain inert until the owner approves external
+  // processing; no Gemini key is required and no queue job is claimed.
+  if (Deno.env.get("H871_GEMINI_DATA_PROCESSING_APPROVED") !== "true") {
+    return json({ error: "AI_DATA_PROCESSING_NOT_APPROVED" }, 503);
+  }
+
   const url = Deno.env.get("SUPABASE_URL");
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   const geminiKey = Deno.env.get("GEMINI_API_KEY");
   const model = Deno.env.get("GEMINI_MODEL");
   if (!url || !serviceKey || !geminiKey || !model) {
     return json({ error: "WORKER_CONFIGURATION_INCOMPLETE" }, 503);
-  }
-
-  // Explicit owner-controlled gate: storing a Gemini key or deploying the
-  // worker does not by itself authorize sending company/customer documents to
-  // an external AI provider. Check before claiming a job so it remains queued.
-  if (Deno.env.get("H871_GEMINI_DATA_PROCESSING_APPROVED") !== "true") {
-    return json({ error: "AI_DATA_PROCESSING_NOT_APPROVED" }, 503);
   }
 
   const admin = createClient(url, serviceKey, {
