@@ -1,6 +1,7 @@
 -- 0007_async_analysis_jobs.sql
--- ADDITIVE DRAFT ONLY. Do not apply until the live schema is reconciled and
--- migration 0004_ai_project_intelligence.sql has been reviewed/applied.
+-- ADDITIVE DRAFT ONLY. Live preflight confirms the AI analysis/history tables
+-- and Main Concept RPCs already exist. Review this migration against that live
+-- schema before applying. Do not replay migration 0004.
 -- This migration does not deploy a worker or change existing project/document RLS.
 
 begin;
@@ -43,13 +44,11 @@ create index if not exists project_ai_analysis_jobs_expired_lease_idx
 
 alter table public.project_ai_analysis_jobs enable row level security;
 
-drop policy if exists "authenticated read project AI analysis jobs"
-  on public.project_ai_analysis_jobs;
-
-create policy "authenticated read project AI analysis jobs"
-  on public.project_ai_analysis_jobs
-  for select to authenticated
-  using (true);
+-- Queue internals are server-side implementation details. The frontend polls
+-- project_ai_analyses, not this table, so authenticated users need no direct
+-- access to job rows. The worker uses the service_role key and bypasses RLS.
+revoke all on table public.project_ai_analysis_jobs from anon, authenticated;
+grant all on table public.project_ai_analysis_jobs to service_role;
 
 -- Atomic queue claim. Only the Supabase service role may execute this function.
 -- FOR UPDATE SKIP LOCKED allows multiple workers without double-claiming a job.
