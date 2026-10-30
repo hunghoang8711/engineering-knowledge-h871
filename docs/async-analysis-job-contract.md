@@ -59,8 +59,8 @@ Budget alerts are not hard spending caps. A runtime that merely has a Free Tier 
 
 1. **Schema reconciliation (read-only):** compare the deployed database with migration `0004_ai_project_intelligence.sql`; confirm whether the analysis/history tables and columns exist. Do not replay migration 0004 blindly.
 2. **Queue schema (additive draft):** add durable claim/lease/retry metadata only after step 1. Prefer extending the analysis-run record if its semantics remain clear; otherwise use a dedicated job table with a unique idempotency key.
-3. **Enqueue API:** add a small authenticated endpoint that validates and creates a queued job, returning its identifier without calling Gemini.
-4. **Worker contract:** implement atomic claim, lease renewal, bounded retry, timeout handling, and result persistence. Worker deployment remains blocked until the runtime passes the free-first decision gate.
+3. **Enqueue API — repository draft implemented:** `supabase/functions/enqueue-analysis/index.ts` authenticates the JWT, checks the admin/editor role, verifies document/project ownership and PDF type, then calls the service-role-only `enqueue_project_ai_analysis_job` RPC. The RPC creates the analysis row and queue row in one transaction and uses an advisory lock plus an idempotency key to prevent duplicate jobs. It returns HTTP 202 with job and analysis IDs; it never calls Gemini.
+4. **Worker contract — queue primitives drafted:** migration 0005 now includes atomic claim, lease heartbeat, and lease-guarded finalization RPCs. A worker implementation and cloud runtime are not yet deployed. Worker deployment remains blocked until the runtime passes the free-first decision gate.
 5. **Frontend:** replace the long synchronous wait with job creation, status polling, refresh recovery, and explicit retry messaging.
 6. **Verification:** test with synthetic PDFs and editor/viewer accounts. Verify duplicate submissions, expired leases, worker interruption, quota exhaustion, malformed model output, and Main Concept apply/restore.
 
@@ -75,4 +75,4 @@ Budget alerts are not hard spending caps. A runtime that merely has a Free Tier 
 
 ## Repository state at this increment
 
-This document is a design/contract checkpoint. It does not change the live website, Supabase database, Storage bucket, Edge Function deployment, secrets, or Google Cloud project.
+Repository-only implementation drafts now exist for the queue schema/RPCs and the authenticated enqueue Edge Function. `supabase/config.toml` enables JWT verification for that endpoint. These files have not been deployed. The migration remains dependent on the reviewed/applied 0004 schema; no production website, Supabase database, Storage bucket, deployed Edge Function, secrets, or Google Cloud resource has been changed. SQL and Deno type/runtime tests remain outstanding.
