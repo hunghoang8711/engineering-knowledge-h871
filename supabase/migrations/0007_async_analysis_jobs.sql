@@ -384,6 +384,7 @@ set search_path = public, pg_temp
 as $$
 declare
   v_existing public.project_ai_analysis_jobs%rowtype;
+  v_document public.documents%rowtype;
   v_analysis_id uuid;
   v_job_id uuid;
 begin
@@ -399,10 +400,10 @@ begin
   if p_max_attempts is null or p_max_attempts < 1 or p_max_attempts > 5 then
     raise exception 'INVALID_MAX_ATTEMPTS';
   end if;
-  if not exists (
-    select 1 from public.documents d
-    where d.id = p_document_id and d.project_id = p_project_id
-  ) then
+  select d.* into v_document
+  from public.documents d
+  where d.id = p_document_id and d.project_id = p_project_id;
+  if not found then
     raise exception 'DOCUMENT_NOT_FOUND_FOR_PROJECT';
   end if;
 
@@ -422,10 +423,14 @@ begin
     return;
   end if;
 
+  -- Snapshot source revision metadata at enqueue time. The worker must not
+  -- update this row outside the lease-guarded finalization transaction.
   insert into public.project_ai_analyses (
-    project_id, document_id, provider, model, status, requested_by
+    project_id, document_id, document_sha256, version_label,
+    provider, model, status, requested_by
   ) values (
-    p_project_id, p_document_id, 'gemini', p_model, 'queued', p_requested_by
+    p_project_id, p_document_id, v_document.sha256, v_document.version_label,
+    'gemini', p_model, 'queued', p_requested_by
   ) returning id into v_analysis_id;
 
   insert into public.project_ai_analysis_jobs (
@@ -444,5 +449,45 @@ revoke all on function public.enqueue_project_ai_analysis_job(uuid, uuid, uuid, 
   from public, anon, authenticated;
 grant execute on function public.enqueue_project_ai_analysis_job(uuid, uuid, uuid, text, text, integer)
   to service_role;
+
+-- Read only the size of an object in the fixed private H871 bucket.
+-- This avoids relying on the Storage schema being exposed through PostgREST.
+-- SECURITY DEFINER accesses storage.objects internally; callers receive no paths
+-- or metadata, and only service_role may execute this RPC.
+create or replace function public.get_h871_project_document_size(p_name text)
+returns bigint
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_size text;
+begin
+  if current_setting('request.jwt.claim.role', true) is distinct from 'service_role' then
+    raise exception 'SERVICE_ROLE_REQUIRED';
+  end if;
+  if p_name is null or p_name = '' or left(p_name, 1) = '/'
+     or position('..' in p_name) > 0 then
+    raise exception 'INVALID_STORAGE_PATH';
+  end if;
+
+  select o.metadata->>'size' into v_size
+  from storage.objects o
+  where o.bucket_id = 'h871-project-documents'
+    and o.name = p_name
+  limit 1;
+
+  if v_size is null or v_size !~ '^[0-9]+$' then
+    return null;
+  end if;
+  return v_size::bigint;
+end;
+$$;
+
+revoke all on function public.get_h871_project_document_size(text)
+  from public, anon, authenticated;
+grant execute on function public.get_h871_project_document_size(text)
+  to service_role;
+
 
 commit;
