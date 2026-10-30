@@ -67,7 +67,7 @@ returns table (
 )
 language plpgsql
 security definer
-set search_path = public, pg_temp
+set search_path = ''
 as $$
 declare
   v_job public.project_ai_analysis_jobs%rowtype;
@@ -172,7 +172,7 @@ create or replace function public.heartbeat_project_ai_analysis_job(
 returns timestamptz
 language plpgsql
 security definer
-set search_path = public, pg_temp
+set search_path = ''
 as $$
 declare
   v_expires_at timestamptz;
@@ -229,7 +229,7 @@ create or replace function public.finish_project_ai_analysis_job(
 returns text
 language plpgsql
 security definer
-set search_path = public, pg_temp
+set search_path = ''
 as $$
 declare
   v_job public.project_ai_analysis_jobs%rowtype;
@@ -380,7 +380,7 @@ returns table (
 )
 language plpgsql
 security definer
-set search_path = public, pg_temp
+set search_path = ''
 as $$
 declare
   v_existing public.project_ai_analysis_jobs%rowtype;
