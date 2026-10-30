@@ -5,6 +5,7 @@
 // to the browser. This function is a repository draft; do not deploy until the
 // database migrations and a genuinely no-cost invocation mechanism are verified.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { clean, parseModelJson, strings } from "./analysis-result.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "https://hunghoang8711.github.io",
@@ -16,13 +17,6 @@ const json = (body: unknown, status = 200) =>
     status,
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
-const clean = (value: unknown, max = 12000): string =>
-  typeof value === "string" ? value.trim().slice(0, max) : "";
-const strings = (value: unknown, max = 40): string[] =>
-  Array.isArray(value)
-    ? value.filter((x): x is string => typeof x === "string")
-      .map((x) => x.trim().slice(0, 500)).filter(Boolean).slice(0, max)
-    : [];
 function toBase64(bytes: Uint8Array): string {
   let out = "";
   const chunk = 3 * 8192;
@@ -35,11 +29,6 @@ function toBase64(bytes: Uint8Array): string {
     out += btoa(binary);
   }
   return out;
-}
-function parseModelJson(text: string): Record<string, unknown> {
-  const value = JSON.parse(text.trim().replace(/^\x60{3}(?:json)?\s*/i, "").replace(/\s*\x60{3}$/, ""));
-  if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("MODEL_OUTPUT_INVALID");
-  return value as Record<string, unknown>;
 }
 function safeLog(stage: string, fields: Record<string, string | number | boolean> = {}) {
   console.info(JSON.stringify({ function: "process-analysis-queue", stage, ...fields }));
