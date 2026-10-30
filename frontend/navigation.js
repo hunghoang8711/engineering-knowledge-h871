@@ -335,7 +335,7 @@
      if(!data?.analysisId)throw new Error("The server did not return an analysis ID.");
      output.replaceChildren(make("p","muted-copy","Request accepted. Status: "+(data.status||"queued")+". Waiting for the background worker…"));
      let latest=null;
-     for(let attempt=0;attempt<60;attempt++){
+     for(let attempt=0;attempt<120;attempt++){
       await new Promise(resolve=>setTimeout(resolve,5000));
       const {data:row,error:readError}=await client.from("project_ai_analyses")
        .select("id,document_id,status,summary,result,error_code,error_message,created_at,completed_at")
