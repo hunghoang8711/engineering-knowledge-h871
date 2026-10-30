@@ -69,7 +69,67 @@ select
   exists (select 1 from pg_extension where extname = 'pg_cron') as pg_cron_installed,
   to_regclass('cron.job') as cron_job_catalog;
 
--- 7) Queue privilege boundary (after migration 0007 is applied).
+-- 7) Required live-schema compatibility for migration 0007.
+-- Expected: every required column below is present. Missing rows indicate drift;
+-- stop and reconcile the migration before applying it.
+with required(table_name, column_name, expected_udt) as (
+  values
+    ('documents','id','uuid'),
+    ('documents','project_id','uuid'),
+    ('documents','sha256','text'),
+    ('documents','version_label','text'),
+    ('documents','relative_path','text'),
+    ('documents','file_type','text'),
+    ('project_ai_analyses','id','uuid'),
+    ('project_ai_analyses','project_id','uuid'),
+    ('project_ai_analyses','document_id','uuid'),
+    ('project_ai_analyses','document_sha256','text'),
+    ('project_ai_analyses','version_label','text'),
+    ('project_ai_analyses','provider','text'),
+    ('project_ai_analyses','model','text'),
+    ('project_ai_analyses','status','text'),
+    ('project_ai_analyses','result','jsonb'),
+    ('project_ai_analyses','summary','text'),
+    ('project_ai_analyses','technical_scope','text'),
+    ('project_ai_analyses','key_equipment','jsonb'),
+    ('project_ai_analyses','requirements','jsonb'),
+    ('project_ai_analyses','risks','jsonb'),
+    ('project_ai_analyses','open_questions','jsonb'),
+    ('project_ai_analyses','suggested_tags','_text'),
+    ('project_ai_analyses','source_references','jsonb'),
+    ('project_ai_analyses','error_code','text'),
+    ('project_ai_analyses','error_message','text'),
+    ('project_ai_analyses','requested_by','uuid'),
+    ('project_ai_analyses','started_at','timestamptz'),
+    ('project_ai_analyses','completed_at','timestamptz')
+)
+select r.table_name, r.column_name, r.expected_udt,
+       c.udt_name as actual_udt,
+       (c.column_name is not null and c.udt_name = r.expected_udt) as compatible
+from required r
+left join information_schema.columns c
+  on c.table_schema = 'public'
+ and c.table_name = r.table_name
+ and c.column_name = r.column_name
+order by r.table_name, r.column_name;
+
+-- 8) Security-definer ownership and search_path diagnostics.
+-- Review function owners; expected owner is a trusted migration owner (normally postgres).
+select p.proname as function_name,
+       pg_get_userbyid(p.proowner) as function_owner,
+       p.prosecdef as security_definer,
+       p.proconfig as function_settings
+from pg_proc p
+join pg_namespace n on n.oid = p.pronamespace
+where n.nspname = 'public'
+  and p.proname in (
+    'claim_project_ai_analysis_job','heartbeat_project_ai_analysis_job',
+    'finish_project_ai_analysis_job','enqueue_project_ai_analysis_job',
+    'get_h871_project_document_size'
+  )
+order by p.proname;
+
+-- 9) Queue privilege boundary (after migration 0007 is applied).
 -- Expected: anon/authenticated cannot access the queue table or execute worker RPCs;
 -- service_role can. This is diagnostic only and does not alter grants.
 select
@@ -80,13 +140,13 @@ select
   has_function_privilege('authenticated', 'public.claim_project_ai_analysis_job(integer)', 'execute') as authenticated_can_claim,
   has_function_privilege('service_role', 'public.claim_project_ai_analysis_job(integer)', 'execute') as service_role_can_claim;
 
--- 8) Worker-only Storage metadata RPC privileges (after migration 0007).
+-- 10) Worker-only Storage metadata RPC privileges (after migration 0007).
 select
   has_function_privilege('anon', 'public.get_h871_project_document_size(text)', 'execute') as anon_can_read_object_size,
   has_function_privilege('authenticated', 'public.get_h871_project_document_size(text)', 'execute') as authenticated_can_read_object_size,
   has_function_privilege('service_role', 'public.get_h871_project_document_size(text)', 'execute') as service_role_can_read_object_size;
 
--- 9) Storage object metadata shape for the private H871 bucket.
+-- 11) Storage object metadata shape for the private H871 bucket.
 -- Aggregates only; no object names, paths, or file contents are returned.
 -- Confirms whether the worker's pre-download metadata.size guard can operate.
 select
