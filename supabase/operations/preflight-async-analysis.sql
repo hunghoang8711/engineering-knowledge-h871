@@ -61,9 +61,9 @@ select id, name, public, file_size_limit, allowed_mime_types
 from storage.buckets
 where id = 'h871-project-documents';
 
--- 6) Cron job state, if pg_cron is installed.
--- If cron.job is unavailable, this statement will error; skip this section.
-select jobid, jobname, schedule, active
-from cron.job
-where jobname like 'h871-%'
-order by jobname;
+-- 6) Safe Cron availability check.
+-- to_regclass() returns NULL when pg_cron / cron.job is not installed;
+-- unlike querying cron.job directly, this never raises 42P01.
+select
+  exists (select 1 from pg_extension where extname = 'pg_cron') as pg_cron_installed,
+  to_regclass('cron.job') as cron_job_catalog;
