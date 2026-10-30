@@ -216,7 +216,7 @@ returns text
 language plpgsql
 security definer
 set search_path = public, pg_temp
-as $
+as $$
 declare
   v_job public.project_ai_analysis_jobs%rowtype;
   v_analysis_id uuid;
@@ -339,7 +339,7 @@ begin
 
   return v_next_job_status;
 end;
-$;
+$$;
 
 revoke all on function public.finish_project_ai_analysis_job(uuid, uuid, text, jsonb, text, text, integer)
   from public, anon, authenticated;
@@ -367,7 +367,7 @@ returns table (
 language plpgsql
 security definer
 set search_path = public, pg_temp
-as $
+as $$
 declare
   v_existing public.project_ai_analysis_jobs%rowtype;
   v_analysis_id uuid;
@@ -424,7 +424,7 @@ begin
 
   return query select v_job_id, v_analysis_id, 'queued'::text, true;
 end;
-$;
+$$;
 
 revoke all on function public.enqueue_project_ai_analysis_job(uuid, uuid, uuid, text, text, integer)
   from public, anon, authenticated;
