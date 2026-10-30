@@ -399,6 +399,11 @@ begin
   where j.idempotency_key = p_idempotency_key;
 
   if found then
+    if v_existing.project_id <> p_project_id
+       or v_existing.document_id <> p_document_id
+       or v_existing.created_by is distinct from p_requested_by then
+      raise exception 'IDEMPOTENCY_KEY_CONFLICT';
+    end if;
     return query select v_existing.id, v_existing.analysis_id, v_existing.status, false;
     return;
   end if;
