@@ -39,7 +39,7 @@ A worker claim must be atomic. Each claim has a lease token, lease expiry, attem
 - Keep the Storage bucket private. Workers download only by the stored object path after validating it.
 - Do not log document names, file contents, Base64, user tokens, or API keys.
 - Do not weaken existing RLS policies. Any new table must enable RLS and define explicit read access; trusted worker writes use server-side credentials only.
-- Never send customer/company files to an external AI provider until the workspace owner has confirmed the applicable company data policy.
+- Never send customer/company files to an external AI provider until the workspace owner has confirmed the applicable company data policy. The worker enforces this with `H871_GEMINI_DATA_PROCESSING_APPROVED=true` before it claims any job; a Gemini API key alone is not consent.
 
 ## Free-first runtime decision gate
 
