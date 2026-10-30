@@ -96,6 +96,20 @@ begin
     and j.lease_expires_at < v_now
     and j.attempt_count >= j.max_attempts;
 
+  -- Keep the user-visible analysis record in sync with jobs exhausted by lease expiry.
+  update public.project_ai_analyses a
+  set status = 'failed',
+      error_code = 'WORKER_LEASE_EXPIRED_MAX_ATTEMPTS',
+      error_message = 'Worker lease expired and maximum attempts were reached.',
+      completed_at = v_now
+  where a.id in (
+    select j.analysis_id
+    from public.project_ai_analysis_jobs j
+    where j.status = 'failed'
+      and j.last_error_code = 'WORKER_LEASE_EXPIRED_MAX_ATTEMPTS'
+      and j.completed_at = v_now
+  );
+
   select j.* into v_job
   from public.project_ai_analysis_jobs j
   where (
@@ -214,7 +228,7 @@ begin
     raise exception 'SERVICE_ROLE_REQUIRED';
   end if;
 
-  if p_status not in ('succeeded', 'failed', 'quota_exhausted') then
+  if p_status is null or p_status not in ('succeeded', 'failed', 'quota_exhausted') then
     raise exception 'INVALID_FINAL_STATUS';
   end if;
   if p_retry_delay_seconds is null or p_retry_delay_seconds < 0
