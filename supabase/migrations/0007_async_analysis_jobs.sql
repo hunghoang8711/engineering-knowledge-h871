@@ -1,4 +1,4 @@
--- 0005_async_analysis_jobs.sql
+-- 0007_async_analysis_jobs.sql
 -- ADDITIVE DRAFT ONLY. Do not apply until the live schema is reconciled and
 -- migration 0004_ai_project_intelligence.sql has been reviewed/applied.
 -- This migration does not deploy a worker or change existing project/document RLS.
