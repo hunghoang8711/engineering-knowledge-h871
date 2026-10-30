@@ -1,0 +1,53 @@
+name: H871 AI analysis queue worker
+
+on:
+  # GitHub scheduled workflows run only from the default branch.
+  # The offset avoids the busiest top-of-hour minute.
+  schedule:
+    - cron: "3-58/5 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: h871-ai-analysis-queue-worker
+  cancel-in-progress: false
+
+jobs:
+  process-one-job:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Invoke one queue-worker run
+        shell: bash
+        env:
+          SUPABASE_URL: ${{ secrets.H871_SUPABASE_URL }}
+          WORKER_SECRET: ${{ secrets.H871_QUEUE_WORKER_SECRET }}
+        run: |
+          set -euo pipefail
+
+          if [[ -z "${SUPABASE_URL}" || -z "${WORKER_SECRET}" ]]; then
+            echo "Required repository secrets are not configured."
+            exit 1
+          fi
+
+          response_file="$(mktemp)"
+          trap 'rm -f "$response_file"' EXIT
+
+          http_status="$(curl --silent --show-error \
+            --output "$response_file" \
+            --write-out "%{http_code}" \
+            --max-time 130 \
+            --request POST \
+            --header "Content-Type: application/json" \
+            --header "x-h871-worker-secret: ${WORKER_SECRET}" \
+            --data '{"source":"github-actions-schedule"}' \
+            "${SUPABASE_URL%/}/functions/v1/process-analysis-queue")"
+
+          if [[ ! "$http_status" =~ ^2[0-9][0-9]$ ]]; then
+            echo "Queue worker returned HTTP ${http_status}."
+            exit 1
+          fi
+
+          echo "Queue worker invocation completed with HTTP ${http_status}."
