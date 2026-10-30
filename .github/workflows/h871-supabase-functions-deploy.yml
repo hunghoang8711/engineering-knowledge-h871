@@ -23,7 +23,7 @@ jobs:
   deploy:
     # This workflow is intentionally manual and restricted to the feature branch.
     # It does not run on push, pull_request, or a schedule.
-    if: github.ref == 'refs/heads/feature/cloud-ai-job-queue-20261030'
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
