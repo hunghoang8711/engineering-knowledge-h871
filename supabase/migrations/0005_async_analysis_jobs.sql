@@ -346,4 +346,84 @@ revoke all on function public.finish_project_ai_analysis_job(uuid, uuid, text, j
 grant execute on function public.finish_project_ai_analysis_job(uuid, uuid, text, jsonb, text, text, integer)
   to service_role;
 
+
+-- Create the analysis run and its durable queue record in one transaction.
+-- The Edge Function performs user authentication/role checks before calling this
+-- service-role-only RPC. Advisory locking makes duplicate requests idempotent.
+create or replace function public.enqueue_project_ai_analysis_job(
+  p_project_id uuid,
+  p_document_id uuid,
+  p_requested_by uuid,
+  p_model text,
+  p_idempotency_key text,
+  p_max_attempts integer default 3
+)
+returns table (
+  job_id uuid,
+  analysis_id uuid,
+  job_status text,
+  was_created boolean
+)
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $
+declare
+  v_existing public.project_ai_analysis_jobs%rowtype;
+  v_analysis_id uuid;
+  v_job_id uuid;
+begin
+  if current_setting('request.jwt.claim.role', true) is distinct from 'service_role' then
+    raise exception 'SERVICE_ROLE_REQUIRED';
+  end if;
+  if p_project_id is null or p_document_id is null or p_requested_by is null
+     or nullif(btrim(p_model), '') is null
+     or nullif(btrim(p_idempotency_key), '') is null
+     or length(p_idempotency_key) > 200 then
+    raise exception 'INVALID_ENQUEUE_ARGUMENTS';
+  end if;
+  if p_max_attempts is null or p_max_attempts < 1 or p_max_attempts > 5 then
+    raise exception 'INVALID_MAX_ATTEMPTS';
+  end if;
+  if not exists (
+    select 1 from public.documents d
+    where d.id = p_document_id and d.project_id = p_project_id
+  ) then
+    raise exception 'DOCUMENT_NOT_FOUND_FOR_PROJECT';
+  end if;
+
+  perform pg_advisory_xact_lock(hashtextextended(p_idempotency_key, 0));
+
+  select j.* into v_existing
+  from public.project_ai_analysis_jobs j
+  where j.idempotency_key = p_idempotency_key;
+
+  if found then
+    return query select v_existing.id, v_existing.analysis_id, v_existing.status, false;
+    return;
+  end if;
+
+  insert into public.project_ai_analyses (
+    project_id, document_id, provider, model, status, requested_by
+  ) values (
+    p_project_id, p_document_id, 'gemini', p_model, 'queued', p_requested_by
+  ) returning id into v_analysis_id;
+
+  insert into public.project_ai_analysis_jobs (
+    analysis_id, project_id, document_id, idempotency_key,
+    status, max_attempts, created_by
+  ) values (
+    v_analysis_id, p_project_id, p_document_id, p_idempotency_key,
+    'queued', p_max_attempts, p_requested_by
+  ) returning id into v_job_id;
+
+  return query select v_job_id, v_analysis_id, 'queued'::text, true;
+end;
+$;
+
+revoke all on function public.enqueue_project_ai_analysis_job(uuid, uuid, uuid, text, text, integer)
+  from public, anon, authenticated;
+grant execute on function public.enqueue_project_ai_analysis_job(uuid, uuid, uuid, text, text, integer)
+  to service_role;
+
 commit;
