@@ -136,6 +136,21 @@ begin
   where j.id = v_job.id
   returning j.* into v_job;
 
+  -- Keep the browser-visible analysis run in sync with the leased job.
+  -- This update is in the same transaction as the claim, so the UI never
+  -- observes a processing job while its analysis row remains queued.
+  update public.project_ai_analyses
+  set status = 'processing',
+      started_at = coalesce(started_at, v_now),
+      completed_at = null,
+      error_code = null,
+      error_message = null
+  where id = v_job.analysis_id;
+
+  if not found then
+    raise exception 'ANALYSIS_RECORD_NOT_FOUND';
+  end if;
+
   return query select
     v_job.id,
     v_job.analysis_id,
