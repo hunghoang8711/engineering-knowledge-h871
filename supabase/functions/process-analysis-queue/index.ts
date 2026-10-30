@@ -162,6 +162,8 @@ Dùng mảng rỗng nếu không có bằng chứng. Không bịa số trang, th
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 85_000);
     let response: Response;
+    let providerBody = "";
+    let provider: any = null;
     try {
       const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
       response = await fetch(endpoint, {
@@ -175,12 +177,18 @@ Dùng mảng rỗng nếu không có bằng chứng. Không bịa số trang, th
           generationConfig: { responseMimeType: "application/json", temperature: 0.1 },
         }),
       });
+      // Keep the deadline active while consuming the response body too. Fetch
+      // resolving only means headers arrived; a stalled body must also time out.
+      if (response.ok) {
+        provider = await response.json();
+      } else {
+        providerBody = await response.text();
+      }
     } finally {
       clearTimeout(timeout);
     }
 
     if (!response.ok) {
-      const providerBody = await response.text();
       const quota = response.status === 429 || /quota|rate.?limit|resource.?exhausted/i.test(providerBody);
       const code = quota ? "GEMINI_FREE_QUOTA_EXHAUSTED" : `GEMINI_HTTP_${response.status}`;
       const message = quota
@@ -190,8 +198,6 @@ Dùng mảng rỗng nếu không có bằng chứng. Không bịa số trang, th
       const finalStatus = await finish(status, null, code, message, quota ? 0 : 30);
       return json({ jobId, status: finalStatus, error: code }, finalStatus === "queued" ? 202 : 200);
     }
-
-    const provider = await response.json();
     const output = provider?.candidates?.[0]?.content?.parts
       ?.map((part: { text?: string }) => part.text || "").join("");
     if (!output) throw new Error("MODEL_OUTPUT_EMPTY");
