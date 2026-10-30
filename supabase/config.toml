@@ -2,3 +2,7 @@
 # This setting requires a valid Supabase user JWT at the Edge Function boundary.
 [functions.analyze-document]
 verify_jwt = true
+
+# Enqueue endpoint verifies the caller JWT and checks the editor/admin role.
+[functions.enqueue-analysis]
+verify_jwt = true
