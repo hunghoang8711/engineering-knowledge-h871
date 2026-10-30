@@ -6,6 +6,7 @@
 // database migrations and a genuinely no-cost invocation mechanism are verified.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { clean, parseModelJson, strings } from "./analysis-result.ts";
+import { isProjectDocumentPath } from "./storage-path.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "https://hunghoang8711.github.io",
@@ -120,7 +121,10 @@ Deno.serve(async (req) => {
     }
 
     const path = clean(doc.relative_path, 1000);
-    if (!path || path.startsWith("/") || path.includes("..")) {
+    // Current uploader stores each object as <project UUID>/<random UUID>.<ext>.
+    // Enforce the project folder boundary so a malformed/cross-linked document
+    // row cannot make this worker read another project's private object.
+    if (!isProjectDocumentPath(path, String(job.project_id))) {
       await finish("failed", null, "INVALID_STORAGE_PATH", "The stored document path is invalid.", 0);
       return json({ jobId, status: "failed", error: "INVALID_STORAGE_PATH" });
     }
