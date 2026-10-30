@@ -101,6 +101,7 @@ Deno.serve(async (req) => {
     return data;
   };
 
+  let geminiTimedOut = false;
   try {
     const { data: doc, error: docError } = await admin.from("documents")
       .select("id,project_id,title,original_filename,file_type,relative_path,sha256,version_label")
@@ -185,6 +186,7 @@ Dùng mảng rỗng nếu không có bằng chứng. Không bịa số trang, th
         providerBody = await response.text();
       }
     } finally {
+      geminiTimedOut = controller.signal.aborted;
       clearTimeout(timeout);
     }
 
@@ -229,7 +231,7 @@ Dùng mảng rỗng nếu không có bằng chứng. Không bịa số trang, th
     return json({ jobId, status: finalStatus });
   } catch (error) {
     const message = error instanceof Error ? error.message : "UNKNOWN_WORKER_ERROR";
-    const timedOut = message.includes("aborted");
+    const timedOut = geminiTimedOut;
     const code = timedOut ? "GEMINI_REQUEST_TIMEOUT" :
       /^[A-Z0-9_]+$/.test(message) ? message : "WORKER_PROCESSING_FAILED";
     const retryDelay = Number(job.attempt_count) < Number(job.max_attempts) ? 45 : 0;
