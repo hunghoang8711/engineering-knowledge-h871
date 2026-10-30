@@ -123,14 +123,12 @@ Deno.serve(async (req) => {
     // Check Storage object metadata before downloading. The bucket permits files
     // up to 50 MiB, but this worker intentionally processes only PDFs <= 5 MiB;
     // rejecting from metadata avoids loading an oversized object into Edge memory.
-    const { data: objectRow, error: objectError } = await admin.schema("storage")
-      .from("objects")
-      .select("metadata")
-      .eq("bucket_id", "h871-project-documents")
-      .eq("name", path)
-      .maybeSingle();
-    const metadataSize = Number(objectRow?.metadata?.size);
-    if (objectError || !objectRow || !Number.isFinite(metadataSize) || metadataSize <= 0) {
+    const { data: storedSize, error: objectError } = await admin.rpc(
+      "get_h871_project_document_size",
+      { p_name: path },
+    );
+    const metadataSize = Number(storedSize);
+    if (objectError || storedSize === null || !Number.isSafeInteger(metadataSize) || metadataSize <= 0) {
       await finish("failed", null, "FILE_METADATA_UNAVAILABLE", "The stored PDF metadata could not be verified.", 0);
       return json({ jobId, status: "failed", error: "FILE_METADATA_UNAVAILABLE" });
     }
@@ -234,14 +232,6 @@ Dùng mảng rỗng nếu không có bằng chứng. Không bịa số trang, th
         : [],
     };
     if (!result.summary) throw new Error("MODEL_OUTPUT_MISSING_SUMMARY");
-
-    // Persist source metadata before lease-guarded result finalization.
-    const { error: metadataError } = await admin.from("project_ai_analyses")
-      .update({
-        document_sha256: doc.sha256 || null,
-        version_label: doc.version_label || null,
-      }).eq("id", analysisId);
-    if (metadataError) throw new Error("ANALYSIS_METADATA_SAVE_FAILED");
 
     const finalStatus = await finish("succeeded", result, null, null, 0);
     safeLog("job_succeeded", { attempt: Number(job.attempt_count) || 0 });
