@@ -269,12 +269,12 @@ begin
       raise exception 'INVALID_ANALYSIS_RESULT';
     end if;
 
-    if (p_result ? 'key_equipment' and jsonb_typeof(p_result->'key_equipment') <> 'array')
-       or (p_result ? 'requirements' and jsonb_typeof(p_result->'requirements') <> 'array')
-       or (p_result ? 'risks' and jsonb_typeof(p_result->'risks') <> 'array')
-       or (p_result ? 'open_questions' and jsonb_typeof(p_result->'open_questions') <> 'array')
-       or (p_result ? 'source_references' and jsonb_typeof(p_result->'source_references') <> 'array')
-       or (p_result ? 'suggested_tags' and jsonb_typeof(p_result->'suggested_tags') <> 'array') then
+    if (p_result ? 'key_equipment' and jsonb_typeof(p_result->'key_equipment') is distinct from 'array')
+       or (p_result ? 'requirements' and jsonb_typeof(p_result->'requirements') is distinct from 'array')
+       or (p_result ? 'risks' and jsonb_typeof(p_result->'risks') is distinct from 'array')
+       or (p_result ? 'open_questions' and jsonb_typeof(p_result->'open_questions') is distinct from 'array')
+       or (p_result ? 'source_references' and jsonb_typeof(p_result->'source_references') is distinct from 'array')
+       or (p_result ? 'suggested_tags' and jsonb_typeof(p_result->'suggested_tags') is distinct from 'array') then
       raise exception 'INVALID_ANALYSIS_RESULT_ARRAY_FIELDS';
     end if;
 
