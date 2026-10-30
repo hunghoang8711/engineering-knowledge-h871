@@ -141,6 +141,51 @@ select
   has_function_privilege('authenticated', 'public.claim_project_ai_analysis_job(integer)', 'execute') as authenticated_can_claim,
   has_function_privilege('service_role', 'public.claim_project_ai_analysis_job(integer)', 'execute') as service_role_can_claim;
 
+-- 9b) Full queue RPC execution matrix (after migration 0007).
+-- Expected: anon/authenticated false and service_role true for every RPC.
+with functions(function_name, identity_args) as (
+  values
+    ('claim_project_ai_analysis_job', 'integer'),
+    ('heartbeat_project_ai_analysis_job', 'uuid, uuid, integer'),
+    ('finish_project_ai_analysis_job', 'uuid, uuid, text, jsonb, text, text, integer'),
+    ('enqueue_project_ai_analysis_job', 'uuid, uuid, uuid, text, text, integer'),
+    ('get_h871_project_document_size', 'text')
+), roles(role_name) as (
+  values ('anon'), ('authenticated'), ('service_role')
+)
+select f.function_name, r.role_name,
+       has_function_privilege(
+         r.role_name,
+         format('public.%I(%s)', f.function_name, f.identity_args),
+         'execute'
+       ) as can_execute
+from functions f
+cross join roles r
+order by f.function_name, r.role_name;
+
+-- 9c) Queue table mutation privileges and structural invariants.
+select
+  has_table_privilege('anon', 'public.project_ai_analysis_jobs', 'insert') as anon_can_insert_jobs,
+  has_table_privilege('anon', 'public.project_ai_analysis_jobs', 'update') as anon_can_update_jobs,
+  has_table_privilege('anon', 'public.project_ai_analysis_jobs', 'delete') as anon_can_delete_jobs,
+  has_table_privilege('authenticated', 'public.project_ai_analysis_jobs', 'insert') as authenticated_can_insert_jobs,
+  has_table_privilege('authenticated', 'public.project_ai_analysis_jobs', 'update') as authenticated_can_update_jobs,
+  has_table_privilege('authenticated', 'public.project_ai_analysis_jobs', 'delete') as authenticated_can_delete_jobs,
+  has_table_privilege('service_role', 'public.project_ai_analysis_jobs', 'insert') as service_role_can_insert_jobs,
+  has_table_privilege('service_role', 'public.project_ai_analysis_jobs', 'update') as service_role_can_update_jobs,
+  has_table_privilege('service_role', 'public.project_ai_analysis_jobs', 'delete') as service_role_can_delete_jobs;
+
+select conname, pg_get_constraintdef(oid) as constraint_definition
+from pg_constraint
+where conrelid = 'public.project_ai_analysis_jobs'::regclass
+order by conname;
+
+select indexname, indexdef
+from pg_indexes
+where schemaname = 'public'
+  and tablename = 'project_ai_analysis_jobs'
+order by indexname;
+
 -- 10) Worker-only Storage metadata RPC privileges (after migration 0007).
 select
   has_function_privilege('anon', 'public.get_h871_project_document_size(text)', 'execute') as anon_can_read_object_size,
