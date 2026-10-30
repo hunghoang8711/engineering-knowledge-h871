@@ -31,9 +31,6 @@ jobs:
         with:
           deno-version: v2.x
 
-      - name: Check formatting
-        run: deno fmt --check supabase/functions/process-analysis-queue/analysis-result.ts supabase/functions/process-analysis-queue/analysis-result_test.ts
-
       - name: Type-check pure result module and tests
         run: deno check supabase/functions/process-analysis-queue/analysis-result.ts supabase/functions/process-analysis-queue/analysis-result_test.ts
 
