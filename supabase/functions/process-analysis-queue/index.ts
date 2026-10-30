@@ -69,7 +69,10 @@ Deno.serve(async (req) => {
     "claim_project_ai_analysis_job", { p_lease_seconds: 180 },
   );
   if (claimError) {
-    safeLog("claim_failed", { code: claimError.code || "UNKNOWN" });
+    safeLog("claim_failed", {
+      code: claimError.code || "UNKNOWN",
+      message: (claimError.message || "UNKNOWN_ERROR").slice(0, 160),
+    });
     return json({ error: "QUEUE_CLAIM_FAILED" }, 503);
   }
   const job = Array.isArray(claimed) ? claimed[0] : null;

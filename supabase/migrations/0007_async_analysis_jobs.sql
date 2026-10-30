@@ -73,7 +73,7 @@ declare
   v_job public.project_ai_analysis_jobs%rowtype;
   v_now timestamptz := now();
 begin
-  if current_setting('request.jwt.claim.role', true) is distinct from 'service_role' then
+  if (auth.jwt() ->> 'role') is distinct from 'service_role' then
     raise exception 'SERVICE_ROLE_REQUIRED';
   end if;
 
@@ -177,7 +177,7 @@ as $$
 declare
   v_expires_at timestamptz;
 begin
-  if current_setting('request.jwt.claim.role', true) is distinct from 'service_role' then
+  if (auth.jwt() ->> 'role') is distinct from 'service_role' then
     raise exception 'SERVICE_ROLE_REQUIRED';
   end if;
 
@@ -238,7 +238,7 @@ declare
   v_next_analysis_status text;
   v_now timestamptz := now();
 begin
-  if current_setting('request.jwt.claim.role', true) is distinct from 'service_role' then
+  if (auth.jwt() ->> 'role') is distinct from 'service_role' then
     raise exception 'SERVICE_ROLE_REQUIRED';
   end if;
 
@@ -388,7 +388,7 @@ declare
   v_analysis_id uuid;
   v_job_id uuid;
 begin
-  if current_setting('request.jwt.claim.role', true) is distinct from 'service_role' then
+  if (auth.jwt() ->> 'role') is distinct from 'service_role' then
     raise exception 'SERVICE_ROLE_REQUIRED';
   end if;
   if p_project_id is null or p_document_id is null or p_requested_by is null
@@ -463,7 +463,7 @@ as $$
 declare
   v_size text;
 begin
-  if current_setting('request.jwt.claim.role', true) is distinct from 'service_role' then
+  if (auth.jwt() ->> 'role') is distinct from 'service_role' then
     raise exception 'SERVICE_ROLE_REQUIRED';
   end if;
   if p_name is null or p_name = '' or left(p_name, 1) = '/'
