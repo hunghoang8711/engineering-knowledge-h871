@@ -1,0 +1,38 @@
+name: H871 AI analysis validation
+
+on:
+  push:
+    branches:
+      - feature/cloud-ai-job-queue-20261030
+    paths:
+      - "supabase/functions/process-analysis-queue/**"
+      - "supabase/migrations/0007_async_analysis_jobs.sql"
+      - ".github/workflows/h871-ai-analysis-validation.yml"
+  pull_request:
+    paths:
+      - "supabase/functions/process-analysis-queue/**"
+      - "supabase/migrations/0007_async_analysis_jobs.sql"
+      - ".github/workflows/h871-ai-analysis-validation.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-analysis-result:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Type-check worker and pure result module
+        run: deno check supabase/functions/process-analysis-queue/index.ts supabase/functions/process-analysis-queue/analysis-result.ts supabase/functions/process-analysis-queue/analysis-result_test.ts supabase/functions/process-analysis-queue/storage-path.ts supabase/functions/process-analysis-queue/storage-path_test.ts
+
+      - name: Run unit tests
+        run: deno test --allow-net supabase/functions/process-analysis-queue/analysis-result_test.ts supabase/functions/process-analysis-queue/storage-path_test.ts
