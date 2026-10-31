@@ -54,7 +54,7 @@ function modelOutput(interaction: any): string {
     .flatMap((step: any) => Array.isArray(step.content) ? step.content : [])
     .filter((part: any) => part?.type === "text" && typeof part.text === "string")
     .map((part: any) => part.text)
-    .join("");
+    .join("") || (typeof interaction?.output_text === "string" ? interaction.output_text : "");
 }
 
 Deno.serve(async (req) => {
@@ -245,13 +245,8 @@ Deno.serve(async (req) => {
       return json({ jobId, status: "failed", error: "PRIVATE_FILE_DOWNLOAD_FAILED" });
     }
 
-    const { data: marked, error: markError } = await admin.rpc(
-      "mark_gemini_interaction_submission_started",
-      { p_job_id: jobId, p_lease_token: leaseToken },
-    );
-    if (markError || marked !== true) throw new Error("GEMINI_SUBMISSION_GUARD_FAILED");
-
     const bytes = new Uint8Array(await blob.arrayBuffer());
+    const pdfBase64 = toBase64(bytes);
     const prompt = `Bạn là chuyên gia phân tích tài liệu kỹ thuật cho H871, workspace kỹ thuật tự động hóa công nghiệp.
 Đọc trực tiếp PDF gốc và trả kết quả hoàn toàn bằng tiếng Việt. Giữ chính xác thuật ngữ chuyên ngành, tên model, mã linh kiện, thông số, đơn vị và điều kiện kỹ thuật. Không suy diễn thành dữ kiện; phân biệt thông tin trong tài liệu với giả định.
 Dự án: ${clean(project.name, 300)} (${clean(project.code, 100)}).
@@ -269,6 +264,12 @@ Chỉ trả về JSON hợp lệ:
 }
 Dùng mảng rỗng nếu không có bằng chứng. Không bịa số trang, thông số, thiết bị hoặc yêu cầu.`;
 
+    const { data: marked, error: markError } = await admin.rpc(
+      "mark_gemini_interaction_submission_started",
+      { p_job_id: jobId, p_lease_token: leaseToken },
+    );
+    if (markError || marked !== true) throw new Error("GEMINI_SUBMISSION_GUARD_FAILED");
+
     const started = Date.now();
     let created;
     try {
@@ -278,7 +279,7 @@ Dùng mảng rỗng nếu không có bằng chứng. Không bịa số trang, th
           model,
           input: [
             { type: "text", text: prompt },
-            { type: "document", data: toBase64(bytes), mime_type: "application/pdf" },
+            { type: "document", data: pdfBase64, mime_type: "application/pdf" },
           ],
           background: true,
           store: true,
