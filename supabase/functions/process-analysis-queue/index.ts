@@ -282,7 +282,7 @@ Dùng mảng rỗng nếu không có bằng chứng. Không bịa số trang, th
           ],
           background: true,
           store: true,
-          generation_config: { temperature: 0.1 },
+          generation_config: { temperature: 0.1, response_format: { type: "text", mime_type: "application/json" } },
         }) }, 60_000);
     } catch {
       // The provider may have accepted the POST before the connection failed.
