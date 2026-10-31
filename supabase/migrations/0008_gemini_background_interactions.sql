@@ -32,7 +32,7 @@ returns table (
 language plpgsql
 security definer
 set search_path = ''
-as $
+as $$
 declare
   v_job public.project_ai_analysis_jobs%rowtype;
   v_now timestamptz := now();
