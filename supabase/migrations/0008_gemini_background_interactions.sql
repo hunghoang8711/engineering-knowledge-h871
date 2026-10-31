@@ -114,7 +114,7 @@ begin
     v_job.attempt_count, v_job.max_attempts, v_job.lease_token,
     v_job.lease_expires_at;
 end;
-$;
+$$;
 
 revoke all on function public.claim_project_ai_analysis_job(integer)
   from public, anon, authenticated;
