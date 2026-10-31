@@ -37,7 +37,7 @@ async function fetchJson(url: string, key: string, init: RequestInit = {}, timeo
     const response = await fetch(url, {
       ...init,
       signal: controller.signal,
-      headers: { "Content-Type": "application/json", "x-goog-api-key": key, ...(init.headers || {}) },
+      headers: { "Content-Type": "application/json", "Api-Revision": "2026-05-20", "x-goog-api-key": key, ...(init.headers || {}) },
     });
     const body = await response.text();
     let data: any = null;
@@ -282,7 +282,8 @@ Dùng mảng rỗng nếu không có bằng chứng. Không bịa số trang, th
           ],
           background: true,
           store: true,
-          generation_config: { temperature: 0.1, response_format: { type: "text", mime_type: "application/json" } },
+          generation_config: { temperature: 0.1 },
+          response_format: { type: "text", mime_type: "application/json" },
         }) }, 60_000);
     } catch {
       // The provider may have accepted the POST before the connection failed.
