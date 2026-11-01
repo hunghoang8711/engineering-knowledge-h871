@@ -161,8 +161,21 @@ Deno.serve(async (req) => {
       if (providerStatus === "failed" || providerStatus === "cancelled" ||
           providerStatus === "incomplete" || providerStatus === "requires_action" ||
           providerStatus === "requires_continuation") {
+        // Log only bounded provider diagnostic fields; never log request/input or credentials.
+        const providerError = result.data?.error;
+        const diagnostic = {
+          providerStatus,
+          errorCode: typeof providerError?.code === "string" || typeof providerError?.code === "number"
+            ? String(providerError.code).slice(0, 80) : "NOT_PROVIDED",
+          errorMessage: typeof providerError?.message === "string"
+            ? providerError.message.replace(/[\\r\\n\\t]+/g, " ").slice(0, 400) : "NOT_PROVIDED",
+          failureReason: typeof result.data?.failure_reason === "string"
+            ? result.data.failure_reason.replace(/[\\r\\n\\t]+/g, " ").slice(0, 200) : "NOT_PROVIDED",
+          hasIncompleteDetails: Boolean(result.data?.incomplete_details),
+        };
+        safeLog("gemini_interaction_terminal", diagnostic);
         await finish("failed", null, `GEMINI_INTERACTION_${providerStatus.toUpperCase()}`,
-          `Gemini interaction ended with status: ${providerStatus}.`, 0);
+          `Gemini interaction ended with status: ${providerStatus}. Check function logs for bounded provider diagnostics.`, 0);
         return json({ jobId, status: "failed", providerStatus });
       }
       if (providerStatus !== "completed") {
