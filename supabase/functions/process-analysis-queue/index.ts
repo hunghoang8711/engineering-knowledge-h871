@@ -168,9 +168,9 @@ Deno.serve(async (req) => {
           errorCode: typeof providerError?.code === "string" || typeof providerError?.code === "number"
             ? String(providerError.code).slice(0, 80) : "NOT_PROVIDED",
           errorMessage: typeof providerError?.message === "string"
-            ? providerError.message.replace(/[\\r\\n\\t]+/g, " ").slice(0, 400) : "NOT_PROVIDED",
+            ? providerError.message.replace(/[\r\n\t]+/g, " ").slice(0, 400) : "NOT_PROVIDED",
           failureReason: typeof result.data?.failure_reason === "string"
-            ? result.data.failure_reason.replace(/[\\r\\n\\t]+/g, " ").slice(0, 200) : "NOT_PROVIDED",
+            ? result.data.failure_reason.replace(/[\r\n\t]+/g, " ").slice(0, 200) : "NOT_PROVIDED",
           hasIncompleteDetails: Boolean(result.data?.incomplete_details),
         };
         safeLog("gemini_interaction_terminal", diagnostic);
