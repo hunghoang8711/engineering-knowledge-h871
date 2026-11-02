@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - feature/cloud-ai-job-queue-20261030
+      - feat/gemini-background-interactions
     paths:
       - "supabase/functions/process-analysis-queue/**"
       - "supabase/functions/analyze-document/**"
