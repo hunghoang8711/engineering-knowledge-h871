@@ -404,11 +404,21 @@
   // New analyses store Vietnamese directly at the root. Existing bilingual records
   // remain readable by preferring their Vietnamese object when it is present.
   const localized=result.vi&&typeof result.vi==="object"?result.vi:result;
-  const title=make("div","ai-result-title");title.append(make("span","ai-status","Analysis Successful"),make("strong","",doc.original_filename||doc.title||"PDF"));output.append(title);
+  const review=localized.document_review||result.document_review||{};
+  const coverage=String(review.coverage_status||"uncertain").toLowerCase();
+  const coverageLabel=coverage==="complete"?"AI reports full-document review":coverage==="partial"?"Partial document review":"Coverage not verified";
+  const title=make("div","ai-result-title");title.append(make("span","ai-status", "Analysis Successful · "+coverageLabel),make("strong","",doc.original_filename||doc.title||"PDF"));output.append(title);
   const addText=(label,value)=>{if(!value)return;const block=make("div","ai-result-block");block.append(make("h4","",label),make("p","",value));output.append(block);};
   const addList=(label,items)=>{if(!Array.isArray(items)||!items.length)return;const block=make("div","ai-result-block");block.append(make("h4","",label));const ul=make("ul","");items.forEach(item=>{const li=make("li","",typeof item==="string"?item:JSON.stringify(item));ul.append(li);});block.append(ul);output.append(block);};
   addText("Summary",localized.summary||result.summary);addText("Technical Scope",localized.technical_scope||result.technical_scope);
-  addList("Key Equipment",localized.key_equipment||result.key_equipment);addList("Requirements",localized.requirements||result.requirements);addList("Risks / Limitations",localized.risks||result.risks);addList("Open Questions",localized.open_questions||result.open_questions);
+  addList("Key Equipment",localized.key_equipment||result.key_equipment);addList("Key Technical Parameters",localized.key_parameters||result.key_parameters);
+  addList("Requirements",localized.requirements||result.requirements);addList("Risks / Limitations",localized.risks||result.risks);addList("Open Questions",localized.open_questions||result.open_questions);
+  if(review.pages_reviewed||coverage!=="complete"||review.limitations?.length||review.visual_elements_reviewed?.length||review.tables_and_drawings_reviewed?.length){
+   addText("PDF Review Coverage",review.pages_reviewed||"AI did not provide a reliable page-coverage description.");
+   addList("Visual Content Reviewed",review.visual_elements_reviewed);
+   addList("Tables / Drawings Reviewed",review.tables_and_drawings_reviewed);
+   addList("Review Limitations",review.limitations);
+  }
   if(Array.isArray(result.suggested_tags)&&result.suggested_tags.length&&canWrite()){
    const block=make("div","ai-result-block ai-tag-editor");block.append(make("h4","","Suggested tags"));
    const targetLabel=make("label","ai-tag-target-label","Save selected tags to");
@@ -493,6 +503,7 @@
     {key:"summary",label:"Summary",type:"text"},
     {key:"technical_scope",label:"Technical scope",type:"text"},
     {key:"key_equipment",label:"Key equipment",type:"list"},
+    {key:"key_parameters",label:"Key technical parameters",type:"list"},
     {key:"requirements",label:"Requirements",type:"list"},
     {key:"risks",label:"Risks / limitations",type:"list"},
     {key:"open_questions",label:"Open questions",type:"list"},
