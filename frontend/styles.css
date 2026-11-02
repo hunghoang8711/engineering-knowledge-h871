@@ -452,3 +452,16 @@ body[data-start-tab]:not([data-start-tab="overview"]):not([data-start-tab="searc
 .ai-compare-diff.is-added .ai-compare-caption{color:#86d5b0}
 .ai-compare-diff.is-removed .ai-compare-caption{color:#f0a4a4}
 @media(max-width:650px){.ai-compare-controls,.ai-compare-text-columns{grid-template-columns:minmax(0,1fr)}.ai-analysis-compare{padding:12px}}
+
+
+/* Document compatibility status: distinguish stored formats from AI-readable PDFs. */
+.document-analysis-capability{display:inline-flex;align-items:center;width:max-content;max-width:100%;margin-top:8px;padding:4px 9px;border:1px solid #475569;border-radius:999px;background:#172235;color:#cbd5e1;font-size:11px;font-weight:700;line-height:1.5;overflow-wrap:anywhere}
+.document-analysis-capability.pdf{border-color:#276749;background:#102b25;color:#a7f3d0}
+.document-analysis-capability.stored{border-color:#765a2b;background:#302617;color:#f5d99a}
+.document-analysis-capability.unsupported{border-color:#69404a;background:#2b1b22;color:#f5b6c2}
+.analysis-compatibility-panel{display:grid;gap:10px;margin:14px 0 18px;padding:15px;border:1px solid #30445b;border-radius:11px;background:#0e1a2a}
+.analysis-compatibility-title{font-size:14px;color:#e5edf7}
+.analysis-compatibility-row{display:grid;grid-template-columns:minmax(150px,.8fr) minmax(0,2fr);gap:12px;padding-top:9px;border-top:1px solid #293d54}
+.analysis-compatibility-row strong{font-size:12px;color:#cbd5e1}
+.analysis-compatibility-row span{font-size:12px;line-height:1.7;color:#aebed0}
+@media(max-width:650px){.analysis-compatibility-panel{padding:12px}.analysis-compatibility-row{grid-template-columns:minmax(0,1fr);gap:3px}}
