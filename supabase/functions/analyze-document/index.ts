@@ -207,7 +207,7 @@ Deno.serve(async (req) => {
 
   let stage = "read_file_bytes";
   const analysisStartedAt = Date.now();
-  let geminiTimeoutHandle: number | undefined;
+  let geminiTimeoutHandle: ReturnType<typeof setTimeout> | undefined;
   let geminiTimedOut = false;
   let geminiAbortController: AbortController | undefined;
   try {
