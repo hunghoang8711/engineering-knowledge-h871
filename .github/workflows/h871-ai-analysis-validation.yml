@@ -10,6 +10,7 @@ on:
       - "supabase/migrations/0008_gemini_background_interactions.sql"
       - "supabase/migrations/0007_async_analysis_jobs.sql"
       - ".github/workflows/h871-ai-analysis-validation.yml"
+      - ".github/workflows/h871-ai-analysis-queue.yml"
   pull_request:
     paths:
       - "supabase/functions/process-analysis-queue/**"
@@ -17,6 +18,7 @@ on:
       - "supabase/migrations/0008_gemini_background_interactions.sql"
       - "supabase/migrations/0007_async_analysis_jobs.sql"
       - ".github/workflows/h871-ai-analysis-validation.yml"
+      - ".github/workflows/h871-ai-analysis-queue.yml"
   workflow_dispatch:
 
 permissions:
