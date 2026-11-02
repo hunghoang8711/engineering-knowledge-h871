@@ -11,6 +11,7 @@ on:
           - both
           - enqueue-analysis
           - process-analysis-queue
+          - analyze-document-disabled
 
 permissions:
   contents: read
@@ -64,6 +65,9 @@ jobs:
               ;;
             enqueue-analysis|process-analysis-queue)
               supabase functions deploy "${DEPLOY_TARGET}" --project-ref "${PROJECT_REF}"
+              ;;
+            analyze-document-disabled)
+              supabase functions deploy analyze-document --project-ref "${PROJECT_REF}"
               ;;
             *)
               echo "Unsupported deployment target."
