@@ -1,6 +1,7 @@
 // H871 durable AI analysis enqueue endpoint.
-// This endpoint creates a queue record only. It never downloads a document
-// and never calls Gemini, so the browser receives a prompt response.
+// This endpoint validates the request and creates/reuses a durable queue record.
+// It then wakes the queue worker in the Edge Runtime background; the worker owns
+// private-file access and Gemini submission/polling.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -16,6 +17,43 @@ const json = (body: unknown, status = 200) =>
   });
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+function wakeQueueWorker(supabaseUrl: string, workerSecret: string, jobId: string) {
+  // Do not hold the browser request open while the worker downloads a PDF or
+  // waits for Gemini. EdgeRuntime.waitUntil keeps this kick alive in the
+  // background; the scheduled GitHub worker remains the recovery mechanism.
+  EdgeRuntime.waitUntil((async () => {
+    try {
+      const response = await fetch(
+        `${supabaseUrl.replace(/\\/$/, "")}/functions/v1/process-analysis-queue`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-h871-worker-secret": workerSecret,
+          },
+          body: JSON.stringify({ source: "enqueue-analysis", jobId }),
+        },
+      );
+      console.info(JSON.stringify({
+        function: "enqueue-analysis",
+        stage: "worker_kick_finished",
+        jobId,
+        httpStatus: response.status,
+      }));
+      // The worker response body is intentionally not logged. A non-2xx
+      // response leaves the durable job for the scheduled worker to recover.
+      await response.body?.cancel();
+    } catch (error) {
+      console.error(JSON.stringify({
+        function: "enqueue-analysis",
+        stage: "worker_kick_failed",
+        jobId,
+        message: error instanceof Error ? error.message.slice(0, 160) : "UNKNOWN_ERROR",
+      }));
+    }
+  })());
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -125,10 +163,27 @@ Deno.serve(async (req) => {
   }
 
   const job = enqueueRows[0];
+  const workerSecret = Deno.env.get("H871_QUEUE_WORKER_SECRET") || "";
+  const approved = Deno.env.get("H871_GEMINI_DATA_PROCESSING_APPROVED") === "true";
+  if (workerSecret.length >= 32 && approved) {
+    wakeQueueWorker(supabaseUrl, workerSecret, String(job.job_id));
+  } else {
+    // Keep enqueue successful; the scheduled worker can recover the job once
+    // the required server-side approval/secret configuration is available.
+    console.warn(JSON.stringify({
+      function: "enqueue-analysis",
+      stage: "worker_kick_not_configured",
+      jobId: String(job.job_id),
+      approvalEnabled: approved,
+      workerSecretConfigured: workerSecret.length >= 32,
+    }));
+  }
+
   return json({
     jobId: job.job_id,
     analysisId: job.analysis_id,
     status: job.job_status,
     created: job.was_created,
+    workerKick: workerSecret.length >= 32 && approved ? "requested" : "scheduled_fallback",
   }, 202);
 });
