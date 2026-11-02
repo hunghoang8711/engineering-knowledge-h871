@@ -6,6 +6,12 @@ on:
   schedule:
     - cron: "3-58/5 * * * *"
   workflow_dispatch:
+    inputs:
+      run_once:
+        description: Run exactly one queue-worker invocation without enabling the recurring schedule
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -16,8 +22,8 @@ concurrency:
 
 jobs:
   process-one-job:
-    # Keep scheduling inert until the owner explicitly enables this repository variable.
-    if: vars.H871_QUEUE_WORKER_ENABLED == 'true'
+    # Scheduled runs require the repository variable. Manual one-shot runs can opt in per invocation.
+    if: vars.H871_QUEUE_WORKER_ENABLED == 'true' || (github.event_name == 'workflow_dispatch' && inputs.run_once == true)
     runs-on: ubuntu-latest
     timeout-minutes: 3
     steps:
@@ -44,7 +50,7 @@ jobs:
             --request POST \
             --header "Content-Type: application/json" \
             --header "x-h871-worker-secret: ${WORKER_SECRET}" \
-            --data '{"source":"github-actions-schedule"}' \
+            --data '{"source":"github-actions"}' \
             "${SUPABASE_URL%/}/functions/v1/process-analysis-queue")"
 
           if [[ ! "$http_status" =~ ^2[0-9][0-9]$ ]]; then
