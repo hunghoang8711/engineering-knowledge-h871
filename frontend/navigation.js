@@ -438,6 +438,75 @@
   if(Array.isArray(result.source_references)&&result.source_references.length){const block=make("div","ai-result-block");block.append(make("h4","","Source references"));const ul=make("ul");result.source_references.forEach(ref=>{const li=make("li","",[ref.reference,ref.claim].filter(Boolean).join(" — ")||JSON.stringify(ref));ul.append(li);});block.append(ul);output.append(block);}
   if(canWrite()&&options.includeApply!==false){const apply=make("button","ai-apply-button","Set this document as Main Concept");apply.type="button";apply.addEventListener("click",async()=>{if(!confirm("Use this successful analysis as Main Concept? The AI summary and suggested tags will replace the project description and tags. The change and its history snapshot are saved together."))return;apply.disabled=true;apply.textContent="Applying…";try{const {error}=await client.rpc("apply_main_concept",{p_project_id:doc.project_id,p_document_id:doc.id});if(error)throw error;const {data:project,error:projectError}=await client.from("projects").select("id,code,name,description,status,tags,main_concept_document_id,created_at,updated_at").eq("id",doc.project_id).single();if(projectError)throw projectError;projects=[...projects.filter(x=>x.id!==project.id),project];selectedProject=project;const header=$("#module-detail .project-detail-header");if(header){const desc=header.querySelector(".project-description");if(desc)desc.textContent=project.description||"No description provided.";let tagBox=header.querySelector(".project-tags");if(!tagBox){tagBox=make("div","project-tags");const status=header.querySelector(".project-status");header.insertBefore(tagBox,status||null);}renderProjectTags(tagBox,project.tags);}const fileRows=$("#module-detail .project-document-list");if(fileRows){fileRows.replaceChildren();documents.filter(d=>d.project_id===project.id).forEach(d=>fileRows.append(fileCard(d)));}say("Main Concept applied. Project description and tags updated; change history saved.");const list=$("#ai-history-list");if(list)await loadProjectAIHistory(doc.project_id,list);apply.textContent="Main Concept applied";}catch(err){say("Could not apply Main Concept: "+err.message,true);apply.disabled=false;apply.textContent="Set this document as Main Concept";}});output.append(apply);}
 }
+ function renderAnalysisComparison(container,analyses){
+  const successful=(analyses||[]).filter(item=>item.status==="succeeded"&&item.result&&typeof item.result==="object");
+  const panel=make("section","ai-analysis-compare");
+  panel.append(make("h4","ai-history-title","Compare analysis versions"));
+  if(successful.length<2){
+   panel.append(make("p","muted-copy","At least two successful AI analyses are required to compare document revisions. Existing analyses are preserved; no new analysis is triggered."));
+   container.append(panel);return;
+  }
+  const controls=make("div","ai-compare-controls");
+  const baselineLabel=make("label","ai-compare-field","Baseline version");
+  const baseline=make("select","ai-compare-select");
+  const currentLabel=make("label","ai-compare-field","Compare with");
+  const current=make("select","ai-compare-select");
+  const optionText=item=>{
+   const doc=documents.find(d=>d.id===item.document_id);
+   const source=doc?.original_filename||doc?.title||"PDF";
+   return new Date(item.created_at).toLocaleString()+" · "+source;
+  };
+  successful.forEach(item=>{baseline.append(new Option(optionText(item),item.id));current.append(new Option(optionText(item),item.id));});
+  baseline.value=successful[1].id;current.value=successful[0].id;
+  baselineLabel.append(baseline);currentLabel.append(current);controls.append(baselineLabel,currentLabel);panel.append(controls);
+  const output=make("div","ai-compare-results");panel.append(output);
+  const payload=item=>{const result=item?.result||{};return result.vi&&typeof result.vi==="object"?{...result,...result.vi}:result;};
+  const valueFor=(item,key)=>payload(item)[key];
+  const display=item=>typeof item==="string"?item:JSON.stringify(item);
+  const normalized=item=>display(item).trim().toLocaleLowerCase();
+  const render=()=>{
+   output.replaceChildren();
+   const older=successful.find(item=>item.id===baseline.value);
+   const newer=successful.find(item=>item.id===current.value);
+   if(!older||!newer)return;
+   if(older.id===newer.id){output.append(make("p","muted-copy","Choose two different analysis records to compare."));return;}
+   const specs=[
+    {key:"summary",label:"Summary",type:"text"},
+    {key:"technical_scope",label:"Technical scope",type:"text"},
+    {key:"key_equipment",label:"Key equipment",type:"list"},
+    {key:"requirements",label:"Requirements",type:"list"},
+    {key:"risks",label:"Risks / limitations",type:"list"},
+    {key:"open_questions",label:"Open questions",type:"list"},
+    {key:"suggested_tags",label:"Suggested tags",type:"list"}
+   ];
+   specs.forEach(spec=>{
+    const before=valueFor(older,spec.key),after=valueFor(newer,spec.key);
+    if(spec.type==="text"){
+     const left=String(before||"").trim(),right=String(after||"").trim();
+     const changed=left!==right;
+     const block=make("article","ai-compare-block");
+     const head=make("div","ai-compare-block-head");head.append(make("strong","",spec.label),make("span",changed?"ai-compare-changed":"ai-compare-unchanged",changed?"Changed":"No change"));block.append(head);
+     const columns=make("div","ai-compare-text-columns");
+     const oldCol=make("div","ai-compare-value");oldCol.append(make("span","ai-compare-caption","Baseline"),make("p","",left||"—"));
+     const newCol=make("div","ai-compare-value");newCol.append(make("span","ai-compare-caption","Compared version"),make("p","",right||"—"));
+     columns.append(oldCol,newCol);block.append(columns);output.append(block);
+    }else{
+     const oldItems=Array.isArray(before)?before:[],newItems=Array.isArray(after)?after:[];
+     const oldMap=new Map(oldItems.map(item=>[normalized(item),item]));
+     const newMap=new Map(newItems.map(item=>[normalized(item),item]));
+     const added=newItems.filter(item=>!oldMap.has(normalized(item)));
+     const removed=oldItems.filter(item=>!newMap.has(normalized(item)));
+     const block=make("article","ai-compare-block");
+     const head=make("div","ai-compare-block-head");head.append(make("strong","",spec.label),make("span",added.length||removed.length?"ai-compare-changed":"ai-compare-unchanged",added.length||removed.length?"Changed":"No change"));block.append(head);
+     if(!added.length&&!removed.length)block.append(make("p","muted-copy","No changes detected."));
+     if(added.length){const group=make("div","ai-compare-diff is-added");group.append(make("span","ai-compare-caption","Added"));const list=make("ul");added.forEach(item=>list.append(make("li","",display(item))));group.append(list);block.append(group);}
+     if(removed.length){const group=make("div","ai-compare-diff is-removed");group.append(make("span","ai-compare-caption","Removed"));const list=make("ul");removed.forEach(item=>list.append(make("li","",display(item))));group.append(list);block.append(group);}
+     output.append(block);
+    }
+   });
+  };
+  baseline.addEventListener("change",render);current.addEventListener("change",render);render();container.append(panel);
+ }
  async function loadProjectAIHistory(projectId,container){
   if(!container||!client||!user||!canWrite())return;
   container.replaceChildren(make("p","muted-copy","Loading analysis history…"));
@@ -445,6 +514,7 @@
   if(error){container.replaceChildren(make("p","form-feedback error","Could not load analysis history: "+error.message));return;}
   container.replaceChildren();
   if(!analyses?.length){container.append(make("p","muted-copy","No AI analyses recorded yet."));return;}
+  renderAnalysisComparison(container,analyses);
   analyses.forEach(item=>{
    const row=make("article","ai-history-item");
    const top=make("div","ai-history-top");
