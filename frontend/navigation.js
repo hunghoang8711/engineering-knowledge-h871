@@ -4,6 +4,7 @@
  let client=null,user=null,role=null,active="overview",projects=[],customers=[],documents=[],knowledgeEntries=[],selectedProject=null,moduleLoadToken=0,knownEndUsers=[];
  let listSearch="",listFilter="",listFilterValue="",listToolbarReady=false;
  const knownTags=new Set();
+ const analysisIdempotencyKeys=new Map();
  const loadedModules=new Set();
  const officeExt=["pdf","doc","docx","docm","xls","xlsx","xlsm","ppt","pptx","pptm"];
  const defs={
@@ -329,12 +330,11 @@
    (async()=>{
     try{
      const requestKeyName="h871-ai-analysis-idempotency:"+d.id;
-     let idempotencyKey=null;
-     try{idempotencyKey=sessionStorage.getItem(requestKeyName);}catch{/* Storage may be disabled by browser policy. */}
-     if(!idempotencyKey){
-      idempotencyKey=crypto.randomUUID();
-      try{sessionStorage.setItem(requestKeyName,idempotencyKey);}catch{/* Continue without cross-reload idempotency when storage is unavailable. */}
-     }
+     let idempotencyKey=analysisIdempotencyKeys.get(d.id)||null;
+     if(!idempotencyKey){try{idempotencyKey=sessionStorage.getItem(requestKeyName);}catch{/* Storage may be disabled by browser policy. */}}
+     if(!idempotencyKey)idempotencyKey=crypto.randomUUID();
+     analysisIdempotencyKeys.set(d.id,idempotencyKey);
+     try{sessionStorage.setItem(requestKeyName,idempotencyKey);}catch{/* Continue with in-memory idempotency when storage is unavailable. */}
      const {data,error}=await client.functions.invoke("enqueue-analysis",{body:{documentId:d.id,projectId:d.project_id,idempotencyKey}});
      if(error){let detail=error.message||"Queue request failed";try{const ctx=error.context;if(ctx&&typeof ctx.json==="function"){const body=await ctx.json();detail=body.message||body.error||detail;}}catch{}throw new Error(detail);}
      if(data?.error)throw new Error(data.message||data.error);
@@ -350,12 +350,14 @@
       latest=row;
       if(!row)throw new Error("The analysis record could not be found.");
       if(row.status==="succeeded"){
+       analysisIdempotencyKeys.delete(d.id);
        try{sessionStorage.removeItem(requestKeyName);}catch{/* Ignore unavailable session storage. */}
        if(output.isConnected)renderProjectAIResult(output,d,{result:row.result});
        if(history?.isConnected)await loadProjectAIHistory(d.project_id,history);
        return;
       }
       if(["failed","quota_exhausted","cancelled"].includes(row.status)){
+       analysisIdempotencyKeys.delete(d.id);
        try{sessionStorage.removeItem(requestKeyName);}catch{/* Ignore unavailable session storage. */}
        const statusText=row.status==="quota_exhausted"?"Gemini free quota/rate limit reached; no paid fallback was used.":(row.error_message||row.error_code||"Analysis failed.");
        if(output.isConnected)output.replaceChildren(make("p","form-feedback error","Analysis "+row.status+": "+statusText));
@@ -364,13 +366,13 @@
       }
       if(output.isConnected)output.replaceChildren(make("p","muted-copy","Analysis status: "+(row.status||"queued")+". The background worker is processing the selected PDF."));
      }
-     if(output.isConnected)output.replaceChildren(make("p","muted-copy","The request remains "+(latest?.status||"queued")+". Background processing may take longer; reopen this project to view the saved status and result."));
+     if(output.isConnected)output.replaceChildren(make("p","muted-copy","The request remains "+(latest?.status||"queued")+". Background processing may take longer. Click “Resume analysis” to continue checking this same request; its saved idempotency key prevents a duplicate submission."));
      if(history?.isConnected)await loadProjectAIHistory(d.project_id,history);
     }catch(err){
      if(output.isConnected)output.replaceChildren(make("p","form-feedback error","AI analysis request failed: "+(err.message||"Unknown error")));
      if(history?.isConnected)await loadProjectAIHistory(d.project_id,history);
     }finally{
-     if(analyze.isConnected){analyze.disabled=false;analyze.textContent="✦ Analyze PDF";}
+     if(analyze.isConnected){analyze.disabled=false;analyze.textContent=analysisIdempotencyKeys.has(d.id)?"↻ Resume analysis":"✦ Analyze PDF";}
     }
    })();
   });card.append(analyze);}
