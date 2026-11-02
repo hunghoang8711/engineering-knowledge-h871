@@ -12,6 +12,11 @@ on:
         required: false
         default: false
         type: boolean
+      wait_for_completion:
+        description: Manually keep polling the durable Gemini interaction for up to 60 minutes
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -22,16 +27,17 @@ concurrency:
 
 jobs:
   process-one-job:
-    # Scheduled runs require the repository variable. Manual one-shot runs can opt in per invocation.
-    if: vars.H871_QUEUE_WORKER_ENABLED == 'true' || (github.event_name == 'workflow_dispatch' && inputs.run_once == true)
+    # Scheduled runs require the repository variable. Manual runs can opt in per invocation.
+    if: vars.H871_QUEUE_WORKER_ENABLED == 'true' || (github.event_name == 'workflow_dispatch' && (inputs.run_once == true || inputs.wait_for_completion == true))
     runs-on: ubuntu-latest
-    timeout-minutes: 3
+    timeout-minutes: 90
     steps:
-      - name: Invoke one queue-worker run
+      - name: Invoke queue worker and optionally keep polling
         shell: bash
         env:
           SUPABASE_URL: ${{ secrets.H871_SUPABASE_URL }}
           WORKER_SECRET: ${{ secrets.H871_QUEUE_WORKER_SECRET }}
+          WAIT_FOR_COMPLETION: ${{ github.event_name == 'workflow_dispatch' && inputs.wait_for_completion || false }}
         run: |
           set -euo pipefail
 
@@ -40,29 +46,75 @@ jobs:
             exit 1
           fi
 
+          max_invocations=1
+          if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" && "${WAIT_FOR_COMPLETION}" == "true" ]]; then
+            # One initial submission/poll plus up to twelve 5-minute follow-up polls.
+            max_invocations=13
+            echo "Manual wait mode enabled: polling for up to 60 minutes."
+          fi
+
           response_file="$(mktemp)"
           trap 'rm -f "$response_file"' EXIT
+          active_job_id=""
 
-          http_status="$(curl --silent --show-error \
-            --output "$response_file" \
-            --write-out "%{http_code}" \
-            --max-time 130 \
-            --request POST \
-            --header "Content-Type: application/json" \
-            --header "x-h871-worker-secret: ${WORKER_SECRET}" \
-            --data '{"source":"github-actions"}' \
-            "${SUPABASE_URL%/}/functions/v1/process-analysis-queue")"
+          for ((invocation=1; invocation<=max_invocations; invocation++)); do
+            echo "Queue worker invocation ${invocation}/${max_invocations}."
 
-          if [[ ! "$http_status" =~ ^2[0-9][0-9]$ ]]; then
-            echo "Queue worker returned HTTP ${http_status}."
-            exit 1
-          fi
+            http_status="$(curl --silent --show-error \
+              --output "$response_file" \
+              --write-out "%{http_code}" \
+              --max-time 130 \
+              --request POST \
+              --header "Content-Type: application/json" \
+              --header "x-h871-worker-secret: ${WORKER_SECRET}" \
+              --data '{"source":"github-actions"}' \
+              "${SUPABASE_URL%/}/functions/v1/process-analysis-queue")"
 
-          echo "Queue worker invocation completed with HTTP ${http_status}."
+            if [[ ! "$http_status" =~ ^2[0-9][0-9]$ ]]; then
+              echo "Queue worker returned HTTP ${http_status}."
+              exit 1
+            fi
 
-          # Log only the worker's safe state fields, never raw response bodies.
-          if jq -e 'type == "object"' "$response_file" >/dev/null; then
+            if ! jq -e 'type == "object"' "$response_file" >/dev/null; then
+              echo "Queue worker returned a non-JSON response body."
+              exit 1
+            fi
+
+            worker_status="$(jq -r '.status // "unknown"' "$response_file")"
+            response_job_id="$(jq -r '.jobId // empty' "$response_file")"
+            if [[ -n "$response_job_id" ]]; then
+              active_job_id="$response_job_id"
+            fi
+
+            # Log only safe state fields; never log raw response bodies or credentials.
             jq -c '{status: (.status // null), jobId: (.jobId // null), error: (.error // null), providerStatus: (.providerStatus // null), poll: (.poll // null)}' "$response_file"
-          else
-            echo "Queue worker returned a non-JSON response body."
-          fi
+
+            case "$worker_status" in
+              succeeded|failed|quota_exhausted)
+                echo "Gemini job reached terminal state: ${worker_status}."
+                break
+                ;;
+              queued|processing)
+                if (( invocation < max_invocations )); then
+                  echo "Gemini is still processing. Waiting 5 minutes before polling the same durable queue."
+                  sleep 300
+                else
+                  echo "Polling window reached 60 minutes. The saved Gemini Interaction ID remains in Supabase; it will not be resubmitted."
+                fi
+                ;;
+              idle)
+                if [[ -n "$active_job_id" ]] && (( invocation < max_invocations )); then
+                  # Avoid stopping early if the next poll arrives just before available_at.
+                  echo "No job is claimable yet; retrying shortly without resubmitting the PDF."
+                  sleep 30
+                else
+                  echo "Queue is idle; no pending Gemini interaction was found."
+                  break
+                fi
+                ;;
+              *)
+                echo "Worker returned an unexpected state: ${worker_status}."
+                break
+                ;;
+            esac
+          done
