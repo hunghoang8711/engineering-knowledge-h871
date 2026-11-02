@@ -17,6 +17,14 @@
  function feedback(id,msg,error=false){const el=$("#"+id+"-feedback");if(el){el.textContent=msg;el.classList.toggle("error",error);}}
  function esc(s){return String(s??"");}
  function make(tag,cls,text){const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e;}
+ function getDocumentAnalysisCapability(d){
+  const raw=String(d.file_type||"").trim().toLowerCase();
+  const name=String(d.original_filename||d.title||"").trim().toLowerCase();
+  const ext=raw==="application/pdf"?"pdf":(raw||name.split(".").pop());
+  if(ext==="pdf"||name.endsWith(".pdf"))return {kind:"pdf",label:"PDF · max 5 MiB",detail:"Eligible for the current Gemini flow. The worker checks the actual file size before sending any document data."};
+  if(officeExt.includes(ext))return {kind:"stored",label:"Stored only · AI reader pending",detail:"Upload and private storage are supported, but text extraction and AI analysis are not enabled for this format. It is not sent to Gemini."};
+  return {kind:"unsupported",label:"No analysis adapter",detail:"The current uploader and AI pipeline do not support this format."};
+ }
  function projectTags(value){const source=Array.isArray(value)?value:[value];return [...new Set(source.flatMap(item=>String(item??"").split(",")).map(tag=>tag.trim()).filter(Boolean))];}
  function renderProjectTags(container,value){container.replaceChildren();projectTags(value).forEach(tag=>container.append(make("span","project-tag",tag)));}
  function backToAppOr(path){try{const ref=document.referrer?new URL(document.referrer):null;const here=new URL(location.href);if(ref&&ref.origin===here.origin&&ref.pathname.startsWith(here.pathname.slice(0,here.pathname.lastIndexOf("/")+1))){history.back();return;}}catch{}location.href=path;}
@@ -310,6 +318,17 @@
    const aiHead=make("div","detail-section-heading");aiHead.append(make("h3","","AI analysis & history"),make("span","","Gemini · PDF only"));aiSection.append(aiHead);
    const aiIntro=make("p","muted-copy","Analyze an approved PDF directly with Gemini. This does not change the project summary or tags until you choose Main Concept.");
    aiSection.append(aiIntro);
+   const compatibility=make("div","analysis-compatibility-panel");
+   compatibility.append(make("strong","analysis-compatibility-title","Document compatibility"));
+   const compatibilityRows=[
+    ["PDF","Gemini analysis is available for files up to 5 MiB. The worker checks the actual size before sending."],
+    ["Word · Excel · PowerPoint","Upload and private storage are supported. Content extraction and AI analysis are not enabled yet; these files are never sent to Gemini."],
+    ["CAD · images · archives","Not accepted by the current uploader. No automatic conversion or AI processing is attempted."],
+    ["Processing control","Analysis starts only after an editor/admin explicitly selects Analyze PDF. Server-side data-processing approval is also required."]
+   ];
+   compatibilityRows.forEach(([label,description])=>{const row=make("div","analysis-compatibility-row");row.append(make("strong","",label),make("span","",description));compatibility.append(row);});
+   aiSection.append(compatibility);
+
    const aiOutput=make("div","ai-analysis-output");aiOutput.id="ai-analysis-output";aiSection.append(aiOutput);
    const historyTitle=make("h4","ai-history-title","Recent analysis history");aiSection.append(historyTitle);
    const historyList=make("div","ai-history-list");historyList.id="ai-history-list";historyList.append(make("p","muted-copy","Loading analysis history…"));aiSection.append(historyList);
@@ -320,7 +339,7 @@
   window.scrollTo({top:0,behavior:"smooth"});
  }
  function fileCard(d){
-  const project=projects.find(x=>x.id===d.project_id);const isMainConcept=project?.main_concept_document_id===d.id;const card=make("article","document-card"+(isMainConcept?" is-main-concept":""));const ext=(d.file_type||"FILE").toUpperCase();const info=make("div","document-main");info.append(make("span","file-type-badge",ext),make("strong","document-title",d.original_filename||d.title));if(isMainConcept)info.append(make("span","main-concept-badge","MAIN"));info.append(make("p","document-note",d.notes||"No note for this file."),make("p","document-meta","Updated "+new Date(d.updated_at||d.created_at).toLocaleString()+" · "+(d.updated_by===user?.id?"updated by you":d.updated_by?"updated by "+(d.updated_by_name||d.updated_by.slice(0,8)):"uploaded by "+(d.created_by===user?.id?"you":(d.created_by_name||String(d.created_by||"unknown").slice(0,8))))+" · "+(d.status||"pending_review")));card.append(info);
+  const project=projects.find(x=>x.id===d.project_id);const isMainConcept=project?.main_concept_document_id===d.id;const card=make("article","document-card"+(isMainConcept?" is-main-concept":""));const ext=(d.file_type||"FILE").toUpperCase();const info=make("div","document-main");info.append(make("span","file-type-badge",ext),make("strong","document-title",d.original_filename||d.title));if(isMainConcept)info.append(make("span","main-concept-badge","MAIN"));const capability=getDocumentAnalysisCapability(d);const capabilityBadge=make("span","document-analysis-capability "+capability.kind,capability.label);capabilityBadge.title=capability.detail;info.append(capabilityBadge);info.append(make("p","document-note",d.notes||"No note for this file."),make("p","document-meta","Updated "+new Date(d.updated_at||d.created_at).toLocaleString()+" · "+(d.updated_by===user?.id?"updated by you":d.updated_by?"updated by "+(d.updated_by_name||d.updated_by.slice(0,8)):"uploaded by "+(d.created_by===user?.id?"you":(d.created_by_name||String(d.created_by||"unknown").slice(0,8))))+" · "+(d.status||"pending_review")));card.append(info);
   const open=make("button","download-file","Open / download");open.type="button";open.addEventListener("click",async()=>{const {data,error}=await client.storage.from("h871-project-documents").createSignedUrl(d.relative_path,60);if(error){say(error.message,true);return;}window.open(data.signedUrl,"_blank","noopener");});card.append(open);
   const isPdf=(d.file_type||"").toLowerCase()==="pdf"||(d.original_filename||d.title||"").toLowerCase().endsWith(".pdf");
   if(canWrite()&&isPdf){const mainBtn=make("button","ai-apply-button",isMainConcept?"✓ Main Concept":"Set as Main Concept");mainBtn.type="button";mainBtn.disabled=isMainConcept;mainBtn.title=isMainConcept?"This document is already the project's Main Concept":"Use the latest successful AI analysis of this PDF as the project's Main Concept";mainBtn.addEventListener("click",async()=>{if(!confirm("Set this PDF as the project's Main Concept using its latest successful AI analysis? The project description and tags will be updated and a history snapshot saved."))return;mainBtn.disabled=true;mainBtn.textContent="Applying…";try{const {error}=await client.rpc("apply_main_concept",{p_project_id:d.project_id,p_document_id:d.id});if(error)throw error;loadedModules.delete("projects");await loadModule("projects",true);await openProject(d.project_id);say("Main Concept applied. Project description and tags updated; change history saved.");}catch(err){say("Could not set Main Concept: "+(err.message||"Unknown error")+". Ensure this PDF has a successful AI analysis first.",true);mainBtn.disabled=false;mainBtn.textContent="Set as Main Concept";}});card.append(mainBtn);const analyze=make("button","ai-analyze-button","✦ Analyze PDF");analyze.type="button";analyze.addEventListener("click",()=>{
