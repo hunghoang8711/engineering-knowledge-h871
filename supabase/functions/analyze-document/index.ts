@@ -64,6 +64,13 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return json({ error: "METHOD_NOT_ALLOWED" }, 405);
 
+  // The synchronous legacy endpoint is retired by default. The current UI uses
+  // enqueue-analysis + process-analysis-queue; fail closed so a previously
+  // deployed endpoint cannot bypass the queue worker consent and safety gates.
+  if (Deno.env.get("H871_LEGACY_ANALYZE_DOCUMENT_ENABLED") !== "true") {
+    return json({ error: "LEGACY_ANALYSIS_ENDPOINT_DISABLED" }, 410);
+  }
+
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
@@ -200,7 +207,7 @@ Deno.serve(async (req) => {
 
   let stage = "read_file_bytes";
   const analysisStartedAt = Date.now();
-  let geminiTimeoutHandle: number | undefined;
+  let geminiTimeoutHandle: ReturnType<typeof setTimeout> | undefined;
   let geminiTimedOut = false;
   let geminiAbortController: AbortController | undefined;
   try {

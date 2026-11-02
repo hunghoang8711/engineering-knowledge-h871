@@ -4,6 +4,7 @@
  let client=null,user=null,role=null,active="overview",projects=[],customers=[],documents=[],knowledgeEntries=[],selectedProject=null,moduleLoadToken=0,knownEndUsers=[];
  let listSearch="",listFilter="",listFilterValue="",listToolbarReady=false;
  const knownTags=new Set();
+ const analysisIdempotencyKeys=new Map();
  const loadedModules=new Set();
  const officeExt=["pdf","doc","docx","docm","xls","xlsx","xlsm","ppt","pptx","pptm"];
  const defs={
@@ -300,7 +301,7 @@
   const fileSection=make("section","detail-section");const fh=make("div","detail-section-heading");fh.append(make("h3","","Project documents"),make("span","",String(documents.filter(d=>d.project_id===p.id).length)+" files"));fileSection.append(fh);
   const fileRows=make("div","project-document-list");documents.filter(d=>d.project_id===p.id).forEach(d=>fileRows.append(fileCard(d)));if(!fileRows.children.length)fileRows.append(make("p","muted-copy","No files have been added to this project."));fileSection.append(fileRows);
   if(canWrite()){
-   const uploadToggle=make("button","module-create-toggle","＋ Add project file");uploadToggle.type="button";const form=make("form","upload-document-form");form.hidden=true;uploadToggle.addEventListener("click",()=>{form.hidden=!form.hidden;uploadToggle.textContent=form.hidden?"＋ Add project file":"Cancel";if(!form.hidden)form.querySelector('input[type="file"]')?.focus({preventScroll:true});});fileSection.append(uploadToggle);form.innerHTML='<label>Upload files (PDF, Word, Excel, PowerPoint only)</label><input type="file" name="files" multiple required accept=".pdf,.doc,.docx,.docm,.xls,.xlsx,.xlsm,.ppt,.pptx,.pptm"><label>Notes for these files</label><textarea name="notes" rows="2" maxlength="2000" placeholder="Purpose, revision context, changes or instructions"></textarea><button type="submit">＋ Add project files</button><p class="form-feedback" role="status"></p>';
+   const uploadToggle=make("button","module-create-toggle","＋ Add project file");uploadToggle.type="button";const form=make("form","upload-document-form");form.hidden=true;uploadToggle.addEventListener("click",()=>{form.hidden=!form.hidden;uploadToggle.textContent=form.hidden?"＋ Add project file":"Cancel";if(!form.hidden)form.querySelector('input[type="file"]')?.focus({preventScroll:true});});fileSection.append(uploadToggle);form.innerHTML='<label>Upload files (PDF, Word, Excel, PowerPoint only)</label><input type="file" name="files" multiple required accept=".pdf,.doc,.docx,.docm,.xls,.xlsx,.xlsm,.ppt,.pptx,.pptm"><p class="muted-copy">Storage upload limit: 50 MiB per file. H871 AI analysis currently accepts PDF files up to 5 MiB; larger PDFs can still be stored but cannot be analyzed by the current AI worker.</p><label>Notes for these files</label><textarea name="notes" rows="2" maxlength="2000" placeholder="Purpose, revision context, changes or instructions"></textarea><button type="submit">＋ Add project files</button><p class="form-feedback" role="status"></p>';
    form.addEventListener("submit",async e=>{e.preventDefault();const files=[...form.querySelector('input[type=file]').files];const note=form.querySelector("textarea").value.trim();const msg=form.querySelector(".form-feedback");if(!files.length)return;const bad=files.find(f=>!officeExt.includes(f.name.split(".").pop().toLowerCase()));if(bad){msg.textContent="Unsupported file: "+bad.name;return;}const btn=form.querySelector("button");btn.disabled=true;msg.textContent="Uploading…";try{await uploadFiles(p.id,files,note);loadedModules.delete("projects");await loadModule("projects",true);await openProject(p.id);}catch(err){msg.textContent="Upload failed: "+err.message;}finally{btn.disabled=false;}});fileSection.append(form);
   }else fileSection.append(make("p","muted-copy","Read-only access: only editors and admins can add files."));
   detail.append(fileSection);
@@ -328,7 +329,12 @@
    output.replaceChildren(make("p","muted-copy","Submitting this selected PDF to the H871 analysis queue…"));
    (async()=>{
     try{
-     const idempotencyKey=crypto.randomUUID();
+     const requestKeyName="h871-ai-analysis-idempotency:"+d.id;
+     let idempotencyKey=analysisIdempotencyKeys.get(d.id)||null;
+     if(!idempotencyKey){try{idempotencyKey=sessionStorage.getItem(requestKeyName);}catch{/* Storage may be disabled by browser policy. */}}
+     if(!idempotencyKey)idempotencyKey=crypto.randomUUID();
+     analysisIdempotencyKeys.set(d.id,idempotencyKey);
+     try{sessionStorage.setItem(requestKeyName,idempotencyKey);}catch{/* Continue with in-memory idempotency when storage is unavailable. */}
      const {data,error}=await client.functions.invoke("enqueue-analysis",{body:{documentId:d.id,projectId:d.project_id,idempotencyKey}});
      if(error){let detail=error.message||"Queue request failed";try{const ctx=error.context;if(ctx&&typeof ctx.json==="function"){const body=await ctx.json();detail=body.message||body.error||detail;}}catch{}throw new Error(detail);}
      if(data?.error)throw new Error(data.message||data.error);
@@ -344,11 +350,15 @@
       latest=row;
       if(!row)throw new Error("The analysis record could not be found.");
       if(row.status==="succeeded"){
+       analysisIdempotencyKeys.delete(d.id);
+       try{sessionStorage.removeItem(requestKeyName);}catch{/* Ignore unavailable session storage. */}
        if(output.isConnected)renderProjectAIResult(output,d,{result:row.result});
        if(history?.isConnected)await loadProjectAIHistory(d.project_id,history);
        return;
       }
       if(["failed","quota_exhausted","cancelled"].includes(row.status)){
+       analysisIdempotencyKeys.delete(d.id);
+       try{sessionStorage.removeItem(requestKeyName);}catch{/* Ignore unavailable session storage. */}
        const statusText=row.status==="quota_exhausted"?"Gemini free quota/rate limit reached; no paid fallback was used.":(row.error_message||row.error_code||"Analysis failed.");
        if(output.isConnected)output.replaceChildren(make("p","form-feedback error","Analysis "+row.status+": "+statusText));
        if(history?.isConnected)await loadProjectAIHistory(d.project_id,history);
@@ -356,13 +366,13 @@
       }
       if(output.isConnected)output.replaceChildren(make("p","muted-copy","Analysis status: "+(row.status||"queued")+". The background worker is processing the selected PDF."));
      }
-     if(output.isConnected)output.replaceChildren(make("p","muted-copy","The request remains "+(latest?.status||"queued")+". Background processing may take longer; reopen this project to view the saved status and result."));
+     if(output.isConnected)output.replaceChildren(make("p","muted-copy","The request remains "+(latest?.status||"queued")+". Background processing may take longer. Click “Resume analysis” to continue checking this same request; its saved idempotency key prevents a duplicate submission."));
      if(history?.isConnected)await loadProjectAIHistory(d.project_id,history);
     }catch(err){
      if(output.isConnected)output.replaceChildren(make("p","form-feedback error","AI analysis request failed: "+(err.message||"Unknown error")));
      if(history?.isConnected)await loadProjectAIHistory(d.project_id,history);
     }finally{
-     if(analyze.isConnected){analyze.disabled=false;analyze.textContent="✦ Analyze PDF";}
+     if(analyze.isConnected){analyze.disabled=false;analyze.textContent=analysisIdempotencyKeys.has(d.id)?"↻ Resume analysis":"✦ Analyze PDF";}
     }
    })();
   });card.append(analyze);}
@@ -426,8 +436,8 @@
    output.append(block);
   }else addList("Suggested tags",result.suggested_tags);
   if(Array.isArray(result.source_references)&&result.source_references.length){const block=make("div","ai-result-block");block.append(make("h4","","Source references"));const ul=make("ul");result.source_references.forEach(ref=>{const li=make("li","",[ref.reference,ref.claim].filter(Boolean).join(" — ")||JSON.stringify(ref));ul.append(li);});block.append(ul);output.append(block);}
-  if(canWrite()&&options.includeApply!==false){const apply=make("button","ai-apply-button","Set this document as Main Concept");apply.type="button";apply.addEventListener("click",async()=>{if(!confirm("Use the latest successful analysis of this document to replace the project summary and tags? A history snapshot will be saved."))return;apply.disabled=true;apply.textContent="Applying…";try{const tagEditor=output.querySelector(".ai-tag-editor");let chosenProjectTags=projects.find(x=>x.id===doc.project_id)?.tags||[];if(tagEditor&&tagEditor.querySelector(".ai-tag-target")?.value==="project"){chosenProjectTags=[...tagEditor.querySelectorAll('button.ai-suggested-tag[aria-pressed="true"] .ai-suggested-tag-text')].map(el=>el.textContent||"");chosenProjectTags=[...new Map(chosenProjectTags.map(t=>[t.trim().toLowerCase(),t.trim()])).values()].filter(Boolean);}const {data:historyId,error}=await client.rpc("apply_main_concept",{p_project_id:doc.project_id,p_document_id:doc.id});if(error)throw error;const {error:tagRestoreError}=await client.from("projects").update({tags:chosenProjectTags,updated_at:new Date().toISOString()}).eq("id",doc.project_id);if(tagRestoreError)throw tagRestoreError;const {data:project,error:projectError}=await client.from("projects").select("id,code,name,description,status,tags,main_concept_document_id,created_at,updated_at").eq("id",doc.project_id).single();if(projectError)throw projectError;projects=[...projects.filter(x=>x.id!==project.id),project];selectedProject=project;const header=$("#module-detail .project-detail-header");if(header){const desc=header.querySelector(".project-description");if(desc)desc.textContent=project.description||"No description provided.";let tagBox=header.querySelector(".project-tags");if(!tagBox){tagBox=make("div","project-tags");const status=header.querySelector(".project-status");header.insertBefore(tagBox,status||null);}renderProjectTags(tagBox,project.tags);}const fileRows=$("#module-detail .project-document-list");if(fileRows){fileRows.replaceChildren();documents.filter(d=>d.project_id===project.id).forEach(d=>fileRows.append(fileCard(d)));}say("Main Concept applied. Project description and tags updated; change history saved.");const list=$("#ai-history-list");if(list)await loadProjectAIHistory(doc.project_id,list);apply.textContent="Main Concept applied";}catch(err){say("Could not apply Main Concept: "+err.message,true);apply.disabled=false;apply.textContent="Set this document as Main Concept";}});output.append(apply);}
- }
+  if(canWrite()&&options.includeApply!==false){const apply=make("button","ai-apply-button","Set this document as Main Concept");apply.type="button";apply.addEventListener("click",async()=>{if(!confirm("Use this successful analysis as Main Concept? The AI summary and suggested tags will replace the project description and tags. The change and its history snapshot are saved together."))return;apply.disabled=true;apply.textContent="Applying…";try{const {error}=await client.rpc("apply_main_concept",{p_project_id:doc.project_id,p_document_id:doc.id});if(error)throw error;const {data:project,error:projectError}=await client.from("projects").select("id,code,name,description,status,tags,main_concept_document_id,created_at,updated_at").eq("id",doc.project_id).single();if(projectError)throw projectError;projects=[...projects.filter(x=>x.id!==project.id),project];selectedProject=project;const header=$("#module-detail .project-detail-header");if(header){const desc=header.querySelector(".project-description");if(desc)desc.textContent=project.description||"No description provided.";let tagBox=header.querySelector(".project-tags");if(!tagBox){tagBox=make("div","project-tags");const status=header.querySelector(".project-status");header.insertBefore(tagBox,status||null);}renderProjectTags(tagBox,project.tags);}const fileRows=$("#module-detail .project-document-list");if(fileRows){fileRows.replaceChildren();documents.filter(d=>d.project_id===project.id).forEach(d=>fileRows.append(fileCard(d)));}say("Main Concept applied. Project description and tags updated; change history saved.");const list=$("#ai-history-list");if(list)await loadProjectAIHistory(doc.project_id,list);apply.textContent="Main Concept applied";}catch(err){say("Could not apply Main Concept: "+err.message,true);apply.disabled=false;apply.textContent="Set this document as Main Concept";}});output.append(apply);}
+}
  async function loadProjectAIHistory(projectId,container){
   if(!container||!client||!user||!canWrite())return;
   container.replaceChildren(make("p","muted-copy","Loading analysis history…"));
@@ -470,7 +480,7 @@
   }
   const {data:changes,error:historyError}=await client.from("project_change_history").select("id,event_type,source_document_id,previous_description,new_description,previous_tags,new_tags,created_at,restored_from_history_id").eq("project_id",projectId).order("created_at",{ascending:false}).limit(10);
   if(historyError){container.append(make("p","form-feedback error","Could not load project change history: "+historyError.message));return;}
-  if(changes?.length){container.append(make("h4","ai-history-title","Main Concept change history"));changes.forEach(change=>{const row=make("article","ai-history-item");row.append(make("div","ai-history-top",String(change.event_type||"change").replaceAll("_"," ")),make("p","document-meta",new Date(change.created_at).toLocaleString()));row.append(make("p","ai-history-description","Description: "+(change.new_description||"—")));row.append(make("p","ai-history-description","Tags: "+((change.new_tags||[]).join(", ")||"—")));if(change.restored_from_history_id)row.append(make("p","muted-copy","Restored from a previous snapshot."));container.append(row);});}
+  if(changes?.length){container.append(make("h4","ai-history-title","Main Concept change history"));changes.forEach(change=>{const row=make("article","ai-history-item");row.append(make("div","ai-history-top",String(change.event_type||"change").replaceAll("_"," ")),make("p","document-meta",new Date(change.created_at).toLocaleString()));row.append(make("p","ai-history-description","Description: "+(change.new_description||"—")));row.append(make("p","ai-history-description","Tags: "+((change.new_tags||[]).join(", ")||"—")));if(change.restored_from_history_id)row.append(make("p","muted-copy","Restored from a previous snapshot."));if(canWrite()){const restore=make("button","ai-history-restore","Restore this version");restore.type="button";restore.addEventListener("click",async()=>{if(!confirm("Restore this historical project description, tags and Main Concept? A new history entry will be created; existing history will be preserved."))return;restore.disabled=true;restore.textContent="Restoring…";try{const {error}=await client.rpc("restore_project_history",{p_project_id:projectId,p_history_id:change.id});if(error)throw error;loadedModules.delete("projects");await loadModule("projects",true);await openProject(projectId,false);say("Previous project version restored. A new history entry was saved.");}catch(err){restore.disabled=false;restore.textContent="Restore this version";say("Could not restore project history: "+(err.message||"Unknown error"),true);}});row.append(restore);}container.append(row);});}
  }
  function wireForms(){
   $("#customer-type")?.addEventListener("change",updateCustomerForm);updateCustomerForm();$("#project-tags")?.addEventListener("input",()=>{const values=$("#project-tags").value.split(",").map(x=>x.trim()).filter(Boolean);values.forEach(t=>knownTags.add(t));populateTagSuggestions();});

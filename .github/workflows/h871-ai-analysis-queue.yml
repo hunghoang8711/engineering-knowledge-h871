@@ -53,3 +53,10 @@ jobs:
           fi
 
           echo "Queue worker invocation completed with HTTP ${http_status}."
+
+          # Log only the worker's safe state fields, never raw response bodies.
+          if jq -e 'type == "object"' "$response_file" >/dev/null; then
+            jq -c '{status: (.status // null), jobId: (.jobId // null), error: (.error // null), providerStatus: (.providerStatus // null), poll: (.poll // null)}' "$response_file"
+          else
+            echo "Queue worker returned a non-JSON response body."
+          fi
