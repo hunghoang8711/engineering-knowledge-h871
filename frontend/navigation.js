@@ -89,7 +89,8 @@
   hint.classList.toggle("error",!!match);
  }
  async function uploadFiles(projectId,files,notes){
-  const uploaded=[];for(const file of files){
+  const report={uploaded:[],queued:[],skipped:[],queueErrors:[]};
+  for(const file of files){
    const ext=file.name.split(".").pop().toLowerCase();
    if(!officeExt.includes(ext))throw new Error("Unsupported file type: "+file.name+". Only PDF, Word, Excel and PowerPoint files are allowed.");
    if(file.size>50*1024*1024)throw new Error(file.name+" exceeds the 50 MB limit.");
@@ -98,13 +99,44 @@
    const path=projectId+"/"+crypto.randomUUID()+"."+safeExt;
    const {error:storageError}=await client.storage.from("h871-project-documents").upload(path,file,{upsert:false,contentType:file.type||undefined});
    if(storageError)throw storageError;
-   const {error:rowError}=await client.from("documents").insert({
+   const {data:documentRow,error:rowError}=await client.from("documents").insert({
     project_id:projectId,title:file.name,original_filename:file.name,file_type:ext.toUpperCase(),relative_path:path,
     notes:notes||null,source_kind:"local_file",status:"pending_review",created_by:user.id,updated_by:user.id,created_by_name:user.email||"H871 user",updated_by_name:user.email||"H871 user"
-   });
-   if(rowError){await client.storage.from("h871-project-documents").remove([path]);throw rowError;}
-   uploaded.push(file.name);
-  }return uploaded;
+   }).select("id").single();
+   if(rowError||!documentRow?.id){await client.storage.from("h871-project-documents").remove([path]);throw rowError||new Error("The document record was not created.");}
+   report.uploaded.push(file.name);
+
+   if(ext!=="pdf"){report.skipped.push(file.name+" (PDF analysis only)");continue;}
+   if(file.size>5*1024*1024){report.skipped.push(file.name+" (larger than the 5 MiB AI limit)");continue;}
+
+   // Use the document UUID as a stable idempotency key. Retrying the same
+   // upload request cannot create a second Gemini job for this document.
+   const idempotencyKey=documentRow.id;
+   try{
+    const {data:queueData,error:queueError}=await client.functions.invoke("enqueue-analysis",{
+     body:{documentId:documentRow.id,projectId,idempotencyKey}
+    });
+    if(queueError||queueData?.error||!queueData?.analysisId){
+     let detail=queueData?.message||queueData?.error||queueError?.message||"The queue did not confirm an analysis ID.";
+     try{const ctx=queueError?.context;if(ctx&&typeof ctx.json==="function"){const body=await ctx.json();detail=body.message||body.error||detail;}}catch{}
+     report.queueErrors.push(file.name+": "+detail);
+    }else{
+     analysisIdempotencyKeys.set(documentRow.id,idempotencyKey);
+     try{sessionStorage.setItem("h871-ai-analysis-idempotency:"+documentRow.id,idempotencyKey);}catch{/* Stable key remains in memory for this page session. */}
+     report.queued.push(file.name);
+    }
+   }catch(error){
+    report.queueErrors.push(file.name+": "+(error?.message||"Queue request failed."));
+   }
+  }
+  return report;
+ }
+ function uploadReportMessage(report){
+  const parts=[report.uploaded.length+" file(s) uploaded."];
+  if(report.queued.length)parts.push(report.queued.length+" PDF(s) automatically queued for Gemini.");
+  if(report.skipped.length)parts.push("Not queued: "+report.skipped.join("; ")+".");
+  if(report.queueErrors.length)parts.push("Upload succeeded, but auto-queue needs attention: "+report.queueErrors.join("; ")+".");
+  return parts.join(" ");
  }
  async function loadModule(tab,force=false){
   if(!force&&loadedModules.has(tab))return;
@@ -310,13 +342,13 @@
   const fileRows=make("div","project-document-list");documents.filter(d=>d.project_id===p.id).forEach(d=>fileRows.append(fileCard(d)));if(!fileRows.children.length)fileRows.append(make("p","muted-copy","No files have been added to this project."));fileSection.append(fileRows);
   if(canWrite()){
    const uploadToggle=make("button","module-create-toggle","＋ Add project file");uploadToggle.type="button";const form=make("form","upload-document-form");form.hidden=true;uploadToggle.addEventListener("click",()=>{form.hidden=!form.hidden;uploadToggle.textContent=form.hidden?"＋ Add project file":"Cancel";if(!form.hidden)form.querySelector('input[type="file"]')?.focus({preventScroll:true});});fileSection.append(uploadToggle);form.innerHTML='<label>Upload files (PDF, Word, Excel, PowerPoint only)</label><input type="file" name="files" multiple required accept=".pdf,.doc,.docx,.docm,.xls,.xlsx,.xlsm,.ppt,.pptx,.pptm"><p class="muted-copy">Storage upload limit: 50 MiB per file. H871 AI analysis currently accepts PDF files up to 5 MiB; larger PDFs can still be stored but cannot be analyzed by the current AI worker.</p><label>Notes for these files</label><textarea name="notes" rows="2" maxlength="2000" placeholder="Purpose, revision context, changes or instructions"></textarea><button type="submit">＋ Add project files</button><p class="form-feedback" role="status"></p>';
-   form.addEventListener("submit",async e=>{e.preventDefault();const files=[...form.querySelector('input[type=file]').files];const note=form.querySelector("textarea").value.trim();const msg=form.querySelector(".form-feedback");if(!files.length)return;const bad=files.find(f=>!officeExt.includes(f.name.split(".").pop().toLowerCase()));if(bad){msg.textContent="Unsupported file: "+bad.name;return;}const btn=form.querySelector("button");btn.disabled=true;msg.textContent="Uploading…";try{await uploadFiles(p.id,files,note);loadedModules.delete("projects");await loadModule("projects",true);await openProject(p.id);}catch(err){msg.textContent="Upload failed: "+err.message;}finally{btn.disabled=false;}});fileSection.append(form);
+   form.addEventListener("submit",async e=>{e.preventDefault();const files=[...form.querySelector('input[type=file]').files];const note=form.querySelector("textarea").value.trim();const msg=form.querySelector(".form-feedback");if(!files.length)return;const bad=files.find(f=>!officeExt.includes(f.name.split(".").pop().toLowerCase()));if(bad){msg.textContent="Unsupported file: "+bad.name;return;}const btn=form.querySelector("button");btn.disabled=true;msg.textContent="Uploading…";try{const report=await uploadFiles(p.id,files,note);msg.textContent=uploadReportMessage(report);loadedModules.delete("projects");await loadModule("projects",true);await openProject(p.id);}catch(err){msg.textContent="Upload failed: "+err.message;}finally{btn.disabled=false;}});fileSection.append(form);
   }else fileSection.append(make("p","muted-copy","Read-only access: only editors and admins can add files."));
   detail.append(fileSection);
   if(user){
    const aiSection=make("section","detail-section ai-analysis-section");aiSection.id="project-ai-analysis";
    const aiHead=make("div","detail-section-heading");aiHead.append(make("h3","","AI analysis & history"),make("span","","Gemini · PDF only"));aiSection.append(aiHead);
-   const aiIntro=make("p","muted-copy","Analyze an approved PDF directly with Gemini. This does not change the project summary or tags until you choose Main Concept.");
+   const aiIntro=make("p","muted-copy","PDFs up to 5 MiB are automatically queued for Gemini after upload. Results are saved to this project; this does not change the project summary or tags until you choose Main Concept.");
    aiSection.append(aiIntro);
    const compatibility=make("div","analysis-compatibility-panel");
    compatibility.append(make("strong","analysis-compatibility-title","Document compatibility"));
@@ -324,7 +356,7 @@
     ["PDF","Gemini analysis is available for files up to 5 MiB. The worker checks the actual size before sending."],
     ["Word · Excel · PowerPoint","Upload and private storage are supported. Content extraction and AI analysis are not enabled yet; these files are never sent to Gemini."],
     ["CAD · images · archives","Not accepted by the current uploader. No automatic conversion or AI processing is attempted."],
-    ["Processing control","Analysis starts only after an editor/admin explicitly selects Analyze PDF. Server-side data-processing approval is also required."]
+    ["Processing control","PDF analysis is automatically queued after an editor/admin uploads the file. Server-side data-processing approval and the scheduled worker must be enabled."]
    ];
    compatibilityRows.forEach(([label,description])=>{const row=make("div","analysis-compatibility-row");row.append(make("strong","",label),make("span","",description));compatibility.append(row);});
    aiSection.append(compatibility);
@@ -342,7 +374,7 @@
   const project=projects.find(x=>x.id===d.project_id);const isMainConcept=project?.main_concept_document_id===d.id;const card=make("article","document-card"+(isMainConcept?" is-main-concept":""));const ext=(d.file_type||"FILE").toUpperCase();const info=make("div","document-main");info.append(make("span","file-type-badge",ext),make("strong","document-title",d.original_filename||d.title));if(isMainConcept)info.append(make("span","main-concept-badge","MAIN"));const capability=getDocumentAnalysisCapability(d);const capabilityBadge=make("span","document-analysis-capability "+capability.kind,capability.label);capabilityBadge.title=capability.detail;info.append(capabilityBadge);info.append(make("p","document-note",d.notes||"No note for this file."),make("p","document-meta","Updated "+new Date(d.updated_at||d.created_at).toLocaleString()+" · "+(d.updated_by===user?.id?"updated by you":d.updated_by?"updated by "+(d.updated_by_name||d.updated_by.slice(0,8)):"uploaded by "+(d.created_by===user?.id?"you":(d.created_by_name||String(d.created_by||"unknown").slice(0,8))))+" · "+(d.status||"pending_review")));card.append(info);
   const open=make("button","download-file","Open / download");open.type="button";open.addEventListener("click",async()=>{const {data,error}=await client.storage.from("h871-project-documents").createSignedUrl(d.relative_path,60);if(error){say(error.message,true);return;}window.open(data.signedUrl,"_blank","noopener");});card.append(open);
   const isPdf=(d.file_type||"").toLowerCase()==="pdf"||(d.original_filename||d.title||"").toLowerCase().endsWith(".pdf");
-  if(canWrite()&&isPdf){const mainBtn=make("button","ai-apply-button",isMainConcept?"✓ Main Concept":"Set as Main Concept");mainBtn.type="button";mainBtn.disabled=isMainConcept;mainBtn.title=isMainConcept?"This document is already the project's Main Concept":"Use the latest successful AI analysis of this PDF as the project's Main Concept";mainBtn.addEventListener("click",async()=>{if(!confirm("Set this PDF as the project's Main Concept using its latest successful AI analysis? The project description and tags will be updated and a history snapshot saved."))return;mainBtn.disabled=true;mainBtn.textContent="Applying…";try{const {error}=await client.rpc("apply_main_concept",{p_project_id:d.project_id,p_document_id:d.id});if(error)throw error;loadedModules.delete("projects");await loadModule("projects",true);await openProject(d.project_id);say("Main Concept applied. Project description and tags updated; change history saved.");}catch(err){say("Could not set Main Concept: "+(err.message||"Unknown error")+". Ensure this PDF has a successful AI analysis first.",true);mainBtn.disabled=false;mainBtn.textContent="Set as Main Concept";}});card.append(mainBtn);const analyze=make("button","ai-analyze-button","✦ Analyze PDF");analyze.type="button";analyze.addEventListener("click",()=>{
+  if(canWrite()&&isPdf){const mainBtn=make("button","ai-apply-button",isMainConcept?"✓ Main Concept":"Set as Main Concept");mainBtn.type="button";mainBtn.disabled=isMainConcept;mainBtn.title=isMainConcept?"This document is already the project's Main Concept":"Use the latest successful AI analysis of this PDF as the project's Main Concept";mainBtn.addEventListener("click",async()=>{if(!confirm("Set this PDF as the project's Main Concept using its latest successful AI analysis? The project description and tags will be updated and a history snapshot saved."))return;mainBtn.disabled=true;mainBtn.textContent="Applying…";try{const {error}=await client.rpc("apply_main_concept",{p_project_id:d.project_id,p_document_id:d.id});if(error)throw error;loadedModules.delete("projects");await loadModule("projects",true);await openProject(d.project_id);say("Main Concept applied. Project description and tags updated; change history saved.");}catch(err){say("Could not set Main Concept: "+(err.message||"Unknown error")+". Ensure this PDF has a successful AI analysis first.",true);mainBtn.disabled=false;mainBtn.textContent="Set as Main Concept";}});card.append(mainBtn);let resumeKey=analysisIdempotencyKeys.get(d.id)||null;if(!resumeKey){try{resumeKey=sessionStorage.getItem("h871-ai-analysis-idempotency:"+d.id);}catch{/* Session storage may be unavailable. */}}if(resumeKey)analysisIdempotencyKeys.set(d.id,resumeKey);const analyze=make("button","ai-analyze-button",resumeKey?"↻ Resume analysis":"✦ Analyze PDF");analyze.type="button";analyze.addEventListener("click",()=>{
    const output=$("#ai-analysis-output"),history=$("#ai-history-list");if(!output){say("Open project details to run AI analysis.",true);return;}
    analyze.disabled=true;analyze.textContent="Queued…";
    output.replaceChildren(make("p","muted-copy","Submitting this selected PDF to the H871 analysis queue…"));
@@ -606,8 +638,8 @@
     }
     const endUserName=$("#project-end-user")?.value.trim()||null;
     if(customerId){const {error:ce}=await client.from("project_customers").insert({project_id:p.id,customer_id:customerId,end_user_name:endUserName,created_by:user.id});if(ce)throw new Error("Project was created, but the customer link failed: "+ce.message);if(endUserName&&!knownEndUsers.some(n=>n.toLowerCase()===endUserName.toLowerCase()))knownEndUsers.push(endUserName);knownEndUsers=[...new Set(knownEndUsers)].sort((a,b)=>a.localeCompare(b));populateCustomerSuggestions();}
-    const files=[...$("#project-files").files];if(files.length)await uploadFiles(p.id,files,$("#project-file-notes").value.trim());
-    form.reset();feedback("project","Project created successfully.");document.querySelector('[data-form-mount="projects"]').hidden=true;$("#module-create-toggle").textContent="＋ Add project";loadedModules.delete("projects");await loadModule("projects",true);await openProject(p.id);
+    const files=[...$("#project-files").files];let uploadReport=null;if(files.length)uploadReport=await uploadFiles(p.id,files,$("#project-file-notes").value.trim());
+    form.reset();feedback("project",uploadReport?("Project created successfully. "+uploadReportMessage(uploadReport)):"Project created successfully.");document.querySelector('[data-form-mount="projects"]').hidden=true;$("#module-create-toggle").textContent="＋ Add project";loadedModules.delete("projects");await loadModule("projects",true);await openProject(p.id);
    }catch(err){feedback("project","Could not create project: "+err.message,true);}finally{btn.disabled=false;}
   });
   $("#customer-form")?.addEventListener("submit",async e=>{
