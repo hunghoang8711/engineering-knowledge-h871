@@ -430,3 +430,25 @@ body[data-start-tab]:not([data-start-tab="overview"]):not([data-start-tab="searc
 body[data-start-tab]:not([data-start-tab="overview"]):not([data-start-tab="search"]) .main-content > footer {
   display: none;
 }
+
+/* H871 AI analysis version comparison */
+.ai-analysis-compare{display:grid;gap:14px;margin:18px 0 22px;padding:16px;border:1px solid #30445b;border-radius:12px;background:#0e1a2a}
+.ai-compare-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.ai-compare-field{display:grid;gap:6px;color:#b9c9dc;font-size:12px;font-weight:700}
+.ai-compare-select{box-sizing:border-box;width:100%;min-width:0;padding:9px 10px;border:1px solid #38516b;border-radius:8px;background:#091321;color:#e5edf7;font:inherit;font-size:13px}
+.ai-compare-results{display:grid;gap:10px}
+.ai-compare-block{display:grid;gap:10px;padding:13px;border:1px solid #293d54;border-radius:9px;background:#101e30}
+.ai-compare-block-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.ai-compare-block-head strong{font-size:14px}
+.ai-compare-changed,.ai-compare-unchanged{flex:0 0 auto;padding:3px 8px;border-radius:999px;background:#27364a;color:#cbd5e1;font-size:11px;font-weight:700}
+.ai-compare-changed{background:#49371d;color:#fcd9a0}
+.ai-compare-text-columns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.ai-compare-value{min-width:0;padding:10px;border-radius:8px;background:#0b1625}
+.ai-compare-value p{margin:5px 0 0;color:#d7e2ef;font-size:13px;line-height:1.75;overflow-wrap:anywhere;white-space:pre-wrap}
+.ai-compare-caption{display:block;color:#91a7bf;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.ai-compare-diff{padding:9px 11px;border-radius:8px;background:#0b1625}
+.ai-compare-diff ul{margin:6px 0 0;padding-left:20px}
+.ai-compare-diff li{margin:3px 0;color:#d7e2ef;font-size:13px;line-height:1.65;overflow-wrap:anywhere}
+.ai-compare-diff.is-added .ai-compare-caption{color:#86d5b0}
+.ai-compare-diff.is-removed .ai-compare-caption{color:#f0a4a4}
+@media(max-width:650px){.ai-compare-controls,.ai-compare-text-columns{grid-template-columns:minmax(0,1fr)}.ai-analysis-compare{padding:12px}}
