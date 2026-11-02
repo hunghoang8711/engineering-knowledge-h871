@@ -30,7 +30,7 @@ jobs:
     # Scheduled runs require the repository variable. Manual runs can opt in per invocation.
     if: vars.H871_QUEUE_WORKER_ENABLED == 'true' || (github.event_name == 'workflow_dispatch' && (inputs.run_once == true || inputs.wait_for_completion == true))
     runs-on: ubuntu-latest
-    timeout-minutes: 65
+    timeout-minutes: 90
     steps:
       - name: Invoke queue worker and optionally keep polling
         shell: bash
