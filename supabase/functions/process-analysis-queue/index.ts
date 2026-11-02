@@ -186,14 +186,41 @@ Deno.serve(async (req) => {
       const output = modelOutput(result.data);
       if (!output) throw new Error("MODEL_OUTPUT_EMPTY");
       const parsed = parseModelJson(output);
+      const rawReview = parsed.document_review && typeof parsed.document_review === "object"
+        ? parsed.document_review as Record<string, unknown> : {};
+      const requestedCoverage = clean(rawReview.coverage_status, 20).toLowerCase();
+      const coverageStatus = ["complete", "partial", "uncertain"].includes(requestedCoverage)
+        ? requestedCoverage : "uncertain";
+      const keyParameters = Array.isArray(parsed.key_parameters)
+        ? parsed.key_parameters.filter((item: unknown) => item && typeof item === "object")
+          .slice(0, 100).map((item: any) => ({
+            parameter: clean(item.parameter, 200),
+            value: clean(item.value, 200),
+            unit: clean(item.unit, 80),
+            context: clean(item.context, 500),
+            reference: clean(item.reference, 120),
+          })).filter((item: any) => item.parameter && item.value)
+        : [];
+      const documentReview = {
+        coverage_status: coverageStatus,
+        pages_reviewed: clean(rawReview.pages_reviewed, 200),
+        visual_elements_reviewed: strings(rawReview.visual_elements_reviewed, 40),
+        tables_and_drawings_reviewed: strings(rawReview.tables_and_drawings_reviewed, 40),
+        limitations: strings(rawReview.limitations, 40),
+      };
+      if (coverageStatus !== "complete" && !documentReview.limitations.length) {
+        documentReview.limitations.push("AI không xác nhận đã xem xét đầy đủ toàn bộ nội dung PDF; cần kiểm tra thủ công.");
+      }
       const analysis = {
         summary: clean(parsed.summary),
         technical_scope: clean(parsed.technical_scope),
         key_equipment: strings(parsed.key_equipment),
+        key_parameters: keyParameters,
         requirements: strings(parsed.requirements),
         risks: strings(parsed.risks),
         open_questions: strings(parsed.open_questions),
         suggested_tags: strings(parsed.suggested_tags, 30),
+        document_review: documentReview,
         source_references: Array.isArray(parsed.source_references)
           ? parsed.source_references.filter((x: unknown) => x && typeof x === "object").slice(0, 80)
           : [],
@@ -260,22 +287,44 @@ Deno.serve(async (req) => {
 
     const bytes = new Uint8Array(await blob.arrayBuffer());
     const pdfBase64 = toBase64(bytes);
-    const prompt = `Bạn là chuyên gia phân tích tài liệu kỹ thuật cho H871, workspace kỹ thuật tự động hóa công nghiệp.
-Đọc trực tiếp PDF gốc và trả kết quả hoàn toàn bằng tiếng Việt. Giữ chính xác thuật ngữ chuyên ngành, tên model, mã linh kiện, thông số, đơn vị và điều kiện kỹ thuật. Không suy diễn thành dữ kiện; phân biệt thông tin trong tài liệu với giả định.
+    const prompt = `Bạn là kỹ sư trưởng phân tích tài liệu cho H871, chuyên về thiết kế máy và tự động hóa công nghiệp.
+NHIỆM VỤ CỐT LÕI: Phân tích trực tiếp TOÀN BỘ PDF gốc như một tài liệu đa phương thức. Không coi PDF là văn bản thuần. Phải xem xét cả chữ, hình ảnh, ảnh chụp, bản vẽ cơ khí, sơ đồ điện/khí nén, lưu đồ, biểu đồ, bảng biểu, chú thích, ký hiệu và bố cục trang.
+PHẠM VI ĐỌC:
+1. Đi lần lượt từ trang đầu đến trang cuối; không chỉ đọc phần tóm tắt, mục lục hoặc các trang đầu. Kết nối thông tin liên quan nằm rải rác ở các trang khác nhau.
+2. Với bản vẽ/hình ảnh: phân tích những gì thực sự nhìn thấy như hình dạng cơ cấu, vị trí tương quan, hướng chuyển động, cách lắp đặt, kích thước, dung sai, callout, mã chi tiết, chú giải và quan hệ giữa các thành phần. Không tự suy ra kích thước hoặc cấu tạo không thể nhìn thấy.
+3. Với sơ đồ: giải thích luồng tín hiệu, trình tự hoạt động, kết nối, logic điều khiển hoặc luồng vật liệu nếu sơ đồ thể hiện đủ căn cứ.
+4. Với bảng: giữ mối liên hệ giữa tên cột, hàng, giá trị, đơn vị, ghi chú và điều kiện áp dụng. Không tách một con số khỏi tiêu đề/đơn vị của nó.
+5. Với tài liệu thiết kế máy: chú ý cơ cấu cơ khí, robot, actuator, sensor, camera/vision, conveyor, khí nén, điện điều khiển, PLC, safety, cycle time, năng suất, layout, interface, yêu cầu khách hàng, BOM và phương án vận hành.
+6. Đối chiếu chéo giữa mô tả, bảng, hình và bản vẽ. Nêu rõ mâu thuẫn hoặc khác biệt; không tự chọn một giá trị nếu tài liệu chưa xác định phiên bản đúng.
+ĐỘ TIN CẬY:
+- Phân biệt rõ dữ kiện được ghi/hiển thị trực tiếp, nhận định kỹ thuật có căn cứ và giả định.
+- Giữ nguyên model, part number, mã bản vẽ, kích thước, dung sai, đơn vị, điều kiện và dấu +/-.
+- Mọi thông số quan trọng phải có trang/mục tham chiếu khi xác định được. Không bịa số trang hoặc nguồn dẫn.
+- Nếu chữ/hình/bản vẽ mờ, bị cắt, không đọc được hoặc không thể kiểm tra, ghi vào limitations; không đoán.
+- Chỉ đặt coverage_status="complete" nếu đã thực sự xem xét tất cả các trang và nội dung trực quan có ý nghĩa. Nếu có trang/nội dung không đọc được hoặc không chắc đã xem hết, dùng "partial" hoặc "uncertain". Đây là tự đánh giá của AI, không phải xác minh độc lập.
+- Không bịa dữ kiện. Dùng mảng rỗng khi không có bằng chứng.
 Dự án: ${clean(project.name, 300)} (${clean(project.code, 100)}).
 Tên tài liệu: ${clean(doc.title, 500)}.
-Chỉ trả về JSON hợp lệ:
+Chỉ trả về JSON hợp lệ theo cấu trúc:
 {
- "summary": "tóm tắt ngắn gọn bằng tiếng Việt, có thể dùng làm mô tả dự án",
- "technical_scope": "phạm vi kỹ thuật và quy trình",
- "key_equipment": ["thiết bị/linh kiện được nêu"],
- "requirements": ["yêu cầu và thông số được nêu rõ"],
- "risks": ["rủi ro, giới hạn, giả định; ghi rõ giả định"],
- "open_questions": ["câu hỏi chưa được giải quyết"],
+ "summary": "tóm tắt tổng thể, nêu mục đích và nội dung chính của tài liệu",
+ "technical_scope": "phạm vi kỹ thuật, kiến trúc giải pháp, nguyên lý và trình tự hoạt động",
+ "key_equipment": ["thiết bị/linh kiện, model và vai trò nếu có căn cứ"],
+ "key_parameters": [{"parameter":"tên thông số","value":"giá trị chính xác","unit":"đơn vị","context":"điều kiện/ý nghĩa","reference":"trang hoặc mục"}],
+ "requirements": ["yêu cầu kỹ thuật và thông số bắt buộc"],
+ "risks": ["rủi ro, giới hạn, mâu thuẫn hoặc giả định; ghi rõ loại thông tin"],
+ "open_questions": ["điểm chưa rõ hoặc cần xác nhận"],
  "suggested_tags": ["thẻ kỹ thuật ngắn gọn"],
+ "document_review": {
+   "coverage_status": "complete | partial | uncertain",
+   "pages_reviewed": "mô tả phạm vi trang đã xem; không đoán tổng số trang",
+   "visual_elements_reviewed": ["loại hình ảnh/sơ đồ/bản vẽ thực sự đã xem"],
+   "tables_and_drawings_reviewed": ["bảng/bản vẽ/sơ đồ thực sự đã kiểm tra"],
+   "limitations": ["trang, hình, bảng hoặc nội dung không đọc/không xác minh được"]
+ },
  "source_references": [{"reference":"trang/mục nếu xác định được","claim":"thông tin được nguồn hỗ trợ"}]
 }
-Dùng mảng rỗng nếu không có bằng chứng. Không bịa số trang, thông số, thiết bị hoặc yêu cầu.`;
+Chỉ ghi nhận những gì tài liệu hỗ trợ. Nếu không có hình ảnh/bảng/bản vẽ có ý nghĩa, nêu rõ điều đó trong document_review thay vì tạo nội dung giả.`;
 
     const { data: marked, error: markError } = await admin.rpc(
       "mark_gemini_interaction_submission_started",
