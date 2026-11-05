@@ -525,6 +525,28 @@
   const valueFor=(item,key)=>payload(item)[key];
   const display=item=>typeof item==="string"?item:JSON.stringify(item);
   const normalized=item=>display(item).trim().toLocaleLowerCase();
+  const parameterLabels={parameter:"Parameter",value:"Value",unit:"Unit",context:"Context",reference:"Source",equipment:"Equipment",name:"Name",description:"Description",quantity:"Quantity",model:"Model",manufacturer:"Manufacturer"};
+  const formatFieldValue=value=>Array.isArray(value)?value.map(formatFieldValue).join(", "):value&&typeof value==="object"?Object.entries(value).map(([key,nested])=>(parameterLabels[key]||key)+": "+formatFieldValue(nested)).join("; "):String(value??"");
+  const renderDiffItem=item=>{
+   const li=make("li","ai-compare-diff-item");
+   if(!item||typeof item!=="object"||Array.isArray(item)){li.textContent=formatFieldValue(item);return li;}
+   const parameter=String(item.parameter||item.name||"").trim();
+   const value=item.value;
+   const unit=String(item.unit||"").trim();
+   if(parameter||value!==undefined){
+    const heading=make("div","ai-compare-parameter-heading");
+    heading.append(make("strong","",parameter||"Technical parameter"));
+    if(value!==undefined&&value!==null&&String(value)!=="")heading.append(make("span","ai-compare-parameter-value",String(value)+(unit?" "+unit:"")));
+    li.append(heading);
+    if(item.context)li.append(make("p","ai-compare-parameter-context",String(item.context)));
+    if(item.reference)li.append(make("span","ai-compare-parameter-reference","Source: "+String(item.reference)));
+    const extra=Object.entries(item).filter(([key])=>!["parameter","name","value","unit","context","reference"].includes(key));
+    extra.forEach(([key,extraValue])=>li.append(make("p","ai-compare-parameter-extra",(parameterLabels[key]||key)+": "+formatFieldValue(extraValue))));
+    return li;
+   }
+   Object.entries(item).forEach(([key,value])=>li.append(make("p","ai-compare-parameter-extra",(parameterLabels[key]||key)+": "+formatFieldValue(value))));
+   return li;
+  };
   const render=()=>{
    output.replaceChildren();
    const older=successful.find(item=>item.id===baseline.value);
@@ -561,7 +583,7 @@
      const block=make("article","ai-compare-block");
      const head=make("div","ai-compare-block-head");head.append(make("strong","",spec.label),make("span",added.length||removed.length?"ai-compare-changed":"ai-compare-unchanged",added.length||removed.length?"Changed":"No change"));block.append(head);
      if(!added.length&&!removed.length)block.append(make("p","muted-copy","No changes detected."));
-     if(added.length){const group=make("div","ai-compare-diff is-added");group.append(make("span","ai-compare-caption","Added"));const list=make("ul");added.forEach(item=>list.append(make("li","",display(item))));group.append(list);block.append(group);}
+     if(added.length){const group=make("div","ai-compare-diff is-added");group.append(make("span","ai-compare-caption","Added"));const list=make("ul");added.forEach(item=>list.append(renderDiffItem(item)));group.append(list);block.append(group);}
      if(removed.length){const group=make("div","ai-compare-diff is-removed");group.append(make("span","ai-compare-caption","Removed"));const list=make("ul");removed.forEach(item=>list.append(make("li","",display(item))));group.append(list);block.append(group);}
      output.append(block);
     }
