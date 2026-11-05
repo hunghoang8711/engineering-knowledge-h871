@@ -9,6 +9,22 @@
   <link rel="stylesheet" href="./styles.css?v=20261105-project-customer-selection1" />
 </head>
 <body>
+  <script>
+    // Set the route before the page's Overview sections can paint.
+    (() => {
+      const path = location.pathname.split("/").pop() || "index.html";
+      const routeByPath = {
+        "customers.html": "customers",
+        "projects.html": "projects",
+        "customer-detail.html": "customers",
+        "project-detail.html": "projects",
+        "knowledge.html": "knowledge"
+      };
+      const legacyRoute = location.hash.replace(/^#/, "").split("/")[0];
+      const route = routeByPath[path] || ({ project: "projects", customer: "customers" }[legacyRoute] || legacyRoute || "overview");
+      document.body.dataset.startTab = route;
+    })();
+  </script>
   <div class="app-shell">
     <aside class="sidebar">
       <div class="brand-mark">H871</div>
