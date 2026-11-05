@@ -449,6 +449,14 @@ body[data-start-tab]:not([data-start-tab="overview"]):not([data-start-tab="searc
 .ai-compare-diff{padding:9px 11px;border-radius:8px;background:#0b1625}
 .ai-compare-diff ul{margin:6px 0 0;padding-left:20px}
 .ai-compare-diff li{margin:3px 0;color:#d7e2ef;font-size:13px;line-height:1.65;overflow-wrap:anywhere}
+.ai-compare-diff-item{padding:7px 0}
+.ai-compare-parameter-heading{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.ai-compare-parameter-heading strong{color:#f1f5f9;font-weight:650}
+.ai-compare-parameter-value{color:#9fe2c1;font-weight:700}
+.ai-compare-parameter-context,.ai-compare-parameter-extra{margin:4px 0 0;color:#b9c8d9;font-size:12px;line-height:1.6}
+.ai-compare-parameter-reference{display:inline-block;margin-top:4px;color:#8fa6c0;font-size:11px}
+.ai-compare-block-head{flex-wrap:wrap}
+.ai-compare-block-head strong{min-width:0;overflow-wrap:anywhere}
 .ai-compare-diff.is-added .ai-compare-caption{color:#86d5b0}
 .ai-compare-diff.is-removed .ai-compare-caption{color:#f0a4a4}
 @media(max-width:650px){.ai-compare-controls,.ai-compare-text-columns{grid-template-columns:minmax(0,1fr)}.ai-analysis-compare{padding:12px}}
