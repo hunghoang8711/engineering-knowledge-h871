@@ -1,7 +1,7 @@
 (() => {
  const $=s=>document.querySelector(s);
  const config=window.H871_SUPABASE_CONFIG||{};
- let client=null,user=null,role=null,active="overview",projects=[],customers=[],documents=[],knowledgeEntries=[],selectedProject=null,moduleLoadToken=0,knownEndUsers=[];
+ let client=null,user=null,role=null,active="overview",projects=[],customers=[],customersLoaded=false,documents=[],knowledgeEntries=[],selectedProject=null,moduleLoadToken=0,knownEndUsers=[];
  let listSearch="",listFilter="",listFilterValue="",listToolbarReady=false;
  const knownTags=new Set();
  const analysisIdempotencyKeys=new Map();
@@ -87,10 +87,10 @@
   $("#end-user-field").hidden=!intermediary;$("#customer-end-user").required=intermediary;
  }
  async function loadCustomers(){
-  if(!client||!user){customers=[];return;}
+  if(!client||!user){customers=[];customersLoaded=false;return;}
   const {data,error}=await client.from("customers").select("id,name,customer_type,end_user_name,description,industry,notes,created_at").order("name");
   if(error){say("Could not load customers: "+error.message,true);return;}
-  customers=data||[];
+  customers=data||[];customersLoaded=true;
   const endUserResult=await client.from("project_customers").select("end_user_name");
   knownEndUsers=[...new Set([...(endUserResult.data||[]).map(row=>String(row.end_user_name||"").trim()),...customers.map(c=>String(c.end_user_name||"").trim())].filter(Boolean))].sort((a,b)=>a.localeCompare(b));
   populateCustomerChoices();populateCustomerSuggestions();
@@ -165,6 +165,7 @@
   if(!client||!user){if(active===tab){say("Sign in to view this list.",true);renderRows(tab,[]);}return;}
   if(active===tab)say("Loading…");
   if(tab==="projects"){
+   if(!customersLoaded)await loadCustomers();
    const [{data:p,error:pe},{data:d,error:de},{data:projectLinks,error:ple}]=await Promise.all([
     client.from("projects").select("id,code,name,description,status,tags,main_concept_document_id,created_at,updated_at").order("updated_at",{ascending:false}).limit(300),
     client.from("documents").select("id,project_id,title,original_filename,file_type,notes,tags,relative_path,status,created_by,updated_by,created_at,updated_at").order("updated_at",{ascending:false}).limit(1000),
@@ -318,6 +319,7 @@
    if(p)projects=[...projects.filter(x=>x.id!==p.id),p];
   }
   if(!p){say("Project not found. Return to Projects and refresh the list.",true);return;}
+  if(!customersLoaded)await loadCustomers();
   if(navigate){location.href="./project-detail.html?id="+encodeURIComponent(projectId);return;}selectedProject=p;
   $("#module-records").hidden=true;$("#module-toolbar").hidden=true;$("#module-search").parentElement.hidden=true;$("#module-message").hidden=true;
   let detail=$("#module-detail");if(!detail){detail=make("section","project-detail");detail.id="module-detail";$("#module-workspace").append(detail);}detail.replaceChildren();detail.hidden=false;
@@ -336,8 +338,9 @@
    const editDescription=addField("Summary / description","edit-project-description",p.description,2000,"textarea");
    const statusLabel=make("label","","Project status");statusLabel.htmlFor="edit-project-status";const editStatus=make("select");editStatus.id="edit-project-status";[["active","Active"],["on_hold","On hold"],["completed","Completed"],["archived","Archived"]].forEach(([v,t])=>editStatus.append(new Option(t,v)));editStatus.value=p.status||"active";editForm.append(statusLabel,editStatus);
    const editTags=addField("Tags (comma-separated)","edit-project-tags",(p.tags||[]).join(", "),500);
-   const customerLabel=make("label","","Customer");customerLabel.htmlFor="edit-project-customer";const editCustomer=make("select");editCustomer.id="edit-project-customer";editCustomer.append(new Option("No customer selected",""));customers.forEach(c=>editCustomer.append(new Option(c.name,c.id)));const currentProjectCustomer=(customersForProject.data||[])[0];editCustomer.value=currentProjectCustomer?.customer_id||"";editForm.append(customerLabel,editCustomer);
-   const editEndUser=addField("End User","edit-project-end-user",currentProjectCustomer?.end_user_name||currentProjectCustomer?.customers?.end_user_name||"",200);editEndUser.setAttribute("list","end-user-suggestions");editEndUser.placeholder="Enter or select a saved End User";
+   const customerLabel=make("label","","Customer (existing record)");customerLabel.htmlFor="edit-project-customer";const editCustomer=make("select");editCustomer.id="edit-project-customer";editCustomer.append(new Option("No customer selected",""));customers.forEach(c=>editCustomer.append(new Option(c.name+(c.customer_type==="intermediary"&&c.end_user_name?" → "+c.end_user_name:""),c.id)));const currentProjectCustomer=(customersForProject.data||[])[0];editCustomer.value=currentProjectCustomer?.customer_id||"";editForm.append(customerLabel,editCustomer);
+   const editNewCustomer=addField("Or enter a new Customer name","edit-project-new-customer","",200);editNewCustomer.setAttribute("list","customer-suggestions");editNewCustomer.placeholder="Type a new company/customer name";
+   const editEndUser=addField("End User","edit-project-end-user",currentProjectCustomer?.end_user_name||currentProjectCustomer?.customers?.end_user_name||"",200);editEndUser.setAttribute("list","end-user-suggestions");editEndUser.placeholder="Type or choose an existing End User";
    const actions=make("div","inline-add");const save=make("button","","Save changes");save.type="submit";const cancel=make("button","edit-note","Cancel");cancel.type="button";cancel.addEventListener("click",()=>{editForm.hidden=true;editButton.hidden=false;});actions.append(save,cancel);editForm.append(actions);
    const statusMessage=make("p","form-feedback");statusMessage.setAttribute("role","status");editForm.append(statusMessage);
    editButton.addEventListener("click",()=>{editForm.hidden=!editForm.hidden;editButton.hidden=editForm.hidden;});
@@ -345,7 +348,8 @@
     const name=editName.value.trim();if(!name){statusMessage.textContent="Project name is required.";statusMessage.classList.add("error");return;}
     const tags=[...new Set(editTags.value.split(",").map(t=>t.trim()).filter(Boolean))];
     save.disabled=true;cancel.disabled=true;statusMessage.classList.remove("error");statusMessage.textContent="Saving changes…";
-    try{if(!projectCustomerSchemaReady)throw new Error("Run Supabase migration 0006_project_customer_end_users.sql before changing the project Customer or End User.");const selectedCustomerId=editCustomer.value;const endUserName=editEndUser.value.trim()||null;
+    try{if(!projectCustomerSchemaReady)throw new Error("Run Supabase migration 0006_project_customer_end_users.sql before changing the project Customer or End User.");let selectedCustomerId=editCustomer.value;const newCustomerName=editNewCustomer.value.trim();const endUserName=editEndUser.value.trim()||null;if(selectedCustomerId&&newCustomerName)throw new Error("Choose an existing Customer or enter a new Customer name, not both.");
+     if(newCustomerName){const existing=customers.find(c=>c.name.trim().toLowerCase()===newCustomerName.toLowerCase());if(existing)selectedCustomerId=existing.id;else{const {data:newCustomer,error:customerError}=await client.from("customers").insert({name:newCustomerName,customer_type:"end_user",created_by:user.id}).select("id,name,customer_type,end_user_name,description,industry,notes,created_at").single();if(customerError)throw new Error("Could not create the new Customer: "+customerError.message);customers=[...customers,newCustomer].sort((a,b)=>a.name.localeCompare(b.name));selectedCustomerId=newCustomer.id;populateCustomerChoices();populateCustomerSuggestions();}}
      const {error:deleteLinksError}=await client.from("project_customers").delete().eq("project_id",p.id);if(deleteLinksError)throw deleteLinksError;
      if(selectedCustomerId){const {error:insertLinkError}=await client.from("project_customers").insert({project_id:p.id,customer_id:selectedCustomerId,end_user_name:endUserName,created_by:user.id});if(insertLinkError)throw insertLinkError;}
      const payload={code:editCode.value.trim()||null,name,description:editDescription.value.trim()||null,status:editStatus.value,tags,updated_at:new Date().toISOString()};
