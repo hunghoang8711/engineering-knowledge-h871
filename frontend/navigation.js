@@ -17,6 +17,27 @@
  function feedback(id,msg,error=false){const el=$("#"+id+"-feedback");if(el){el.textContent=msg;el.classList.toggle("error",error);}}
  function esc(s){return String(s??"");}
  function make(tag,cls,text){const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e;}
+ function formatAnalysisFieldValue(value,labels){
+  return Array.isArray(value)?value.map(item=>formatAnalysisFieldValue(item,labels)).join(", "):value&&typeof value==="object"?Object.entries(value).map(([key,nested])=>(labels[key]||key)+": "+formatAnalysisFieldValue(nested,labels)).join("; "):String(value??"");
+ }
+ function renderAnalysisListItem(item){
+  const labels={parameter:"Parameter",value:"Value",unit:"Unit",context:"Context",reference:"Source",equipment:"Equipment",name:"Name",description:"Description",quantity:"Quantity",model:"Model",manufacturer:"Manufacturer"};
+  const li=make("li","ai-compare-diff-item");
+  if(!item||typeof item!=="object"||Array.isArray(item)){li.textContent=formatAnalysisFieldValue(item,labels);return li;}
+  const parameter=String(item.parameter||item.name||"").trim(),value=item.value,unit=String(item.unit||"").trim();
+  if(parameter||value!==undefined){
+   const heading=make("div","ai-compare-parameter-heading");
+   heading.append(make("strong","",parameter||"Technical parameter"));
+   if(value!==undefined&&value!==null&&String(value)!=="")heading.append(make("span","ai-compare-parameter-value",String(value)+(unit?" "+unit:"")));
+   li.append(heading);
+   if(item.context)li.append(make("p","ai-compare-parameter-context",String(item.context)));
+   if(item.reference)li.append(make("span","ai-compare-parameter-reference","Source: "+String(item.reference)));
+   Object.entries(item).filter(([key])=>!["parameter","name","value","unit","context","reference"].includes(key)).forEach(([key,val])=>li.append(make("p","ai-compare-parameter-extra",(labels[key]||key)+": "+formatAnalysisFieldValue(val,labels))));
+   return li;
+  }
+  Object.entries(item).forEach(([key,val])=>li.append(make("p","ai-compare-parameter-extra",(labels[key]||key)+": "+formatAnalysisFieldValue(val,labels))));
+  return li;
+ }
  function getDocumentAnalysisCapability(d){
   const raw=String(d.file_type||"").trim().toLowerCase();
   const name=String(d.original_filename||d.title||"").trim().toLowerCase();
@@ -441,7 +462,7 @@
   const coverageLabel=coverage==="complete"?"AI reports full-document review":coverage==="partial"?"Partial document review":"Coverage not verified";
   const title=make("div","ai-result-title");title.append(make("span","ai-status", "Analysis Successful · "+coverageLabel),make("strong","",doc.original_filename||doc.title||"PDF"));output.append(title);
   const addText=(label,value)=>{if(!value)return;const block=make("div","ai-result-block");block.append(make("h4","",label),make("p","",value));output.append(block);};
-  const addList=(label,items)=>{if(!Array.isArray(items)||!items.length)return;const block=make("div","ai-result-block");block.append(make("h4","",label));const ul=make("ul","");items.forEach(item=>{const li=make("li","",typeof item==="string"?item:JSON.stringify(item));ul.append(li);});block.append(ul);output.append(block);};
+  const addList=(label,items)=>{if(!Array.isArray(items)||!items.length)return;const block=make("div","ai-result-block");block.append(make("h4","",label));const ul=make("ul","");items.forEach(item=>ul.append(renderAnalysisListItem(item)));block.append(ul);output.append(block);};
   addText("Summary",localized.summary||result.summary);addText("Technical Scope",localized.technical_scope||result.technical_scope);
   addList("Key Equipment",localized.key_equipment||result.key_equipment);addList("Key Technical Parameters",localized.key_parameters||result.key_parameters);
   addList("Requirements",localized.requirements||result.requirements);addList("Risks / Limitations",localized.risks||result.risks);addList("Open Questions",localized.open_questions||result.open_questions);
@@ -502,9 +523,13 @@
  function renderAnalysisComparison(container,analyses){
   const successful=(analyses||[]).filter(item=>item.status==="succeeded"&&item.result&&typeof item.result==="object");
   const panel=make("section","ai-analysis-compare");
-  panel.append(make("h4","ai-history-title","Compare analysis versions"));
+  const disclosure=make("details","ai-analysis-compare-disclosure");
+  const disclosureSummary=make("summary","ai-analysis-compare-summary","See more · Compare analysis versions");
+  disclosure.append(disclosureSummary);
+  const compareContent=make("div","ai-analysis-compare-content");
+  panel.append(disclosure);disclosure.append(compareContent);
   if(successful.length<2){
-   panel.append(make("p","muted-copy","At least two successful AI analyses are required to compare document revisions. Existing analyses are preserved; no new analysis is triggered."));
+   compareContent.append(make("p","muted-copy","At least two successful AI analyses are required to compare document revisions. Existing analyses are preserved; no new analysis is triggered."));
    container.append(panel);return;
   }
   const controls=make("div","ai-compare-controls");
@@ -519,8 +544,8 @@
   };
   successful.forEach(item=>{baseline.append(new Option(optionText(item),item.id));current.append(new Option(optionText(item),item.id));});
   baseline.value=successful[1].id;current.value=successful[0].id;
-  baselineLabel.append(baseline);currentLabel.append(current);controls.append(baselineLabel,currentLabel);panel.append(controls);
-  const output=make("div","ai-compare-results");panel.append(output);
+  baselineLabel.append(baseline);currentLabel.append(current);controls.append(baselineLabel,currentLabel);compareContent.append(controls);
+  const output=make("div","ai-compare-results");compareContent.append(output);
   const payload=item=>{const result=item?.result||{};return result.vi&&typeof result.vi==="object"?{...result,...result.vi}:result;};
   const valueFor=(item,key)=>payload(item)[key];
   const display=item=>typeof item==="string"?item:JSON.stringify(item);
@@ -584,7 +609,7 @@
      const head=make("div","ai-compare-block-head");head.append(make("strong","",spec.label),make("span",added.length||removed.length?"ai-compare-changed":"ai-compare-unchanged",added.length||removed.length?"Changed":"No change"));block.append(head);
      if(!added.length&&!removed.length)block.append(make("p","muted-copy","No changes detected."));
      if(added.length){const group=make("div","ai-compare-diff is-added");group.append(make("span","ai-compare-caption","Added"));const list=make("ul");added.forEach(item=>list.append(renderDiffItem(item)));group.append(list);block.append(group);}
-     if(removed.length){const group=make("div","ai-compare-diff is-removed");group.append(make("span","ai-compare-caption","Removed"));const list=make("ul");removed.forEach(item=>list.append(make("li","",display(item))));group.append(list);block.append(group);}
+     if(removed.length){const group=make("div","ai-compare-diff is-removed");group.append(make("span","ai-compare-caption","Removed"));const list=make("ul");removed.forEach(item=>list.append(renderDiffItem(item)));group.append(list);block.append(group);}
      output.append(block);
     }
    });

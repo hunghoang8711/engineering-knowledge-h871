@@ -473,3 +473,12 @@ body[data-start-tab]:not([data-start-tab="overview"]):not([data-start-tab="searc
 .analysis-compatibility-row strong{font-size:12px;color:#cbd5e1}
 .analysis-compatibility-row span{font-size:12px;line-height:1.7;color:#aebed0}
 @media(max-width:650px){.analysis-compatibility-panel{padding:12px}.analysis-compatibility-row{grid-template-columns:minmax(0,1fr);gap:3px}}
+
+/* Collapsed-by-default disclosure for AI analysis version comparison. */
+.ai-analysis-compare-disclosure{display:block}
+.ai-analysis-compare-summary{display:flex;align-items:center;gap:9px;width:max-content;max-width:100%;padding:9px 13px;border:1px solid #344b63;border-radius:9px;background:#132338;color:#b9eaf5;font-size:13px;font-weight:750;line-height:1.5;cursor:pointer;list-style:none}
+.ai-analysis-compare-summary::-webkit-details-marker{display:none}
+.ai-analysis-compare-summary::before{content:"＋";display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;background:#23465b;color:#a8f0ff;font-size:12px}
+.ai-analysis-compare-disclosure[open]>.ai-analysis-compare-summary::before{content:"−"}
+.ai-analysis-compare-summary:hover{border-color:#67e8f9;background:#172d43}
+.ai-analysis-compare-content{display:grid;gap:14px;margin-top:14px}
