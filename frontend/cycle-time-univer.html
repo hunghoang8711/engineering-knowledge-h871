@@ -423,8 +423,20 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
     });
     const widths=[...new Set(selectedImportRanges.map(x=>x.width))];
     document.getElementById('confirm-import-ranges').disabled=!selectedImportRanges.length||widths.length>1;
-    if(widths.length>1) document.getElementById('import-preview').textContent='All selected regions must have the same number of columns to append into one continuous table.';
-    else if(selectedImportRanges.length) document.getElementById('import-preview').textContent='Selected regions will be appended vertically in this order. The first region defines the table columns.';
+    const preview=document.getElementById('import-preview');
+    if(widths.length>1) preview.textContent='All selected regions must have the same number of columns to append into one continuous table.';
+    else if(selectedImportRanges.length) {
+      const sheet=pendingExcelSheet;
+      const lines=['Selected regions will be appended vertically in this order. Preview (first 3 rows per region):'];
+      selectedImportRanges.forEach((range,index)=>{
+        lines.push('['+(index+1)+'] '+range.address);
+        for(let r=range.startRow;r<=Math.min(range.endRow,range.startRow+2);r++){
+          const vals=[];for(let c=range.startCol;c<=range.endCol;c++){const v=cellToImportValue(sheet.getCell(r,c),sheet);vals.push(String(v??'').replace(/\\s+/g,' ').slice(0,24));}
+          lines.push(vals.join(' | '));
+        }
+      });
+      preview.textContent=lines.join('\\n');
+    }
   }
   function addImportRange() {
     if(!pendingExcelSheet)throw new Error('Choose an Excel worksheet first.');
@@ -471,9 +483,6 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
     const wb=new ExcelJS.Workbook();await wb.xlsx.load(await file.arrayBuffer());
     if(!wb.worksheets.length) throw new Error('The Excel file contains no worksheet.');
     showImportDialog(wb,file.name);
-  }
-);
-    setStatus('Imported worksheet "'+sheet.name+'" from '+file.name+'. Review the generated Time Chart and click Save to project.');
   }
   async function exportXlsx() {
     if(!window.ExcelJS||!workbook) throw new Error('Workbook or ExcelJS is not ready.');
