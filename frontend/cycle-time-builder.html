@@ -441,7 +441,7 @@ function showProjectContext(name){projectName=name||"Selected project";$("#proje
 async function saveProjectChart(){
 if(!projectId){status("Choose a project first.");return;}
 const btn=$("#save-project");if(btn){btn.disabled=true;saveFeedback("reset");btn.textContent="Saving…";}
-const payload={version:4,cellFormulas,columnRoles,chartId,chartTitle:
+const payload={version:4,chartId,chartTitle:$("#chart-title").value.trim(),projectName:$("#project-name").value,projectDescription:$("#project-desc").value,rows,customCols,columnRoles,merges,cellStyles,columnWidths,rowHeights,cellFormulas};
 try{
 if(!supa){status("Supabase is unavailable. Chart was not saved to the project.");saveFeedback("warning");return;}
 const {data}=await supa.auth.getUser();const userId=data?.user?.id;
