@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#111827">
+<title>Cycle Time Builder | H871</title>
+<link rel="stylesheet" href="./styles.css?v=20261107-cycle-time1">
+<script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+<style>
+.ct-wrap{display:grid;gap:18px}.ct-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}.ct-actions,.ct-toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.ct-btn{border:1px solid #38516b;border-radius:8px;background:#16283d;color:#dceafa;padding:9px 12px;font:inherit;font-size:12px;font-weight:700;cursor:pointer}.ct-btn.primary{background:#0e5368;border-color:#16758b;color:#e5fbff}.ct-btn:disabled{opacity:.4;cursor:not-allowed}.ct-panel{padding:17px;border:1px solid #293f56;border-radius:13px;background:#101d2e;min-width:0}.ct-panel h2{font-size:16px;margin:0 0 12px;color:#edf6ff}.ct-meta{display:grid;grid-template-columns:minmax(180px,1fr) minmax(180px,2fr);gap:12px}.ct-field{display:grid;gap:5px;color:#9fb3c9;font-size:11px;font-weight:700}.ct-field input{width:100%;box-sizing:border-box;background:#091321;border:1px solid #344b63;border-radius:7px;padding:9px;color:#e5edf7;font:inherit;font-size:13px}.ct-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.ct-metric{padding:12px;border:1px solid #2c4259;border-radius:9px;background:#0c1929}.ct-metric span{display:block;color:#8fa7c0;font-size:10px;text-transform:uppercase;letter-spacing:.06em}.ct-metric strong{display:block;margin-top:4px;color:#e7f4ff;font-size:20px}.ct-table-wrap{overflow:auto;border:1px solid #30465e;border-radius:9px}.ct-table{border-collapse:separate;border-spacing:0;min-width:850px;width:100%;font-size:12px}.ct-table th{position:sticky;top:0;background:#1a2b40;color:#b8cce0;text-align:left;font-size:10px;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}.ct-table th,.ct-table td{border-right:1px solid #263b51;border-bottom:1px solid #263b51;padding:0}.ct-table td{background:#0d1928;color:#dce7f3;min-width:110px;height:36px}.ct-table td.fixed-col{min-width:125px}.ct-table td[contenteditable=true]{padding:8px 9px;outline:none}.ct-table td[contenteditable=true]:focus{box-shadow:inset 0 0 0 2px #38bdf8;background:#10253a}.ct-table td.selected{box-shadow:inset 0 0 0 2px #38bdf8}.ct-table td.merged-hidden{display:none}.ct-table th{padding:9px}.ct-table td:first-child{min-width:35px;text-align:center;color:#8196ad}.ct-table .cluster-cell{font-weight:750}.ct-note{color:#8fa7c0;font-size:11px;line-height:1.6;margin:9px 0 0}.ct-chart-block{display:grid;gap:10px}.ct-chart-title{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}.ct-chart-title h3{font-size:14px;margin:0;color:#e8f3ff}.ct-legend{display:flex;gap:8px;flex-wrap:wrap}.ct-legend span{display:inline-flex;align-items:center;gap:5px;color:#b6c7d9;font-size:10px}.ct-dot{width:9px;height:9px;border-radius:3px;display:inline-block}.ct-chart{overflow:auto;border:1px solid #2b4158;border-radius:9px;background:#0b1726}.ct-chart-inner{min-width:720px}.ct-axis,.ct-lane{display:grid;grid-template-columns:190px minmax(500px,1fr);border-bottom:1px solid #24384d}.ct-axis{min-height:35px;background:#15263a}.ct-axis-label{padding:8px 10px;color:#91a8c0;font-size:10px;font-weight:700}.ct-axis-scale{position:relative;display:flex;justify-content:space-between;padding:8px 5px;color:#8197ae;font-size:10px}.ct-lane{min-height:42px}.ct-lane-name{display:flex;align-items:center;padding:7px 10px;border-right:1px solid #24384d;color:#dce9f7;font-size:11px;overflow-wrap:anywhere}.ct-track{position:relative;min-height:42px;background-image:linear-gradient(to right,#24384d 1px,transparent 1px);background-size:10% 100%}.ct-bar{position:absolute;top:7px;height:27px;min-width:2px;border-radius:5px;display:flex;align-items:center;padding:0 7px;box-sizing:border-box;overflow:hidden;white-space:nowrap;color:#07111e;font-size:10px;font-weight:800;box-shadow:0 1px 5px #0005}.ct-bar.cluster{top:9px;height:23px;opacity:.88}.ct-empty{padding:22px;text-align:center;color:#8299b2;font-size:12px}.ct-select{background:#0b1726;color:#dceafa;border:1px solid #38516b;border-radius:7px;padding:8px;font:inherit;font-size:11px}.ct-merge-cell{background:#102c42!important}.ct-table td[style*="background-color"]{background-clip:padding-box}@media(max-width:760px){.ct-meta{grid-template-columns:1fr}.ct-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.ct-panel{padding:13px}.ct-axis,.ct-lane{grid-template-columns:140px minmax(500px,1fr)}}
+</style>
+</head>
+<body data-start-tab="calculate">
+<div class="app-shell">
+<aside class="sidebar"><div class="brand-mark">H871</div><div class="brand-copy"><strong>Engineering Hub</strong><span>Knowledge Workspace</span></div>
+<nav aria-label="Main navigation"><a class="nav-item" href="./index.html" data-tab="overview">Overview</a><a class="nav-item" href="./projects.html" data-tab="projects">Projects</a><a class="nav-item" href="./customers.html" data-tab="customers">Customers</a><a class="nav-item" href="./knowledge.html" data-tab="knowledge">Knowledge Library</a><a class="nav-item active" href="./calculate.html" data-tab="calculate" aria-current="page">Calculate Library</a><a class="nav-item" href="./index.html#intake" data-tab="intake">Review Queue</a></nav>
+<div class="sidebar-foot"><span class="status-dot"></span><span>Engineering tools workspace</span></div></aside>
+<main class="main-content">
+<header class="topbar"><div><p class="eyebrow">ROBOT &amp; MOTION / CYCLE TIME</p><h1>Cycle Time Builder</h1><p class="subtitle">Build an activity schedule, compare cluster timing and export an Excel workbook.</p></div></header>
+<div class="ct-wrap">
+<div class="ct-head"><div><a href="./calculate.html" class="back-button">← Calculate Library</a><p class="ct-note">Auto time scale · Cluster overview + activity detail · Excel-style worksheet</p></div><div class="ct-actions"><button class="ct-btn" id="sample">Load sample</button><button class="ct-btn" id="save">Save JSON</button><button class="ct-btn" id="load">Open JSON</button><button class="ct-btn primary" id="export">Export Excel</button><input id="json-file" type="file" accept=".json,application/json" hidden></div></div>
+<section class="ct-panel"><h2>Cycle information</h2><div class="ct-meta"><label class="ct-field">Project / Machine name<input id="project-name" value="Automation Cycle Time Study" placeholder="Enter project or machine name"></label><label class="ct-field">Description<input id="project-desc" value="Cycle time breakdown by cluster and activity" placeholder="Optional description"></label></div></section>
+<section class="ct-panel"><div class="ct-chart-title"><h2>Activity worksheet</h2><div class="ct-toolbar"><button class="ct-btn" id="add-row">＋ Add row</button><button class="ct-btn" id="add-col">＋ Add column</button><button class="ct-btn" id="merge">Merge selected cells</button><button class="ct-btn" id="unmerge">Unmerge</button><button class="ct-btn" id="bold">Bold</button><input id="cell-color" type="color" value="#24435b" title="Cell fill" aria-label="Cell fill"><button class="ct-btn" id="fill">Apply fill</button></div></div>
+<div class="ct-table-wrap"><table class="ct-table" id="input-table"><thead></thead><tbody></tbody></table></div>
+<p class="ct-note">Edit cells directly like a spreadsheet. Cluster, Start and End determine the timeline; Activity is its label. Add custom columns for notes or technical parameters. Select a rectangular range with click + Shift-click, then merge or format custom cells. Timeline-driving columns remain unmerged to preserve calculations.</p></section>
+<section class="ct-panel"><div class="ct-metrics" id="metrics"></div></section>
+<section class="ct-panel ct-chart-block"><div class="ct-chart-title"><h2>Cluster overview</h2><span class="ct-note">One bar per cluster · earliest start to latest end</span></div><div id="cluster-chart" class="ct-chart"></div></section>
+<section class="ct-panel ct-chart-block"><div class="ct-chart-title"><h2>Activity timeline</h2><span class="ct-note">One row per activity · parallel processes share the same time axis</span></div><div id="activity-chart" class="ct-chart"></div></section>
+<p class="ct-note" id="status" role="status">Ready. Times are entered in seconds; decimals are supported.</p>
+</div><footer>H871 Engineering Knowledge Hub <span>·</span> Calculate Library <span>·</span> Cycle Time Builder</footer>
+</main></div>
+<script>
+(()=>{
+const $=s=>document.querySelector(s), colors=["#67d5b5","#78b9f2","#f5bd68","#c49af2","#ef8f9d","#9bd16f","#e9a7d4","#83cbd0"];
+let rows=[],customCols=["Remark"],selected=[],merges=[],cellStyles={};
+const defaults=[
+{cluster:"Robot",activity:"Pick component",start:"0",end:"1.2",remark:"Vacuum ON"},
+{cluster:"Robot",activity:"Transfer to fixture",start:"1.2",end:"2.8",remark:""},
+{cluster:"Fixture",activity:"Clamp workpiece",start:"2.0",end:"2.7",remark:"Parallel"},
+{cluster:"Robot",activity:"Place component",start:"2.8",end:"3.6",remark:"Vacuum OFF"},
+{cluster:"Process",activity:"Inspection",start:"3.6",end:"5.1",remark:"Camera check"},
+{cluster:"Fixture",activity:"Unclamp",start:"5.1",end:"5.7",remark:""}
+];
+const cols=()=>["Cluster","Activity","Start (s)","End (s)",...customCols];
+const keyFor=(r,c)=>r+":"+c;
+function escapeHtml(v){return String(v??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+function clean(){return rows.map(r=>({...r,cluster:String(r.cluster||"").trim(),activity:String(r.activity||"").trim(),start:Number(r.start),end:Number(r.end)})).filter(r=>r.cluster&&r.activity&&Number.isFinite(r.start)&&Number.isFinite(r.end)&&r.end>r.start);}
+function colorMap(){const names=[...new Set(clean().map(r=>r.cluster))];return Object.fromEntries(names.map((n,i)=>[n,colors[i%colors.length]]));}
+function renderTable(){
+const head=$("#input-table thead"),body=$("#input-table tbody"),names=cols();head.innerHTML="<tr>"+["#"].concat(names).map((n,i)=>"<th>"+escapeHtml(n)+"</th>").join("")+"</tr>";
+body.innerHTML="";
+rows.forEach((r,ri)=>{const tr=document.createElement("tr");tr.innerHTML="<td>"+(ri+1)+"</td>"+names.map((name,ci)=>{const field=["cluster","activity","start","end"][ci],value=field?r[field]:(r.custom?.[name]??"");const editable=ci>=4||ci===0||ci===1||ci===2||ci===3;const k=keyFor(ri,ci);const style=cellStyles[k]||{};const merge=merges.find(m=>m.cells.includes(k));return '<td contenteditable="'+editable+'" data-r="'+ri+'" data-c="'+ci+'" class="'+(ci<4?"fixed-col ":"")+(selected.includes(k)?"selected ":"")+(merge&&merge.master!==k?"merged-hidden ":"")+'" style="'+(style.background?"background:"+style.background+";":"")+(style.color?"color:"+style.color+";":"")+(style.bold?"font-weight:800;":"")+'" '+(merge&&merge.master===k?'colspan="'+merge.colspan+'" rowspan="'+merge.rowspan+'"':"")+'>'+escapeHtml(value)+'</td>';}).join("");body.append(tr);});
+body.querySelectorAll("td[contenteditable=true]").forEach(td=>td.addEventListener("input",()=>{const r=+td.dataset.r,c=+td.dataset.c,v=td.textContent.trim();if(c===0)rows[r].cluster=v;else if(c===1)rows[r].activity=v;else if(c===2)rows[r].start=v;else if(c===3)rows[r].end=v;else{rows[r].custom=rows[r].custom||{};rows[r].custom[cols()[c]]=v;}renderCharts();}));
+body.querySelectorAll("td[data-r]").forEach(td=>td.addEventListener("click",e=>{const k=keyFor(+td.dataset.r,+td.dataset.c);if(e.shiftKey&&selected.length){const [ar,ac]=selected[0].split(":").map(Number),br=+td.dataset.r,bc=+td.dataset.c;selected=[];for(let rr=Math.min(ar,br);rr<=Math.max(ar,br);rr++)for(let cc=Math.min(ac,bc);cc<=Math.max(ac,bc);cc++)selected.push(keyFor(rr,cc));}else selected=[k];renderTable();}));
+}
+function timeline(target,items,isCluster){
+const valid=clean(),max=Math.max(0,...valid.map(r=>r.end)),min=Math.min(0,...valid.map(r=>r.start)),span=Math.max(max-min,.001),ticks=5;
+if(!items.length){$(target).innerHTML='<div class="ct-empty">Add valid activities to generate the timeline.</div>';return;}
+const axis='<div class="ct-axis"><div class="ct-axis-label">PROCESS / CLUSTER</div><div class="ct-axis-scale">'+Array.from({length:ticks+1},(_,i)=>'<span>'+((min+span*i/ticks).toFixed(2).replace(/0+$/,"").replace(/\.$/,""))+' s</span>').join("")+'</div></div>';
+const cm=colorMap(),lanes=items.map(item=>{const s=item.start,e=item.end,left=(s-min)/span*100,width=(e-s)/span*100;return '<div class="ct-lane"><div class="ct-lane-name">'+escapeHtml(item.label)+'</div><div class="ct-track"><div class="ct-bar '+(isCluster?"cluster":"")+'" style="left:'+left+'%;width:'+width+'%;background:'+cm[item.cluster]+'">'+escapeHtml(item.barLabel)+'</div></div></div>';}).join("");
+$(target).innerHTML='<div class="ct-chart-inner">'+axis+lanes+'</div>';
+}
+function renderCharts(){
+const valid=clean(),cm=colorMap(),clusters=[...new Set(valid.map(r=>r.cluster))];
+timeline("#cluster-chart",clusters.map(n=>{const group=valid.filter(r=>r.cluster===n);return{label:n,cluster:n,start:Math.min(...group.map(r=>r.start)),end:Math.max(...group.map(r=>r.end)),barLabel:n+" · "+(Math.max(...group.map(r=>r.end))-Math.min(...group.map(r=>r.start))).toFixed(2)+" s"};}),true);
+timeline("#activity-chart",valid.map(r=>({label:r.cluster+" / "+r.activity,cluster:r.cluster,start:r.start,end:r.end,barLabel:r.activity+" · "+(r.end-r.start).toFixed(2)+" s"})),false);
+const cycle=valid.length?Math.max(...valid.map(r=>r.end)):0,total=valid.reduce((s,r)=>s+r.end-r.start,0),parallel=cycle?Math.max(0,total-cycle):0;
+$("#metrics").innerHTML=[["Total cycle time",cycle.toFixed(2)+" s"],["Activities",valid.length],["Clusters",clusters.length],["Parallel overlap",parallel.toFixed(2)+" s"]].map(([a,b])=>'<div class="ct-metric"><span>'+a+'</span><strong>'+b+'</strong></div>').join("");
+}
+function status(t){$("#status").textContent=t;}
+function addRow(){rows.push({cluster:"",activity:"",start:"0",end:"1",custom:{}});renderTable();renderCharts();}
+function addCol(){const name=prompt("New column name","Parameter "+(customCols.length+1));if(!name||!name.trim())return;const n=name.trim();if(cols().some(c=>c.toLowerCase()===n.toLowerCase())){status("Column name already exists.");return;}customCols.push(n);renderTable();}
+function mergeSelected(){
+if(selected.length<2){status("Select at least two cells using click + Shift-click.");return;}
+const coords=selected.map(k=>k.split(":").map(Number)),rs=coords.map(x=>x[0]),cs=coords.map(x=>x[1]),r0=Math.min(...rs),r1=Math.max(...rs),c0=Math.min(...cs),c1=Math.max(...cs);
+if(c0<4){status("Cluster, Activity, Start and End cannot be merged because they drive the calculation.");return;}
+if(selected.length!==(r1-r0+1)*(c1-c0+1)){status("Select a complete rectangular range.");return;}
+const keys=[];for(let r=r0;r<=r1;r++)for(let c=c0;c<=c1;c++)keys.push(keyFor(r,c));
+merges.push({cells:keys,master:keyFor(r0,c0),rowspan:r1-r0+1,colspan:c1-c0+1});renderTable();status("Cells merged for worksheet presentation.");
+}
+function unmerge(){if(!selected.length)return;const k=selected[0];merges=merges.filter(m=>!m.cells.includes(k));renderTable();status("Selected merged range unmerged.");}
+function styleSelected(patch){selected.forEach(k=>cellStyles[k]={...(cellStyles[k]||{}),...patch});renderTable();}
+function download(blob,name){const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=name;a.click();URL.revokeObjectURL(url);}
+function saveJson(){const data={version:1,projectName:$("#project-name").value,description:$("#project-desc").value,rows,customCols,merges,cellStyles};download(new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),"h871-cycle-time.json");status("JSON project saved.");}
+function loadJson(file){const reader=new FileReader();reader.onload=()=>{try{const d=JSON.parse(reader.result);rows=Array.isArray(d.rows)?d.rows:[];customCols=Array.isArray(d.customCols)?d.customCols:["Remark"];merges=d.merges||[];cellStyles=d.cellStyles||{};$("#project-name").value=d.projectName||"";$("#project-desc").value=d.description||"";selected=[];renderTable();renderCharts();status("JSON project loaded.");}catch(e){status("Could not read JSON: "+e.message);}};reader.readAsText(file);}
+async function exportExcel(){
+if(!window.ExcelJS){status("Excel export library did not load. Check network access and retry.");return;}
+const wb=new ExcelJS.Workbook();wb.creator="H871 Engineering Hub";wb.subject="Cycle time analysis";wb.created=new Date();
+const valid=clean(),cm=colorMap(),names=cols(),ws=wb.addWorksheet("Input Data");
+ws.columns=[{header:"#",key:"n",width:6},...names.map((c,i)=>({header:c,key:"c"+i,width:i===1?30:i<4?16:22}))];
+rows.forEach((r,i)=>ws.addRow({n:i+1,...Object.fromEntries(names.map((name,j)=>["c"+j,[r.cluster,r.activity,r.start,r.end][j]??r.custom?.[name]??""]))}));
+ws.views=[{state:"frozen",ySplit:1}];ws.getRow(1).font={bold:true,color:{argb:"FFFFFFFF"}};ws.getRow(1).fill={type:"pattern",pattern:"solid",fgColor:{argb:"FF18324A"}};
+ws.eachRow((row,idx)=>row.eachCell(cell=>{cell.border={bottom:{style:"hair",color:{argb:"FFCBD5E1"}}};if(idx>1&&cell.col===2){const color=cm[String(cell.value)];if(color)cell.fill={type:"pattern",pattern:"solid",fgColor:{argb:"FF"+color.slice(1).toUpperCase()}};}}));
+merges.forEach(m=>{const [r0,c0]=m.master.split(":").map(Number),r1=r0+m.rowspan-1,c1=c0+m.colspan-1;ws.mergeCells(r0+2,c0+2,r1+2,c1+2);});
+Object.entries(cellStyles).forEach(([key,style])=>{const [r,col]=key.split(":").map(Number),cell=ws.getCell(r+2,col+2);if(style.bold)cell.font={...(cell.font||{}),bold:true};if(style.background)cell.fill={type:"pattern",pattern:"solid",fgColor:{argb:"FF"+style.background.replace("#","").toUpperCase()}};if(style.color)cell.font={...(cell.font||{}),color:{argb:"FF"+style.color.replace("#","").toUpperCase()}};});
+const summary=wb.addWorksheet("Summary");summary.addRows([["Cycle Time Builder H871"],["Project",$("#project-name").value],["Description",$("#project-desc").value],["Total cycle time (s)",valid.length?Math.max(...valid.map(r=>r.end)):0],["Activity count",valid.length],["Cluster count",new Set(valid.map(r=>r.cluster)).size]]);summary.getColumn(1).width=28;summary.getColumn(2).width=55;summary.getRow(1).font={bold:true,size:16};
+const min=valid.length?Math.min(0,...valid.map(r=>r.start)):0,max=valid.length?Math.max(...valid.map(r=>r.end)):1,span=Math.max(max-min,.01),step=span/80,buckets=Math.max(1,Math.ceil(span/step)),timeCol=5;
+function makeTimelineSheet(title,items){
+const sh=wb.addWorksheet(title);sh.getColumn(1).width=22;sh.getColumn(2).width=28;sh.getColumn(3).width=13;sh.getColumn(4).width=13;
+for(let i=0;i<buckets;i++)sh.getColumn(timeCol+i).width=2.8;
+sh.addRow(["Cluster","Activity / Group","Start (s)","End (s)","Timeline"]);
+const axis=sh.addRow(["","","","",...Array.from({length:buckets},(_,i)=>i%10===0?(min+i*step).toFixed(2):"")]);
+[1,2].forEach(n=>{sh.getRow(n).font={bold:true,color:{argb:"FFFFFFFF"}};sh.getRow(n).fill={type:"pattern",pattern:"solid",fgColor:{argb:"FF18324A"}};});
+items.forEach(item=>{
+const row=sh.addRow([item.cluster,item.label,item.start,item.end]);const r=row.number;
+const a=Math.max(0,Math.min(buckets-1,Math.floor((item.start-min)/step)));
+const b=Math.max(a,Math.min(buckets-1,Math.ceil((item.end-min)/step)-1));
+if(b>a)sh.mergeCells(r,timeCol,r,timeCol+b-a);
+const bar=sh.getCell(r,timeCol);bar.value=item.barLabel;bar.alignment={horizontal:"center",vertical:"middle"};bar.font={bold:true,color:{argb:"FF07111E"},size:9};bar.fill={type:"pattern",pattern:"solid",fgColor:{argb:"FF"+(cm[item.cluster]||"#9ca3af").slice(1).toUpperCase()}};
+row.height=22;
+});
+sh.views=[{state:"frozen",xSplit:4,ySplit:2}];sh.autoFilter={from:{row:1,column:1},to:{row:1,column:4}};
+}
+const clusters=[...new Set(valid.map(r=>r.cluster))];
+makeTimelineSheet("Cluster Overview",clusters.map(n=>{const g=valid.filter(r=>r.cluster===n),s=Math.min(...g.map(r=>r.start)),e=Math.max(...g.map(r=>r.end));return{cluster:n,label:n,start:s,end:e,barLabel:n+" · "+(e-s).toFixed(2)+" s"};}));
+makeTimelineSheet("Activity Timeline",valid.map(r=>({cluster:r.cluster,label:r.activity,start:r.start,end:r.end,barLabel:r.activity+" · "+(r.end-r.start).toFixed(2)+" s"})));
+const buffer=await wb.xlsx.writeBuffer();download(new Blob([buffer],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}),"H871-Cycle-Time-Builder.xlsx");status("Excel workbook exported with Input Data, Summary, Cluster Overview and Activity Timeline sheets.");
+}
+$("#add-row").onclick=addRow;$("#add-col").onclick=addCol;$("#merge").onclick=mergeSelected;$("#unmerge").onclick=unmerge;$("#bold").onclick=()=>styleSelected({bold:true});$("#fill").onclick=()=>styleSelected({background:$("#cell-color").value});$("#add-row").onclick=addRow;$("#sample").onclick=()=>{rows=defaults.map(x=>({...x,custom:{Remark:x.remark}}));renderTable();renderCharts();status("Sample activities loaded.");};$("#save").onclick=saveJson;$("#load").onclick=()=>$("input#json-file").click();$("#json-file").onchange=e=>e.target.files[0]&&loadJson(e.target.files[0]);$("#export").onclick=exportExcel;
+rows=defaults.map(x=>({...x,custom:{Remark:x.remark}}));renderTable();renderCharts();
+})();
+</script>
+</body></html>
