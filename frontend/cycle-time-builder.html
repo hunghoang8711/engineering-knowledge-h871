@@ -43,7 +43,7 @@ const $=s=>document.querySelector(s), colors=["#67d5b5","#78b9f2","#f5bd68","#c4
 let rows=[],customCols=["Remark"],selected=[],merges=[],cellStyles={},chartId=new URLSearchParams(location.search).get("chart_id")||null;
 
 const cols=()=>["Cluster","Activity","Start (s)","Duration (s)","End (s)",...customCols];
-function syncEnd(r){const e=Number(r.start)+Number(r.duration??(Number(r.end)-Number(r.start)));r.end=Number.isFinite(e)?String(Number(e.toFixed(6))):"";return r.end;}
+function syncEnd(r){const startText=String(r.start??"").trim(),durationText=String(r.duration??"").trim();if(!startText||!durationText){r.end="";return "";}const e=Number(startText)+Number(durationText);r.end=Number.isFinite(e)?String(Number(e.toFixed(6))):"";return r.end;}
 const keyFor=(r,c)=>r+":"+c;
 function escapeHtml(v){return String(v??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
 function clean(){return rows.map(r=>{const start=Number(r.start),duration=(r.duration!==undefined&&r.duration!==""?Number(r.duration):Number(r.end)-start),end=start+duration;return({...r,cluster:String(r.cluster||"").trim(),activity:String(r.activity||"").trim(),start,duration,end});}).filter(r=>r.cluster&&r.activity&&Number.isFinite(r.start)&&Number.isFinite(r.duration)&&r.duration>0&&Number.isFinite(r.end));}
@@ -85,7 +85,7 @@ td.className=(ci<4?"fixed-col ":"")+(selected.includes(k)?"selected ":"")+(merge
 if(style.background)td.style.background=style.background;if(style.color)td.style.color=style.color;if(style.bold)td.style.fontWeight="800";
 if(merge&&merge.master===k){td.colSpan=merge.colspan;td.rowSpan=merge.rowspan;}
 if(!(merge&&merge.master!==k)){
-const input=document.createElement("input");input.type="text";input.className="ct-cell-input";input.value=String(value??"");input.autocomplete="off";input.spellcheck=false;input.setAttribute("aria-label",name+" row "+(ri+1));
+const input=document.createElement("input");input.type="text";input.className="ct-cell-input";input.value=String(value??"");input.autocomplete="off";input.spellcheck=false;if(ci===2||ci===3)input.inputMode="decimal";input.setAttribute("aria-label",name+" row "+(ri+1));
 if(ci===4){input.readOnly=true;input.tabIndex=-1;input.title="Automatically calculated from Start + Duration";}
 td.append(input);
 }
