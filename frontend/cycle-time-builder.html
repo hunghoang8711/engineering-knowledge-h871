@@ -8,7 +8,7 @@
 <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="./supabase-config.js"></script>
-<style>
+<style>.ct-th-content{display:grid;gap:4px;min-width:110px}.ct-role-select{max-width:145px;background:#0b1726;color:#c7d8e9;border:1px solid #38516b;border-radius:5px;padding:4px;font:inherit;font-size:9px;text-transform:none;letter-spacing:0}.ct-format-control{display:inline-flex;align-items:center;gap:4px;color:#9fb3c9;font-size:10px}.ct-format-control input{width:27px;height:24px;padding:0;border:0;background:transparent}
 .ct-wrap{display:grid;gap:18px}.ct-chooser-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.ct-chooser-card{padding:14px;border:1px solid #2c4259;border-radius:10px;background:#0b1726}.ct-chooser-card h3{font-size:13px;margin:0 0 10px;color:#e5f1ff}.ct-chooser-card label{display:grid;gap:5px;color:#9fb3c9;font-size:11px;margin:9px 0}.ct-chooser-card input,.ct-chooser-card select,.ct-chooser-card textarea{width:100%;box-sizing:border-box;background:#091321;border:1px solid #344b63;border-radius:7px;padding:9px;color:#e5edf7;font:inherit;font-size:12px}.ct-project-label{color:#8fa7c0;font-size:11px;margin:0 0 12px}@media(max-width:760px){.ct-chooser-grid{grid-template-columns:1fr}}.ct-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}.ct-actions,.ct-toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.ct-btn{border:1px solid #38516b;border-radius:8px;background:#16283d;color:#dceafa;padding:9px 12px;font:inherit;font-size:12px;font-weight:700;cursor:pointer}.ct-btn.primary{background:#0e5368;border-color:#16758b;color:#e5fbff}.ct-btn:disabled{opacity:.4;cursor:not-allowed}.ct-panel{padding:17px;border:1px solid #293f56;border-radius:13px;background:#101d2e;min-width:0}.ct-panel h2{font-size:16px;margin:0 0 12px;color:#edf6ff}.ct-meta{display:grid;grid-template-columns:minmax(180px,1fr) minmax(180px,2fr);gap:12px}.ct-field{display:grid;gap:5px;color:#9fb3c9;font-size:11px;font-weight:700}.ct-field input{width:100%;box-sizing:border-box;background:#091321;border:1px solid #344b63;border-radius:7px;padding:9px;color:#e5edf7;font:inherit;font-size:13px}.ct-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.ct-metric{padding:12px;border:1px solid #2c4259;border-radius:9px;background:#0c1929}.ct-metric span{display:block;color:#8fa7c0;font-size:10px;text-transform:uppercase;letter-spacing:.06em}.ct-metric strong{display:block;margin-top:4px;color:#e7f4ff;font-size:20px}.ct-table-wrap{overflow:auto;border:1px solid #30465e;border-radius:9px}.ct-table{border-collapse:separate;border-spacing:0;min-width:850px;width:100%;font-size:12px}.ct-table th{position:sticky;top:0;background:#1a2b40;color:#b8cce0;text-align:left;font-size:10px;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}.ct-table th,.ct-table td{border-right:1px solid #263b51;border-bottom:1px solid #263b51;padding:0}.ct-table td{background:#0d1928;color:#dce7f3;min-width:110px;height:36px}.ct-table td.selected{background:#12324b!important}.ct-table td.selected .ct-cell-input{background:transparent}.ct-table td.fixed-col{min-width:125px}.ct-table td{padding:0;outline:none}.ct-cell-input{display:block;width:100%;height:100%;min-height:36px;min-width:100px;box-sizing:border-box;border:0;outline:0;background:transparent;color:inherit;padding:8px 9px;font:inherit;font-size:12px;white-space:pre-wrap;overflow-wrap:anywhere;resize:none;field-sizing:content}.ct-table td{position:relative;vertical-align:top}.ct-table th{position:sticky;z-index:3}.ct-col-resizer{position:absolute;right:-3px;top:0;width:7px;height:100%;cursor:col-resize;z-index:5}.ct-row-resizer{position:absolute;left:0;right:0;bottom:-3px;height:7px;cursor:row-resize;z-index:4}.ct-context-menu{position:fixed;z-index:9999;min-width:190px;padding:5px;background:#102238;border:1px solid #42617e;border-radius:9px;box-shadow:0 12px 32px #0009;display:grid;gap:3px}.ct-context-menu[hidden]{display:none}.ct-context-menu button{border:0;border-radius:6px;background:transparent;color:#dceafa;text-align:left;padding:9px 11px;font:inherit;font-size:12px;cursor:pointer}.ct-context-menu button:hover{background:#1c3c57}.ct-context-menu .ct-menu-caption{padding:6px 10px;color:#8fa7c0;font-size:10px;text-transform:uppercase;letter-spacing:.06em}.ct-cell-input:focus{background:#10253a;box-shadow:inset 0 0 0 2px #38bdf8}.ct-cell-input[readonly]{color:#8fa7c0;cursor:not-allowed;background:#0a1522}.ct-row-number{min-width:35px;text-align:center;color:#8196ad;padding:0 8px!important}.ct-table td.selected{box-shadow:inset 0 0 0 2px #38bdf8}.ct-table td.merged-hidden{display:none}.ct-table th{padding:9px}.ct-table td:first-child{min-width:35px;text-align:center;color:#8196ad}.ct-table .cluster-cell{font-weight:750}.ct-note{color:#8fa7c0;font-size:11px;line-height:1.6;margin:9px 0 0}.ct-chart-block{display:grid;gap:10px}.ct-chart-title{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}.ct-chart-title h3{font-size:14px;margin:0;color:#e8f3ff}.ct-legend{display:flex;gap:8px;flex-wrap:wrap}.ct-legend span{display:inline-flex;align-items:center;gap:5px;color:#b6c7d9;font-size:10px}.ct-dot{width:9px;height:9px;border-radius:3px;display:inline-block}.ct-chart{overflow:auto;border:1px solid #2b4158;border-radius:9px;background:#0b1726}.ct-chart-inner{min-width:720px}.ct-axis,.ct-lane{display:grid;grid-template-columns:190px minmax(500px,1fr);border-bottom:1px solid #24384d}.ct-axis{min-height:35px;background:#15263a}.ct-axis-label{padding:8px 10px;color:#91a8c0;font-size:10px;font-weight:700}.ct-axis-scale{position:relative;display:flex;justify-content:space-between;padding:8px 5px;color:#8197ae;font-size:10px}.ct-lane{min-height:42px}.ct-lane-name{display:flex;align-items:center;padding:7px 10px;border-right:1px solid #24384d;color:#dce9f7;font-size:11px;overflow-wrap:anywhere}.ct-track{position:relative;min-height:42px;background-image:linear-gradient(to right,#24384d 1px,transparent 1px);background-size:10% 100%}.ct-bar{position:absolute;top:7px;height:27px;min-width:2px;border-radius:5px;display:flex;align-items:center;padding:0 7px;box-sizing:border-box;overflow:hidden;white-space:nowrap;color:#07111e;font-size:10px;font-weight:800;box-shadow:0 1px 5px #0005}.ct-bar.cluster{top:9px;height:23px;opacity:.88}.ct-empty{padding:22px;text-align:center;color:#8299b2;font-size:12px}.ct-select{background:#0b1726;color:#dceafa;border:1px solid #38516b;border-radius:7px;padding:8px;font:inherit;font-size:11px}.ct-merge-cell{background:#102c42!important}.ct-table td[style*="background-color"]{background-clip:padding-box}@media(max-width:760px){.ct-meta{grid-template-columns:1fr}.ct-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.ct-panel{padding:13px}.ct-axis,.ct-lane{grid-template-columns:140px minmax(500px,1fr)}}
 .ct-import-note{font-size:11px;color:#8fa7c0;margin:8px 0 0}.ct-formula-bar{display:grid;grid-template-columns:90px minmax(180px,1fr) auto;gap:8px;align-items:center;margin:10px 0}.ct-formula-bar input{min-width:0;background:#091321;border:1px solid #344b63;border-radius:7px;padding:8px;color:#e5edf7;font:inherit;font-size:12px}.ct-formula-address{color:#8fa7c0;font-size:11px;text-align:center}.ct-save-feedback{display:inline-flex;align-items:center;gap:7px}.ct-save-feedback .ct-save-check{display:inline-grid;place-items:center;width:19px;height:19px;border-radius:50%;background:#0f766e;color:#ecfeff;font-size:13px;line-height:1;animation:ct-check-pop .38s cubic-bezier(.2,.8,.2,1) both}.ct-btn.ct-saved{border-color:#0f766e;background:#123b3a;color:#c9fff0;box-shadow:0 0 0 3px #14b8a622}.ct-btn.ct-save-warning{border-color:#a16207;background:#3b2c13;color:#fde68a}@keyframes ct-check-pop{0%{transform:scale(.35);opacity:0}65%{transform:scale(1.18);opacity:1}100%{transform:scale(1);opacity:1}}@media(prefers-reduced-motion:reduce){.ct-save-feedback .ct-save-check{animation:none}}</style>
 </head>
@@ -28,7 +28,7 @@
 <div class="ct-chooser-card"><h3>Create a new project</h3><label>Project code<input id="ct-new-code" placeholder="e.g. AUTO-2026-014"></label><label>Project name *<input id="ct-new-name" required placeholder="Machine / project name"></label><label>Project summary<textarea id="ct-new-description" rows="2" placeholder="Process scope or project description"></textarea></label><label>Customer (optional)<select id="ct-new-customer"><option value="">No customer selected</option></select></label><label>Or create customer / company<input id="ct-new-customer-name" placeholder="Customer name"></label><label>End User (optional)<input id="ct-new-end-user" placeholder="End-user company"></label><button class="ct-btn primary" id="ct-create-project">Create project &amp; open chart</button></div>
 </div><p class="ct-note" id="ct-chooser-status" role="status">Project list requires an H871 sign-in with write access.</p>
 </section><section class="ct-panel"><h2>Cycle information</h2><div class="ct-meta"><label class="ct-field">Time Chart title<input id="chart-title" value="Cycle Time Chart 1" placeholder="Name this chart"></label><label class="ct-field">Project / Machine name<input id="project-name" value="Automation Cycle Time Study" placeholder="Enter project or machine name"></label><label class="ct-field">Description<input id="project-desc" value="Cycle time breakdown by cluster and activity" placeholder="Optional description"></label></div></section>
-<section class="ct-panel"><div class="ct-chart-title"><h2>Activity worksheet</h2><div class="ct-toolbar"><button class="ct-btn" id="add-row">＋ Add row</button><button class="ct-btn" id="add-col">＋ Add column</button><button class="ct-btn" id="merge">Merge selected cells</button><button class="ct-btn" id="unmerge">Unmerge</button><button class="ct-btn" id="bold">Bold</button><input id="cell-color" type="color" value="#24435b" title="Cell fill" aria-label="Cell fill"><button class="ct-btn" id="fill">Apply fill</button></div></div>
+<section class="ct-panel"><div class="ct-chart-title"><h2>Activity worksheet</h2><div class="ct-toolbar"><button class="ct-btn" id="add-row">＋ Add row</button><button class="ct-btn" id="add-col">＋ Add column</button><button class="ct-btn" id="merge">Merge selected cells</button><button class="ct-btn" id="unmerge">Unmerge</button><button class="ct-btn" id="bold">Bold</button><label class="ct-format-control">Font <input id="font-color" type="color" value="#e5edf7"></label><input id="cell-color" type="color" value="#24435b" title="Cell fill" aria-label="Cell fill"><button class="ct-btn" id="fill">Apply fill</button><button class="ct-btn" id="align-left">Left</button><button class="ct-btn" id="align-center">Center</button><button class="ct-btn" id="align-right">Right</button><button class="ct-btn" id="valign-top">Top</button><button class="ct-btn" id="valign-middle">Middle</button><button class="ct-btn" id="valign-bottom">Bottom</button></div></div>
 <div class="ct-formula-bar"><span class="ct-formula-address" id="formula-address">A1</span><input id="formula-input" type="text" aria-label="Selected cell formula or value" placeholder="Cell value or formula (e.g. =SUM(C2:C5))"><button class="ct-btn" id="apply-formula">Apply</button></div><div class="ct-table-wrap"><table class="ct-table" id="input-table"><thead></thead><tbody></tbody></table></div><p class="ct-import-note" id="import-note">XLSX import: first worksheet with data. Formula expressions and cached results are retained; formula recalculation for imported Excel functions will be added with the H871 Formula Engine.</p>
 <p class="ct-note">Spreadsheet shortcuts: click / drag to select cells · Arrow keys to move · Shift + arrows to extend selection · Ctrl + A to select all · Ctrl + C / X / V to copy, cut and paste ranges from H871, Excel or Google Sheets. Start Time + Duration calculate End Time automatically; End Time is read-only.</p></section>
 <section class="ct-panel"><div class="ct-metrics" id="metrics"></div></section>
@@ -40,13 +40,19 @@
 <script>
 (()=>{
 const $=s=>document.querySelector(s), colors=["#67d5b5","#78b9f2","#f5bd68","#c49af2","#ef8f9d","#9bd16f","#e9a7d4","#83cbd0"];
-let rows=[],customCols=["Remark"],selected=[],merges=[],cellStyles={},columnWidths={},rowHeights={},cellFormulas={},chartId=new URLSearchParams(location.search).get("chart_id")||null;
+let rows=[],customCols=["Remark"],columnRoles={0:"cluster",1:"text",2:"start",3:"duration",4:"end"},selected=[],merges=[],cellStyles={},columnWidths={},rowHeights={},cellFormulas={},chartId=new URLSearchParams(location.search).get("chart_id")||null;
 
 const cols=()=>["Cluster","Activity","Start (s)","Duration (s)","End (s)",...customCols];
-function syncEnd(r){const startText=String(r.start??"").trim(),durationText=String(r.duration??"").trim();if(!startText||!durationText){r.end="";return "";}const e=Number(startText)+Number(durationText);r.end=Number.isFinite(e)?String(Number(e.toFixed(6))):"";return r.end;}
+const roleLabels={cluster:"Cluster",start:"Start Time",end:"End Time",duration:"Duration Time",text:"Text / Description"};
 const keyFor=(r,c)=>r+":"+c;
+function roleColumn(role){return Object.keys(columnRoles).map(Number).find(c=>columnRoles[c]===role)??-1;}
+function rawColumnValue(r,c){const field=["cluster","activity","start","duration","end"][c];return field?r?.[field]??"":r?.custom?.[cols()[c]]??"";}
+function roleValue(r,role){const c=roleColumn(role);if(c<0)return "";const formula=cellFormulas[keyFor(rows.indexOf(r),c)];return formula?(formula.result??""):rawColumnValue(r,c);}
+function writeRawColumnValue(r,c,value){const field=["cluster","activity","start","duration","end"][c];if(field)r[field]=value;else{r.custom=r.custom||{};r.custom[cols()[c]]=value;}}
+function syncEnd(r){const st=String(roleValue(r,"start")??"").trim(),du=String(roleValue(r,"duration")??"").trim();if(!st||!du)return "";const e=Number(st)+Number(du);return Number.isFinite(e)?String(Number(e.toFixed(6))):"";}
 function escapeHtml(v){return String(v??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
-function clean(){return rows.map(r=>{const start=Number(r.start),duration=(r.duration!==undefined&&r.duration!==""?Number(r.duration):Number(r.end)-start),end=start+duration;return({...r,cluster:String(r.cluster||"").trim(),activity:String(r.activity||"").trim(),start,duration,end});}).filter(r=>r.cluster&&r.activity&&Number.isFinite(r.start)&&Number.isFinite(r.duration)&&r.duration>0&&Number.isFinite(r.end));}
+
+function clean(){return rows.map(r=>{const cluster=String(roleValue(r,"cluster")||"").trim(),startText=String(roleValue(r,"start")??"").trim(),endText=String(roleValue(r,"end")??"").trim(),durationText=String(roleValue(r,"duration")??"").trim(),start=Number(startText),end=durationText!==""&&startText!==""?start+Number(durationText):Number(endText),duration=end-start,activityCol=cols().map((_,i)=>i).find(i=>columnRoles[i]==="text"&&String(rawColumnValue(r,i)??"").trim()!=="")??-1,activity=activityCol<0?"":String(rawColumnValue(r,activityCol)||"").trim();return{...r,cluster,activity,start,duration,end};}).filter(r=>r.cluster&&r.activity&&Number.isFinite(r.start)&&Number.isFinite(r.end)&&r.end>r.start);}
 function colorMap(){const names=[...new Set(clean().map(r=>r.cluster))];return Object.fromEntries(names.map((n,i)=>[n,colors[i%colors.length]]));}
 let activeCell={r:0,c:0},selectionAnchor={r:0,c:0},dragSelecting=false;
 function cellAt(r,c){return $("#input-table").querySelector('td[data-r="'+r+'"][data-c="'+c+'"]');}
@@ -77,23 +83,25 @@ else if(td){td.focus();}
 }
 function renderTable(){
 const head=$("#input-table thead"),body=$("#input-table tbody"),names=cols();
-head.innerHTML="<tr><th class=\"ct-row-number\">#</th>"+names.map((n,i)=>"<th data-c=\""+i+"\">"+escapeHtml(n)+"<span class=\"ct-col-resizer\" data-resize-col=\""+i+"\"></span></th>").join("")+"</tr>";
+head.innerHTML="<tr><th class=\\\"ct-row-number\\\">#</th>"+names.map((n,i)=>"<th data-c=\\\""+i+"\\\"><div class=\\\"ct-th-content\\\"><span>"+escapeHtml(n)+"</span><select class=\\\"ct-role-select\\\" data-role-col=\\\""+i+"\\\">"+Object.entries(roleLabels).map(([v,label])=>"<option value=\\\""+v+"\\\" "+((columnRoles[i]||"text")===v?"selected":"")+">"+label+"</option>").join("")+"</select></div><span class=\\\"ct-col-resizer\\\" data-resize-col=\\\""+i+"\\\"></span></th>").join("")+"</tr>";
 body.innerHTML="";
 if(!rows.length)rows.push({cluster:"",activity:"",start:"",duration:"",end:"",custom:{}});
 rows.forEach((r,ri)=>{
 const tr=document.createElement("tr");
-const number=document.createElement("td");number.textContent=String(ri+1);number.className="ct-row-number";number.style.position="relative";number.innerHTML=escapeHtml(String(ri+1))+"<span class=\"ct-row-resizer\" data-resize-row=\""+ri+"\"></span>";tr.append(number);if(rowHeights[ri])tr.style.height=rowHeights[ri]+"px";
+const number=document.createElement("td");number.textContent=String(ri+1);number.className="ct-row-number";number.dataset.rowIndex=String(ri);number.style.position="relative";number.innerHTML=escapeHtml(String(ri+1))+"<span class=\\\"ct-row-resizer\\\" data-resize-row=\\\""+ri+"\\\"></span>";tr.append(number);if(rowHeights[ri])tr.style.height=rowHeights[ri]+"px";
 names.forEach((name,ci)=>{
 const field=["cluster","activity","start","duration","end"][ci];
 const k=keyFor(ri,ci),formula=cellFormulas[k],style=cellStyles[k]||{},merge=merges.find(m=>m.cells.includes(k));
-const value=formula?(formula.result!==undefined&&formula.result!==null?formula.result:"="+formula.formula):(field?(ci===4?syncEnd(r):r[field]??""):(r.custom?.[name]??""));
+const baseValue=rawColumnValue(r,ci),computedEnd=columnRoles[ci]==="end"&&roleColumn("start")>=0&&roleColumn("duration")>=0?(()=>{const st=Number(roleValue(r,"start")),du=Number(roleValue(r,"duration"));return String(roleValue(r,"start")).trim()!==""&&String(roleValue(r,"duration")).trim()!==""&&Number.isFinite(st+du)?String(Number((st+du).toFixed(6))):baseValue;})():baseValue;
+ const value=formula?(formula.result!==undefined&&formula.result!==null?formula.result:"="+formula.formula):computedEnd;
 const td=document.createElement("td");td.tabIndex=0;td.dataset.r=String(ri);td.dataset.c=String(ci);
 td.className=(ci<4?"fixed-col ":"")+(selected.includes(k)?"selected ":"")+(merge&&merge.master!==k?"merged-hidden ":"");
-if(style.background)td.style.background=style.background;if(style.color)td.style.color=style.color;if(style.bold)td.style.fontWeight="800";if(formula)td.title="Excel formula: ="+formula.formula+" · cached value: "+String(formula.result??"not available");
+const role=columnRoles[ci]||"text",defaultAlign=role==="cluster"?"left":(["start","end","duration"].includes(role)?"center":"left");td.style.textAlign=style.horizontalAlign||defaultAlign;td.style.verticalAlign=style.verticalAlign||((role==="cluster"||["start","end","duration"].includes(role))?"middle":"top");
+ if(style.background)td.style.background=style.background;
 if(merge&&merge.master===k){td.colSpan=merge.colspan;td.rowSpan=merge.rowspan;}
 if(!(merge&&merge.master!==k)){
 const input=document.createElement("textarea");input.className="ct-cell-input";input.value=String(value??"");input.rows=1;input.autocomplete="off";input.spellcheck=false;input.wrap="soft";if(ci===2||ci===3)input.inputMode="decimal";input.setAttribute("aria-label",name+" row "+(ri+1));
-if(ci===4){input.readOnly=true;input.tabIndex=-1;input.title="Automatically calculated from Start + Duration";}
+if(columnRoles[ci]==="end"&&roleColumn("start")>=0&&roleColumn("duration")>=0){input.readOnly=true;
 td.append(input);
 }
 tr.append(td);
@@ -131,14 +139,15 @@ function showMenu(x,y,items){
  contextMenu.style.left=Math.max(4,Math.min(x,innerWidth-215))+"px";contextMenu.style.top=Math.max(4,Math.min(y,innerHeight-170))+"px";contextMenu.hidden=false;
 }
 document.addEventListener("click",hideMenu);document.addEventListener("keydown",e=>{if(e.key==="Escape")hideMenu();});
+table.querySelector("thead").addEventListener("change",e=>{const select=e.target.closest("[data-role-col]");if(select)changeColumnRole(+select.dataset.roleCol,select.value);});
 table.addEventListener("contextmenu",e=>{
  const td=e.target.closest("td[data-r][data-c]"),th=e.target.closest("th[data-c]");if(!td&&!th)return;e.preventDefault();const items=[];
- if(td){const r=+td.dataset.r;items.push({caption:"Row"},{label:"Insert row above",action:()=>insertRowAt(r)},{label:"Insert row below",action:()=>insertRowAt(r+1)});}
+ if(td){const r=+td.dataset.r;items.push({caption:"Row"},{label:"Insert row above",action:()=>insertRowAt(r)},{label:"Insert row below",action:()=>insertRowAt(r+1)},{label:"Delete this row",action:()=>deleteSelectedRow(r)});}
  const c=td?+td.dataset.c:th?+th.dataset.c:-1;
- if(c>=5)items.push({caption:"Custom column"},{label:"Insert column left",action:()=>insertCustomColumnAt(c)},{label:"Insert column right",action:()=>insertCustomColumnAt(c+1)});
+if(c>=5)items.push({caption:"Custom column"},{label:"Insert column left",action:()=>insertCustomColumnAt(c)},{label:"Insert column right",action:()=>insertCustomColumnAt(c+1)},{label:"Delete this column",action:()=>deleteCustomColumnAt(c)});
  if(items.length)showMenu(e.clientX,e.clientY,items);
 });
-table.addEventListener("mousedown",e=>{
+table.addEventListener("mousedown",e=>{const th=e.target.closest("th[data-c]"),rowHead=e.target.closest("td[data-row-index]");if(th){const c=+th.dataset.c;selectionAnchor={r:0,c};setSelection(rows.length-1,c);return;}if(rowHead){const r=+rowHead.dataset.rowIndex;selectionAnchor={r,c:0};setSelection(r,cols().length-1,true);return;}
  const ch=e.target.closest("[data-resize-col]"),rh=e.target.closest("[data-resize-row]");if(!ch&&!rh)return;e.preventDefault();e.stopPropagation();
  resizeState=ch?{type:"col",index:+ch.dataset.resizeCol,start:e.clientX,size:ch.parentElement.getBoundingClientRect().width}:{type:"row",index:+rh.dataset.resizeRow,start:e.clientY,size:rh.closest("tr").getBoundingClientRect().height};
 });
@@ -148,24 +157,9 @@ document.addEventListener("mousemove",e=>{
  else{const h=Math.max(34,Math.min(400,resizeState.size+e.clientY-resizeState.start));rowHeights[resizeState.index]=Math.round(h);const tr=table.querySelectorAll("tbody tr")[resizeState.index];if(tr)tr.style.height=h+"px";}
 });
 document.addEventListener("mouseup",()=>{if(resizeState){resizeState=null;status("Dimensions changed. Save the chart to keep them.");}});
-function cellValue(r,c){
-const formula=cellFormulas[keyFor(r,c)];if(formula)return formula.result!==undefined&&formula.result!==null?formula.result:"="+formula.formula;
-const field=["cluster","activity","start","duration","end"][c];
-return field?(c===4?syncEnd(rows[r]):rows[r][field]??""):(rows[r].custom?.[cols()[c]]??"");
-}
-function setCellValue(r,c,value){
-if(!rows[r])rows[r]={cluster:"",activity:"",start:"",duration:"",end:"",custom:{}};
-delete cellFormulas[keyFor(r,c)];
-const v=String(value??"");
-if(c===2||c===3)delete cellFormulas[keyFor(r,4)];
-if(v.trim().startsWith("=")){cellFormulas[keyFor(r,c)]={formula:v.trim().slice(1),result:null};if(c===0)rows[r].cluster="";else if(c===1)rows[r].activity="";else if(c===2)rows[r].start="";else if(c===3)rows[r].duration="";else if(c>=5){rows[r].custom=rows[r].custom||{};rows[r].custom[cols()[c]]="";}syncEnd(rows[r]);return;}
-if(c===0)rows[r].cluster=v;
-else if(c===1)rows[r].activity=v;
-else if(c===2)rows[r].start=v;
-else if(c===3)rows[r].duration=v;
-else if(c>=5){rows[r].custom=rows[r].custom||{};rows[r].custom[cols()[c]]=v;}
-syncEnd(rows[r]);
-}
+function cellValue(r,c){const formula=cellFormulas[keyFor(r,c)];return formula?(formula.result??"="+formula.formula):rawColumnValue(rows[r],c);}
+function setCellValue(r,c,value){if(!rows[r])rows[r]={cluster:"",activity:"",start:"",duration:"",end:"",custom:{}};delete cellFormulas[keyFor(r,c)];const v=String(value??"");if(v.trim().startsWith("=")){cellFormulas[keyFor(r,c)]={formula:v.trim().slice(1),result:null};writeRawColumnValue(rows[r],c,"");return;}writeRawColumnValue(rows[r],c,v);}
+
 table.addEventListener("input",e=>{
 const input=e.target.closest(".ct-cell-input");if(!input||input.readOnly)return;
 const td=input.closest("td[data-r][data-c]");if(!td)return;
@@ -275,7 +269,11 @@ saveFeedbackTimer=setTimeout(()=>{btn.classList.remove("ct-save-warning");btn.te
 }else{btn.textContent="Save to project";btn.removeAttribute("aria-label");}
 }
 function addRow(){const index=rows.length;rows.push({cluster:"",activity:"",start:"",duration:"",end:"",custom:{}});renderTable();renderCharts();focusCell(index,0);}
-function addCol(){const name=prompt("New column name","Parameter "+(customCols.length+1));if(!name||!name.trim())return;const n=name.trim();if(cols().some(c=>c.toLowerCase()===n.toLowerCase())){status("Column name already exists.");return;}customCols.push(n);renderTable();}
+function addCol(){const name=prompt("New column name","Parameter "+(customCols.length+1));if(!name||!name.trim())return;const n=name.trim();if(cols().some(c=>c.toLowerCase()===n.toLowerCase())){status("Column name already exists.");return;}customCols.push(n);columnRoles[cols().length-1]="text";renderTable();}
+function deleteSelectedRow(r){if(rows.length<=1){rows[0]={cluster:"",activity:"",start:"",duration:"",end:"",custom:{}};cellFormulas={};cellStyles={};rowHeights={};}else rows.splice(r,1);const remap=k=>{const [rr,c]=k.split(":").map(Number);return rr<r?k:rr>r?keyFor(rr-1,c):null;};const styles={},forms={};Object.entries(cellStyles).forEach(([k,v])=>{const n=remap(k);if(n)styles[n]=v;});Object.entries(cellFormulas).forEach(([k,v])=>{const n=remap(k);if(n)forms[n]=v;});cellStyles=styles;cellFormulas=forms;const heights={};Object.entries(rowHeights).forEach(([k,v])=>{const n=+k;if(n<r)heights[n]=v;else if(n>r)heights[n-1]=v;});rowHeights=heights;activeCell={r:Math.min(r,rows.length-1),c:0};selectionAnchor={...activeCell};selected=[];renderTable();renderCharts();setSelection(activeCell.r,activeCell.c);status("Row deleted.");}
+function deleteCustomColumnAt(c){if(c<5){status("Built-in columns are reserved; only additional columns can be deleted.");return;}const name=customCols[c-5];if(!name)return;customCols.splice(c-5,1);const roles={};Object.entries(columnRoles).forEach(([k,v])=>{const n=+k;if(n!==c)roles[n>c?n-1:n]=v;});columnRoles=roles;rows.forEach(r=>{if(r.custom)delete r.custom[name];});const remap=k=>{const [r,cc]=k.split(":").map(Number);return cc===c?null:cc>c?keyFor(r,cc-1):k;};const styles={},forms={};Object.entries(cellStyles).forEach(([k,v])=>{const n=remap(k);if(n)styles[n]=v;});Object.entries(cellFormulas).forEach(([k,v])=>{const n=remap(k);if(n)forms[n]=v;});cellStyles=styles;cellFormulas=forms;const widths={};Object.entries(columnWidths).forEach(([k,v])=>{const n=+k;if(n!==c)widths[n>c?n-1:n]=v;});columnWidths=widths;merges=[];renderTable();renderCharts();status("Column deleted.");}
+function changeColumnRole(c,role){if(!roleLabels[role])return;const duplicate=Object.keys(columnRoles).map(Number).find(i=>i!==c&&columnRoles[i]===role);if(duplicate!==undefined){status(roleLabels[role]+" is already assigned to "+cols()[duplicate]+".");renderTable();return;}columnRoles[c]=role;renderTable();renderCharts();status(cols()[c]+" assigned as "+roleLabels[role]+".");}
+
 function mergeSelected(){
 if(selected.length<2){status("Select at least two cells using click + Shift-click.");return;}
 const coords=selected.map(k=>k.split(":").map(Number)),rs=coords.map(x=>x[0]),cs=coords.map(x=>x[1]),r0=Math.min(...rs),r1=Math.max(...rs),c0=Math.min(...cs),c1=Math.max(...cs);
@@ -287,8 +285,8 @@ merges.push({cells:keys,master:keyFor(r0,c0),rowspan:r1-r0+1,colspan:c1-c0+1});r
 function unmerge(){if(!selected.length)return;const k=selected[0];merges=merges.filter(m=>!m.cells.includes(k));renderTable();status("Selected merged range unmerged.");}
 function styleSelected(patch){selected.forEach(k=>cellStyles[k]={...(cellStyles[k]||{}),...patch});renderTable();}
 function download(blob,name){const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=name;a.click();URL.revokeObjectURL(url);}
-function saveJson(){const data={version:3,projectName:$("#project-name").value,description:$("#project-desc").value,rows,customCols,merges,cellStyles,columnWidths,rowHeights,cellFormulas};download(new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),"h871-cycle-time.json");status("JSON project saved.");}
-function loadJson(file){const reader=new FileReader();reader.onload=()=>{try{const d=JSON.parse(reader.result);rows=Array.isArray(d.rows)?d.rows:[];customCols=Array.isArray(d.customCols)?d.customCols:["Remark"];merges=d.merges||[];cellStyles=d.cellStyles||{};columnWidths=d.columnWidths||{};rowHeights=d.rowHeights||{};cellFormulas=d.cellFormulas||{};$("#project-name").value=d.projectName||"";$("#project-desc").value=d.description||"";selected=[];renderTable();renderCharts();status("JSON project loaded.");}catch(e){status("Could not read JSON: "+e.message);}};reader.readAsText(file);}
+function saveJson(){const data={version:4,projectName:$("#project-name").value,description:$("#project-desc").value,rows,customCols,columnRoles,merges,cellStyles,columnWidths,rowHeights,cellFormulas};download(new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),"h871-cycle-time.json");status("JSON project saved.");}
+function loadJson(file){const reader=new FileReader();reader.onload=()=>{try{const d=JSON.parse(reader.result);rows=Array.isArray(d.rows)?d.rows:[];customCols=Array.isArray(d.customCols)?d.customCols:["Remark"];merges=d.merges||[];cellStyles=d.cellStyles||{};columnWidths=d.columnWidths||{};rowHeights=d.rowHeights||{};cellFormulas=d.cellFormulas||{};columnRoles=d.columnRoles&&typeof d.columnRoles==="object"?d.columnRoles:{0:"cluster",1:"text",2:"start",3:"duration",4:"end"};$("#project-name").value=d.projectName||"";$("#project-desc").value=d.description||"";selected=[];renderTable();renderCharts();status("JSON project loaded.");}catch(e){status("Could not read JSON: "+e.message);}};reader.readAsText(file);}
 function excelCellPlain(value){
  if(value===null||value===undefined)return "";
  if(value instanceof Date)return value.toISOString();
@@ -335,9 +333,9 @@ async function importXlsx(file){
   dataCols.forEach(col=>{
    let target=mapped.get(col.source);
    if(target===undefined){target=nextCustom++;targetNames[target]=col.header;}
-   importCols.push({...col,target});
+importCols.push({...col,target});if(target<=4)importedRoles[target]=["cluster","text","start","duration","end"][target];
   });
-  const importedRows=[],importedFormulas={},importedStyles={},importedWidths={},importedHeights={};
+const importedRows=[],importedFormulas={},importedStyles={},importedWidths={},importedHeights={},importedRoles={};
   let formulaCount=0;
   for(let sr=2;sr<=sheet.rowCount;sr++){
    const sourceRow=sheet.getRow(sr),row={cluster:"",activity:"",start:"",duration:"",end:"",custom:{}},targetRi=importedRows.length;
@@ -371,7 +369,7 @@ async function importXlsx(file){
   if(!confirm(summary))return;
   rows=importedRows.length?importedRows:[{cluster:"",activity:"",start:"",duration:"",end:"",custom:{}}];
   customCols=colsByTarget.length?colsByTarget:["Remark"];
-  cellFormulas=importedFormulas;cellStyles=importedStyles;columnWidths=importedWidths;rowHeights=importedHeights;merges=[];selected=[];activeCell={r:0,c:0};selectionAnchor={r:0,c:0};
+cellFormulas=importedFormulas;cellStyles=importedStyles;columnWidths=importedWidths;rowHeights=importedHeights;columnRoles={...Object.fromEntries(colsByTarget.map((_,i)=>[i+5,"text"])),...importedRoles};merges=[];
   $("#chart-title").value=file.name.replace(/\.xlsx$/i,"")||"Imported Time Chart";
   $("#project-desc").value="Imported from "+file.name+" · Worksheet: "+sheet.name;
   renderTable();renderCharts();setSelection(0,0);
@@ -381,7 +379,7 @@ async function importXlsx(file){
 }
 function applyFormulaBar(){
  const k=keyFor(activeCell.r,activeCell.c),raw=$("#formula-input").value;
- if(activeCell.c===4){status("End Time is calculated by H871 and cannot be overwritten.");return;}
+if(columnRoles[activeCell.c]==="end"&&roleColumn("start")>=0&&roleColumn("duration")>=0)
  if(raw.trim().startsWith("=")){
   const previous=cellFormulas[k],current=cellValue(activeCell.r,activeCell.c);
   cellFormulas[k]={formula:raw.trim().slice(1),result:previous?.formula===raw.trim().slice(1)?previous.result:null};
@@ -426,7 +424,7 @@ makeTimelineSheet("Activity Timeline",valid.map(r=>({cluster:r.cluster,label:r.a
 Object.entries(cellFormulas).forEach(([key,meta])=>{const [r,c]=key.split(":").map(Number),cell=ws.getCell(r+2,c+2);if(meta?.formula)cell.value={formula:String(meta.formula).replace(/^=/,""),result:meta.result??null};});
  const buffer=await wb.xlsx.writeBuffer();download(new Blob([buffer],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}),"H871-Cycle-Time-Builder.xlsx");status("Excel workbook exported with Input Data, Summary, Cluster Overview and Activity Timeline sheets.");
 }
-$("#add-row").onclick=addRow;$("#add-col").onclick=addCol;$("#merge").onclick=mergeSelected;$("#unmerge").onclick=unmerge;$("#bold").onclick=()=>styleSelected({bold:true});$("#fill").onclick=()=>styleSelected({background:$("#cell-color").value});$("#save").onclick=saveJson;$("#load").onclick=()=>$("input#json-file").click();$("#json-file").onchange=e=>e.target.files[0]&&loadJson(e.target.files[0]);$("#export").onclick=exportExcel;$("#import-xlsx").onclick=()=>$("#xlsx-file").click();$("#xlsx-file").onchange=async e=>{const file=e.target.files?.[0];if(file)await importXlsx(file);e.target.value="";};$("#apply-formula").onclick=applyFormulaBar;$("#formula-input").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();applyFormulaBar();}});
+$("#export").onclick=exportExcel;$("#font-color").addEventListener("input",()=>styleSelected({color:$("#font-color").value}));$("#align-left").onclick=()=>styleSelected({horizontalAlign:"left"});$("#align-center").onclick=()=>styleSelected({horizontalAlign:"center"});$("#align-right").onclick=()=>styleSelected({horizontalAlign:"right"});$("#valign-top").onclick=()=>styleSelected({verticalAlign:"top"});$("#valign-middle").onclick=()=>styleSelected({verticalAlign:"middle"});$("#valign-bottom").onclick=()=>styleSelected({verticalAlign:"bottom"});
 const params=new URLSearchParams(location.search);let projectId=params.get("project_id")||params.get("project")||"",projectName="";let supa=null,authUser=null;const projectBackLink=document.querySelector(".ct-head .back-button");if(projectId&&projectBackLink){projectBackLink.href="./project-detail.html?id="+encodeURIComponent(projectId);projectBackLink.textContent="← Project Detail";}
 const projectKey=id=>"h871-cycle-time-chart:"+id;
 function setChooserMode(show){$("#ct-project-chooser").hidden=!show;document.querySelectorAll(".ct-wrap > section:not(#ct-project-chooser),.ct-wrap > #status").forEach(el=>el.hidden=show);$("#save-project").hidden=show||!projectId;$("#load-project").hidden=show||!projectId||!chartId;}
@@ -434,7 +432,7 @@ function showProjectContext(name){projectName=name||"Selected project";$("#proje
 async function saveProjectChart(){
 if(!projectId){status("Choose a project first.");return;}
 const btn=$("#save-project");if(btn){btn.disabled=true;saveFeedback("reset");btn.textContent="Saving…";}
-const payload={version:3,cellFormulas,chartId,chartTitle:$("#chart-title").value.trim()||projectName,projectId,projectName,projectDescription:$("#project-desc").value,rows:rows.map(r=>({...r,duration:r.duration??(Number(r.end)-Number(r.start))})),customCols,merges,cellStyles,columnWidths,rowHeights,savedAt:new Date().toISOString()};
+const payload={version:4,cellFormulas,columnRoles,chartId,chartTitle:
 try{
 if(!supa){status("Supabase is unavailable. Chart was not saved to the project.");saveFeedback("warning");return;}
 const {data}=await supa.auth.getUser();const userId=data?.user?.id;
@@ -485,7 +483,7 @@ rows=sourceRows.map(r=>({...r,duration:r.duration??(Number(r.end)-Number(r.start
 customCols=Array.isArray(d.customCols)&&d.customCols.length?d.customCols:["Remark"];
 merges=Array.isArray(d.merges)?d.merges:[];
 cellStyles=d.cellStyles&&typeof d.cellStyles==="object"?d.cellStyles:{};
-columnWidths=d.columnWidths&&typeof d.columnWidths==="object"?d.columnWidths:{};rowHeights=d.rowHeights&&typeof d.rowHeights==="object"?d.rowHeights:{};cellFormulas=d.cellFormulas&&typeof d.cellFormulas==="object"?d.cellFormulas:{};
+columnWidths=d.columnWidths&&typeof d.columnWidths==="object"?d.columnWidths:{};columnRoles=d.columnRoles&&typeof d.columnRoles==="object"?d.columnRoles:{0:"cluster",1:"text",2:"start",3:"duration",4:"end"};
 selected=[];activeCell={r:0,c:0};selectionAnchor={r:0,c:0};
 projectName=d.projectName||projectName;
 $("#project-name").value=projectName;
@@ -496,20 +494,6 @@ renderTable();renderCharts();
 return sourceRows.length;
 }
 $("#save-project").onclick=saveProjectChart;$("#load-project").onclick=loadProjectChart;
-$("#input-table").addEventListener("paste",e=>{
-const td=e.target.closest("td[data-r][data-c]");if(!td&&!selected.length)return;
-const text=e.clipboardData?.getData("text/plain");if(!text)return;e.preventDefault();
-const matrix=text.replace(/\\r/g,"").split("\n").filter((line,i,all)=>line!==""||i<all.length-1).map(line=>line.split("\\t"));
-const sr=td?Number(td.dataset.r):activeCell.r,sc=td?Number(td.dataset.c):activeCell.c;
-matrix.forEach((line,ri)=>line.forEach((value,ci)=>{
-const r=sr+ri,c=sc+ci;if(c>=cols().length)return;
-while(r>=rows.length)rows.push({cluster:"",activity:"",start:"",duration:"",end:"",custom:{}});
-const v=value.trim();
-if(c===0)rows[r].cluster=v;else if(c===1)rows[r].activity=v;else if(c===2)rows[r].start=v;else if(c===3)rows[r].duration=v;else if(c===4){const st=Number(rows[r].start),en=Number(v);if(Number.isFinite(st)&&Number.isFinite(en))rows[r].duration=String(en-st);}else{rows[r].custom=rows[r].custom||{};rows[r].custom[cols()[c]]=v;}
-syncEnd(rows[r]);
-}));
-renderTable();renderCharts();focusCell(sr,sc);status("Range pasted. End Time values recalculated.");
-});
 async function initProjectChooser(){
 const config=window.H871_SUPABASE_CONFIG||{};
 if(!config.url||!config.anonKey||!window.supabase?.createClient){$("#ct-chooser-status").textContent="Supabase configuration is not available. Open this tool from a Project detail page instead.";return;}
