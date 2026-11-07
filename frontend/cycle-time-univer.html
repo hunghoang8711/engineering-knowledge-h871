@@ -431,11 +431,11 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
       selectedImportRanges.forEach((range,index)=>{
         lines.push('['+(index+1)+'] '+range.address);
         for(let r=range.startRow;r<=Math.min(range.endRow,range.startRow+2);r++){
-          const vals=[];for(let c=range.startCol;c<=range.endCol;c++){const v=cellToImportValue(sheet.getCell(r,c),sheet);vals.push(String(v??'').replace(/\\s+/g,' ').slice(0,24));}
+          const vals=[];for(let c=range.startCol;c<=range.endCol;c++){const v=cellToImportValue(sheet.getCell(r,c),sheet);vals.push(String(v??'').replace(/\s+/g,' ').slice(0,24));}
           lines.push(vals.join(' | '));
         }
       });
-      preview.textContent=lines.join('\\n');
+      preview.textContent=lines.join('\n');
     }
   }
   function addImportRange() {
