@@ -120,6 +120,7 @@ applyTableDimensions();
 }
 const table=$("#input-table");
 $("#undo").onclick=undo;$("#redo").onclick=redo;
+document.addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&["z","y"].includes(e.key.toLowerCase())){e.preventDefault();e.stopImmediatePropagation();if(e.key.toLowerCase()==="z"&&e.shiftKey)redo();else if(e.key.toLowerCase()==="z")undo();else redo();}},true);
 document.addEventListener("beforeinput",e=>{if(e.target.matches(".ct-cell-input,#formula-input,#chart-title,#project-name,#project-desc"))recordUndo();},true);
 document.addEventListener("click",e=>{const el=e.target.closest("button");if(!el||["undo","redo","save","load","save-project","load-project","export","import-xlsx"].includes(el.id))return;if(["add-row","add-col","delete-rows","delete-cols","merge","unmerge","bold","fill","align-left","align-center","align-right","valign-top","valign-middle","valign-bottom","apply-formula"].includes(el.id)||el.closest(".ct-context-menu"))recordUndo();},true);
 document.addEventListener("change",e=>{if(e.target.matches("[data-role-col]"))recordUndo();},true);
