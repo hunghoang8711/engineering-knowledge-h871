@@ -9,7 +9,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="./supabase-config.js"></script>
 <style>
-.ct-wrap{display:grid;gap:18px}.ct-chooser-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.ct-chooser-card{padding:14px;border:1px solid #2c4259;border-radius:10px;background:#0b1726}.ct-chooser-card h3{font-size:13px;margin:0 0 10px;color:#e5f1ff}.ct-chooser-card label{display:grid;gap:5px;color:#9fb3c9;font-size:11px;margin:9px 0}.ct-chooser-card input,.ct-chooser-card select,.ct-chooser-card textarea{width:100%;box-sizing:border-box;background:#091321;border:1px solid #344b63;border-radius:7px;padding:9px;color:#e5edf7;font:inherit;font-size:12px}.ct-project-label{color:#8fa7c0;font-size:11px;margin:0 0 12px}@media(max-width:760px){.ct-chooser-grid{grid-template-columns:1fr}}.ct-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}.ct-actions,.ct-toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.ct-btn{border:1px solid #38516b;border-radius:8px;background:#16283d;color:#dceafa;padding:9px 12px;font:inherit;font-size:12px;font-weight:700;cursor:pointer}.ct-btn.primary{background:#0e5368;border-color:#16758b;color:#e5fbff}.ct-btn:disabled{opacity:.4;cursor:not-allowed}.ct-panel{padding:17px;border:1px solid #293f56;border-radius:13px;background:#101d2e;min-width:0}.ct-panel h2{font-size:16px;margin:0 0 12px;color:#edf6ff}.ct-meta{display:grid;grid-template-columns:minmax(180px,1fr) minmax(180px,2fr);gap:12px}.ct-field{display:grid;gap:5px;color:#9fb3c9;font-size:11px;font-weight:700}.ct-field input{width:100%;box-sizing:border-box;background:#091321;border:1px solid #344b63;border-radius:7px;padding:9px;color:#e5edf7;font:inherit;font-size:13px}.ct-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.ct-metric{padding:12px;border:1px solid #2c4259;border-radius:9px;background:#0c1929}.ct-metric span{display:block;color:#8fa7c0;font-size:10px;text-transform:uppercase;letter-spacing:.06em}.ct-metric strong{display:block;margin-top:4px;color:#e7f4ff;font-size:20px}.ct-table-wrap{overflow:auto;border:1px solid #30465e;border-radius:9px}.ct-table{border-collapse:separate;border-spacing:0;min-width:850px;width:100%;font-size:12px}.ct-table th{position:sticky;top:0;background:#1a2b40;color:#b8cce0;text-align:left;font-size:10px;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}.ct-table th,.ct-table td{border-right:1px solid #263b51;border-bottom:1px solid #263b51;padding:0}.ct-table td{background:#0d1928;color:#dce7f3;min-width:110px;height:36px}.ct-table td.fixed-col{min-width:125px}.ct-table td[contenteditable=true]{padding:8px 9px;outline:none}.ct-table td[contenteditable=true]:focus{box-shadow:inset 0 0 0 2px #38bdf8;background:#10253a}.ct-table td.selected{box-shadow:inset 0 0 0 2px #38bdf8}.ct-table td.merged-hidden{display:none}.ct-table th{padding:9px}.ct-table td:first-child{min-width:35px;text-align:center;color:#8196ad}.ct-table .cluster-cell{font-weight:750}.ct-note{color:#8fa7c0;font-size:11px;line-height:1.6;margin:9px 0 0}.ct-chart-block{display:grid;gap:10px}.ct-chart-title{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}.ct-chart-title h3{font-size:14px;margin:0;color:#e8f3ff}.ct-legend{display:flex;gap:8px;flex-wrap:wrap}.ct-legend span{display:inline-flex;align-items:center;gap:5px;color:#b6c7d9;font-size:10px}.ct-dot{width:9px;height:9px;border-radius:3px;display:inline-block}.ct-chart{overflow:auto;border:1px solid #2b4158;border-radius:9px;background:#0b1726}.ct-chart-inner{min-width:720px}.ct-axis,.ct-lane{display:grid;grid-template-columns:190px minmax(500px,1fr);border-bottom:1px solid #24384d}.ct-axis{min-height:35px;background:#15263a}.ct-axis-label{padding:8px 10px;color:#91a8c0;font-size:10px;font-weight:700}.ct-axis-scale{position:relative;display:flex;justify-content:space-between;padding:8px 5px;color:#8197ae;font-size:10px}.ct-lane{min-height:42px}.ct-lane-name{display:flex;align-items:center;padding:7px 10px;border-right:1px solid #24384d;color:#dce9f7;font-size:11px;overflow-wrap:anywhere}.ct-track{position:relative;min-height:42px;background-image:linear-gradient(to right,#24384d 1px,transparent 1px);background-size:10% 100%}.ct-bar{position:absolute;top:7px;height:27px;min-width:2px;border-radius:5px;display:flex;align-items:center;padding:0 7px;box-sizing:border-box;overflow:hidden;white-space:nowrap;color:#07111e;font-size:10px;font-weight:800;box-shadow:0 1px 5px #0005}.ct-bar.cluster{top:9px;height:23px;opacity:.88}.ct-empty{padding:22px;text-align:center;color:#8299b2;font-size:12px}.ct-select{background:#0b1726;color:#dceafa;border:1px solid #38516b;border-radius:7px;padding:8px;font:inherit;font-size:11px}.ct-merge-cell{background:#102c42!important}.ct-table td[style*="background-color"]{background-clip:padding-box}@media(max-width:760px){.ct-meta{grid-template-columns:1fr}.ct-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.ct-panel{padding:13px}.ct-axis,.ct-lane{grid-template-columns:140px minmax(500px,1fr)}}
+.ct-wrap{display:grid;gap:18px}.ct-chooser-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.ct-chooser-card{padding:14px;border:1px solid #2c4259;border-radius:10px;background:#0b1726}.ct-chooser-card h3{font-size:13px;margin:0 0 10px;color:#e5f1ff}.ct-chooser-card label{display:grid;gap:5px;color:#9fb3c9;font-size:11px;margin:9px 0}.ct-chooser-card input,.ct-chooser-card select,.ct-chooser-card textarea{width:100%;box-sizing:border-box;background:#091321;border:1px solid #344b63;border-radius:7px;padding:9px;color:#e5edf7;font:inherit;font-size:12px}.ct-project-label{color:#8fa7c0;font-size:11px;margin:0 0 12px}@media(max-width:760px){.ct-chooser-grid{grid-template-columns:1fr}}.ct-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}.ct-actions,.ct-toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.ct-btn{border:1px solid #38516b;border-radius:8px;background:#16283d;color:#dceafa;padding:9px 12px;font:inherit;font-size:12px;font-weight:700;cursor:pointer}.ct-btn.primary{background:#0e5368;border-color:#16758b;color:#e5fbff}.ct-btn:disabled{opacity:.4;cursor:not-allowed}.ct-panel{padding:17px;border:1px solid #293f56;border-radius:13px;background:#101d2e;min-width:0}.ct-panel h2{font-size:16px;margin:0 0 12px;color:#edf6ff}.ct-meta{display:grid;grid-template-columns:minmax(180px,1fr) minmax(180px,2fr);gap:12px}.ct-field{display:grid;gap:5px;color:#9fb3c9;font-size:11px;font-weight:700}.ct-field input{width:100%;box-sizing:border-box;background:#091321;border:1px solid #344b63;border-radius:7px;padding:9px;color:#e5edf7;font:inherit;font-size:13px}.ct-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.ct-metric{padding:12px;border:1px solid #2c4259;border-radius:9px;background:#0c1929}.ct-metric span{display:block;color:#8fa7c0;font-size:10px;text-transform:uppercase;letter-spacing:.06em}.ct-metric strong{display:block;margin-top:4px;color:#e7f4ff;font-size:20px}.ct-table-wrap{overflow:auto;border:1px solid #30465e;border-radius:9px}.ct-table{border-collapse:separate;border-spacing:0;min-width:850px;width:100%;font-size:12px}.ct-table th{position:sticky;top:0;background:#1a2b40;color:#b8cce0;text-align:left;font-size:10px;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}.ct-table th,.ct-table td{border-right:1px solid #263b51;border-bottom:1px solid #263b51;padding:0}.ct-table td{background:#0d1928;color:#dce7f3;min-width:110px;height:36px}.ct-table td.selected{background:#12324b!important}.ct-table td.selected .ct-cell-input{background:transparent}.ct-table td.fixed-col{min-width:125px}.ct-table td{padding:0;outline:none}.ct-cell-input{display:block;width:100%;height:36px;min-width:100px;box-sizing:border-box;border:0;outline:0;background:transparent;color:inherit;padding:8px 9px;font:inherit;font-size:12px}.ct-cell-input:focus{background:#10253a;box-shadow:inset 0 0 0 2px #38bdf8}.ct-cell-input[readonly]{color:#8fa7c0;cursor:not-allowed;background:#0a1522}.ct-row-number{min-width:35px;text-align:center;color:#8196ad;padding:0 8px!important}.ct-table td.selected{box-shadow:inset 0 0 0 2px #38bdf8}.ct-table td.merged-hidden{display:none}.ct-table th{padding:9px}.ct-table td:first-child{min-width:35px;text-align:center;color:#8196ad}.ct-table .cluster-cell{font-weight:750}.ct-note{color:#8fa7c0;font-size:11px;line-height:1.6;margin:9px 0 0}.ct-chart-block{display:grid;gap:10px}.ct-chart-title{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}.ct-chart-title h3{font-size:14px;margin:0;color:#e8f3ff}.ct-legend{display:flex;gap:8px;flex-wrap:wrap}.ct-legend span{display:inline-flex;align-items:center;gap:5px;color:#b6c7d9;font-size:10px}.ct-dot{width:9px;height:9px;border-radius:3px;display:inline-block}.ct-chart{overflow:auto;border:1px solid #2b4158;border-radius:9px;background:#0b1726}.ct-chart-inner{min-width:720px}.ct-axis,.ct-lane{display:grid;grid-template-columns:190px minmax(500px,1fr);border-bottom:1px solid #24384d}.ct-axis{min-height:35px;background:#15263a}.ct-axis-label{padding:8px 10px;color:#91a8c0;font-size:10px;font-weight:700}.ct-axis-scale{position:relative;display:flex;justify-content:space-between;padding:8px 5px;color:#8197ae;font-size:10px}.ct-lane{min-height:42px}.ct-lane-name{display:flex;align-items:center;padding:7px 10px;border-right:1px solid #24384d;color:#dce9f7;font-size:11px;overflow-wrap:anywhere}.ct-track{position:relative;min-height:42px;background-image:linear-gradient(to right,#24384d 1px,transparent 1px);background-size:10% 100%}.ct-bar{position:absolute;top:7px;height:27px;min-width:2px;border-radius:5px;display:flex;align-items:center;padding:0 7px;box-sizing:border-box;overflow:hidden;white-space:nowrap;color:#07111e;font-size:10px;font-weight:800;box-shadow:0 1px 5px #0005}.ct-bar.cluster{top:9px;height:23px;opacity:.88}.ct-empty{padding:22px;text-align:center;color:#8299b2;font-size:12px}.ct-select{background:#0b1726;color:#dceafa;border:1px solid #38516b;border-radius:7px;padding:8px;font:inherit;font-size:11px}.ct-merge-cell{background:#102c42!important}.ct-table td[style*="background-color"]{background-clip:padding-box}@media(max-width:760px){.ct-meta{grid-template-columns:1fr}.ct-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.ct-panel{padding:13px}.ct-axis,.ct-lane{grid-template-columns:140px minmax(500px,1fr)}}
 .ct-save-feedback{display:inline-flex;align-items:center;gap:7px}.ct-save-feedback .ct-save-check{display:inline-grid;place-items:center;width:19px;height:19px;border-radius:50%;background:#0f766e;color:#ecfeff;font-size:13px;line-height:1;animation:ct-check-pop .38s cubic-bezier(.2,.8,.2,1) both}.ct-btn.ct-saved{border-color:#0f766e;background:#123b3a;color:#c9fff0;box-shadow:0 0 0 3px #14b8a622}.ct-btn.ct-save-warning{border-color:#a16207;background:#3b2c13;color:#fde68a}@keyframes ct-check-pop{0%{transform:scale(.35);opacity:0}65%{transform:scale(1.18);opacity:1}100%{transform:scale(1);opacity:1}}@media(prefers-reduced-motion:reduce){.ct-save-feedback .ct-save-check{animation:none}}</style>
 </head>
 <body data-start-tab="knowledge">
@@ -20,7 +20,7 @@
 <main class="main-content">
 <header class="topbar"><div><p class="eyebrow">ROBOT &amp; MOTION / CYCLE TIME</p><h1>Cycle Time Builder</h1><p class="subtitle">Build an activity schedule, compare cluster timing and export an Excel workbook.</p></div></header>
 <div class="ct-wrap">
-<div class="ct-head"><div><a href="./knowledge.html" class="back-button">← Knowledge Library</a><p class="ct-note">Auto time scale · Cluster overview + activity detail · Excel-style worksheet</p></div><div class="ct-actions"><button class="ct-btn" id="sample">Load sample</button><button class="ct-btn" id="save-project" hidden>Save to project</button><button class="ct-btn" id="load-project" hidden>Load project chart</button><button class="ct-btn" id="save">Save JSON</button><button class="ct-btn" id="load">Open JSON</button><button class="ct-btn primary" id="export">Export Excel</button><input id="json-file" type="file" accept=".json,application/json" hidden></div></div>
+<div class="ct-head"><div><a href="./knowledge.html" class="back-button">← Knowledge Library</a><p class="ct-note">Auto time scale · Cluster overview + activity detail · Excel-style worksheet</p></div><div class="ct-actions"><button class="ct-btn" id="save-project" hidden>Save to project</button><button class="ct-btn" id="load-project" hidden>Load project chart</button><button class="ct-btn" id="save">Save JSON</button><button class="ct-btn" id="load">Open JSON</button><button class="ct-btn primary" id="export">Export Excel</button><input id="json-file" type="file" accept=".json,application/json" hidden></div></div>
 <section class="ct-panel" id="ct-project-chooser" hidden>
 <h2>Create a new Time Chart</h2><p class="ct-project-label">Select an existing project or enter project details to create a new one. Each project can contain multiple independent charts.</p>
 <div class="ct-chooser-grid">
@@ -71,25 +71,63 @@ paintSelection();
 }
 function focusCell(r,c,extend=false){
 setSelection(r,c,extend);
-const td=cellAt(r,c);if(td){if(td.getAttribute("contenteditable")==="true"){td.focus();const range=document.createRange();range.selectNodeContents(td);range.collapse(false);const sel=window.getSelection();sel.removeAllRanges();sel.addRange(range);}else td.focus();}
+const td=cellAt(r,c),input=td?.querySelector("input.ct-cell-input");
+if(input&&!input.readOnly){input.focus();const n=input.value.length;input.setSelectionRange(n,n);}
+else if(td){td.focus();}
 }
 function renderTable(){
-const head=$("#input-table thead"),body=$("#input-table tbody"),names=cols();head.innerHTML="<tr>"+["#"].concat(names).map((n,i)=>"<th>"+escapeHtml(n)+"</th>").join("")+"</tr>";
+const head=$("#input-table thead"),body=$("#input-table tbody"),names=cols();
+head.innerHTML="<tr>"+["#"].concat(names).map(n=>"<th>"+escapeHtml(n)+"</th>").join("")+"</tr>";
 body.innerHTML="";
-rows.forEach((r,ri)=>{const tr=document.createElement("tr");tr.innerHTML="<td>"+(ri+1)+"</td>"+names.map((name,ci)=>{const field=["cluster","activity","start","duration","end"][ci],value=field?(ci===4?syncEnd(r):r[field]??""):(r.custom?.[name]??"");const editable=ci!==4;const k=keyFor(ri,ci);const style=cellStyles[k]||{};const merge=merges.find(m=>m.cells.includes(k));return '<td tabindex="0" contenteditable="'+editable+'" data-r="'+ri+'" data-c="'+ci+'" class="'+(ci<4?"fixed-col ":"")+(selected.includes(k)?"selected ":"")+(merge&&merge.master!==k?"merged-hidden ":"")+'" style="'+(style.background?"background:"+style.background+";":"")+(style.color?"color:"+style.color+";")+(style.bold?"font-weight:800;":"")+'" '+(merge&&merge.master===k?'colspan="'+merge.colspan+'" rowspan="'+merge.rowspan+'"':"")+'>'+escapeHtml(value)+'</td>';}).join("");body.append(tr);});
+if(!rows.length)rows.push({cluster:"",activity:"",start:"",duration:"",end:"",custom:{}});
+rows.forEach((r,ri)=>{
+const tr=document.createElement("tr");
+const number=document.createElement("td");number.textContent=String(ri+1);number.className="ct-row-number";tr.append(number);
+names.forEach((name,ci)=>{
+const field=["cluster","activity","start","duration","end"][ci];
+const value=field?(ci===4?syncEnd(r):r[field]??""):(r.custom?.[name]??"");
+const k=keyFor(ri,ci),style=cellStyles[k]||{},merge=merges.find(m=>m.cells.includes(k));
+const td=document.createElement("td");td.tabIndex=0;td.dataset.r=String(ri);td.dataset.c=String(ci);
+td.className=(ci<4?"fixed-col ":"")+(selected.includes(k)?"selected ":"")+(merge&&merge.master!==k?"merged-hidden ":"");
+if(style.background)td.style.background=style.background;if(style.color)td.style.color=style.color;if(style.bold)td.style.fontWeight="800";
+if(merge&&merge.master===k){td.colSpan=merge.colspan;td.rowSpan=merge.rowspan;}
+if(!(merge&&merge.master!==k)){
+const input=document.createElement("input");input.type="text";input.className="ct-cell-input";input.value=String(value??"");input.autocomplete="off";input.spellcheck=false;input.setAttribute("aria-label",name+" row "+(ri+1));
+if(ci===4){input.readOnly=true;input.tabIndex=-1;input.title="Automatically calculated from Start + Duration";}
+td.append(input);
+}
+tr.append(td);
+});
+body.append(tr);
+});
 }
 const table=$("#input-table");
+function cellValue(r,c){
+const field=["cluster","activity","start","duration","end"][c];
+return field?(c===4?syncEnd(rows[r]):rows[r][field]??""):(rows[r].custom?.[cols()[c]]??"");
+}
+function setCellValue(r,c,value){
+if(!rows[r])rows[r]={cluster:"",activity:"",start:"",duration:"",end:"",custom:{}};
+const v=String(value??"");
+if(c===0)rows[r].cluster=v;
+else if(c===1)rows[r].activity=v;
+else if(c===2)rows[r].start=v;
+else if(c===3)rows[r].duration=v;
+else if(c>=5){rows[r].custom=rows[r].custom||{};rows[r].custom[cols()[c]]=v;}
+syncEnd(rows[r]);
+}
 table.addEventListener("input",e=>{
-const td=e.target.closest("td[data-r][data-c]");if(!td)return;
-const r=+td.dataset.r,c=+td.dataset.c,v=td.textContent.replace(/[\\r\\n]/g,"").trim();if(c===0)rows[r].cluster=v;else if(c===1)rows[r].activity=v;else if(c===2)rows[r].start=v;else if(c===3)rows[r].duration=v;else if(c>=5){rows[r].custom=rows[r].custom||{};rows[r].custom[cols()[c]]=v;}
-syncEnd(rows[r]);const endCell=cellAt(r,4);if(endCell)endCell.textContent=rows[r].end;renderCharts();
+const input=e.target.closest("input.ct-cell-input");if(!input||input.readOnly)return;
+const td=input.closest("td[data-r][data-c]");if(!td)return;
+const r=+td.dataset.r,c=+td.dataset.c;setCellValue(r,c,input.value);
+const end=cellAt(r,4)?.querySelector("input");if(end)end.value=rows[r].end;
+renderCharts();
 });
 table.addEventListener("mousedown",e=>{
 const td=e.target.closest("td[data-r][data-c]");if(!td)return;
 const r=+td.dataset.r,c=+td.dataset.c;
 if(e.shiftKey){e.preventDefault();setSelection(r,c,true);return;}
-if(c===4){e.preventDefault();setSelection(r,c);return;}
-if(e.buttons===1){dragSelecting=true;selectionAnchor={r,c};setSelection(r,c);if(document.activeElement!==td)td.focus();}
+dragSelecting=true;selectionAnchor={r,c};setSelection(r,c);
 });
 table.addEventListener("mouseover",e=>{
 if(!dragSelecting)return;const td=e.target.closest("td[data-r][data-c]");if(td)setSelection(+td.dataset.r,+td.dataset.c,true);
@@ -101,42 +139,62 @@ const r=+td.dataset.r,c=+td.dataset.c;
 if(e.shiftKey)setSelection(r,c,true);else if(!dragSelecting)setSelection(r,c);
 });
 table.addEventListener("keydown",e=>{
-const td=e.target.closest("td[data-r][data-c]");if(!td)return;
+const input=e.target.closest("input.ct-cell-input"),td=e.target.closest("td[data-r][data-c]");
+if(!td)return;
 const r=+td.dataset.r,c=+td.dataset.c;
 if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="a"){
 e.preventDefault();selectionAnchor={r:0,c:0};setSelection(rows.length-1,cols().length-1,true);return;
 }
 if((e.key==="Delete"||e.key==="Backspace")&&selected.length>1){
-e.preventDefault();selected.forEach(k=>{const [rr,cc]=k.split(":").map(Number);if(cc===0)rows[rr].cluster="";else if(cc===1)rows[rr].activity="";else if(cc===2)rows[rr].start="";else if(cc===3)rows[rr].duration="";else if(cc>=5){rows[rr].custom=rows[rr].custom||{};rows[rr].custom[cols()[cc]]="";}syncEnd(rows[rr]);});renderTable();renderCharts();focusCell(activeCell.r,activeCell.c);return;
+e.preventDefault();selected.forEach(k=>{const [rr,cc]=k.split(":").map(Number);if(cc!==4)setCellValue(rr,cc,"");});
+renderTable();renderCharts();focusCell(activeCell.r,activeCell.c);return;
 }
-if((e.ctrlKey||e.metaKey)&&["c","x"].includes(e.key.toLowerCase())){return;}
-if(e.key==="ArrowUp"||e.key==="ArrowDown"||e.key==="ArrowLeft"||e.key==="ArrowRight"||e.key==="Enter"||e.key==="Tab"){
+if((e.ctrlKey||e.metaKey)&&["c","x"].includes(e.key.toLowerCase()))return;
+if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight","Enter","Tab"].includes(e.key)){
+if(input&&!input.readOnly&&["ArrowLeft","ArrowRight"].includes(e.key)&&!e.shiftKey){
+const atStart=input.selectionStart===0,atEnd=input.selectionEnd===input.value.length;
+if((e.key==="ArrowLeft"&&!atStart)||(e.key==="ArrowRight"&&!atEnd))return;
+}
 e.preventDefault();let nr=r,nc=c;
 if(e.key==="ArrowUp")nr--;if(e.key==="ArrowDown"||e.key==="Enter")nr++;
 if(e.key==="ArrowLeft")nc--;if(e.key==="ArrowRight"||e.key==="Tab")nc+=e.shiftKey?-1:1;
 if(e.key==="Tab"&&e.shiftKey)nc=c-1;
 if(nc<0){nc=cols().length-1;nr--;}if(nc>=cols().length){nc=0;nr++;}
-if(nr>=rows.length){rows.push({cluster:"",activity:"",start:"0",duration:"0",end:"0",custom:{}});renderTable();renderCharts();}
+if(nr<0){nr=0;nc=0;}
+if(nr>=rows.length){rows.push({cluster:"",activity:"",start:"",duration:"",end:"",custom:{}});renderTable();renderCharts();}
 focusCell(nr,nc,e.shiftKey);
 }
 });
+function selectedBounds(){
+const coords=selected.map(k=>k.split(":").map(Number));
+return {r0:Math.min(...coords.map(x=>x[0])),r1:Math.max(...coords.map(x=>x[0])),c0:Math.min(...coords.map(x=>x[1])),c1:Math.max(...coords.map(x=>x[1]))};
+}
+function selectedTsv(){
+if(!selected.length)return "";
+const {r0,r1,c0,c1}=selectedBounds();
+return Array.from({length:r1-r0+1},(_,ri)=>Array.from({length:c1-c0+1},(_,ci)=>cellValue(r0+ri,c0+ci)).join("\t")).join("\n");
+}
 table.addEventListener("copy",e=>{
-if(!selected.length)return;e.preventDefault();
-const coords=selected.map(k=>k.split(":").map(Number)),r0=Math.min(...coords.map(x=>x[0])),r1=Math.max(...coords.map(x=>x[0])),c0=Math.min(...coords.map(x=>x[1])),c1=Math.max(...coords.map(x=>x[1]));
-const text=Array.from({length:r1-r0+1},(_,ri)=>Array.from({length:c1-c0+1},(_,ci)=>{const r=r0+ri,c=c0+ci,field=["cluster","activity","start","duration","end"][c];return field?(c===4?syncEnd(rows[r]):rows[r][field]??""):(rows[r].custom?.[cols()[c]]??"");}).join("\\t")).join("\\n");
-e.clipboardData.setData("text/plain",text);
+if(!selected.length)return;e.preventDefault();e.clipboardData.setData("text/plain",selectedTsv());
 });
 table.addEventListener("cut",e=>{
-if(!selected.length)return;e.preventDefault();
-const keys=[...selected];const coords=keys.map(k=>k.split(":").map(Number));
-const r0=Math.min(...coords.map(x=>x[0])),r1=Math.max(...coords.map(x=>x[0])),c0=Math.min(...coords.map(x=>x[1])),c1=Math.max(...coords.map(x=>x[1]));
-const text=Array.from({length:r1-r0+1},(_,ri)=>Array.from({length:c1-c0+1},(_,ci)=>{const r=r0+ri,c=c0+ci,field=["cluster","activity","start","duration","end"][c];return field?(c===4?syncEnd(rows[r]):rows[r][field]??""):(rows[r].custom?.[cols()[c]]??"");}).join("\\t")).join("\\n");
-e.clipboardData.setData("text/plain",text);
-keys.forEach(k=>{const [r,c]=k.split(":").map(Number);if(c===0)rows[r].cluster="";else if(c===1)rows[r].activity="";else if(c===2)rows[r].start="";else if(c===3)rows[r].duration="";else if(c>=5&&c<cols().length){rows[r].custom=rows[r].custom||{};rows[r].custom[cols()[c]]="";}syncEnd(rows[r]);});
-renderTable();renderCharts();focusCell(r0,c0);
+if(!selected.length)return;e.preventDefault();e.clipboardData.setData("text/plain",selectedTsv());
+selected.forEach(k=>{const [r,c]=k.split(":").map(Number);if(c!==4)setCellValue(r,c,"");});
+renderTable();renderCharts();focusCell(activeCell.r,activeCell.c);
 });
-
-function timeline(target,items,isCluster){
+table.addEventListener("paste",e=>{
+const td=e.target.closest("td[data-r][data-c]");if(!td&&!selected.length)return;
+const text=e.clipboardData?.getData("text/plain");if(text==null)return;e.preventDefault();
+const matrix=text.replace(/\r/g,"").split("\n").map(line=>line.split("\t"));
+const sr=td?Number(td.dataset.r):activeCell.r,sc=td?Number(td.dataset.c):activeCell.c;
+matrix.forEach((line,ri)=>line.forEach((value,ci)=>{
+const r=sr+ri,c=sc+ci;if(c>=cols().length||c===4)return;
+while(r>=rows.length)rows.push({cluster:"",activity:"",start:"",duration:"",end:"",custom:{}});
+setCellValue(r,c,value);
+}));
+renderTable();renderCharts();focusCell(sr,sc);status("Pasted worksheet range. End Time values recalculated.");
+});
+function timeline(target,items,isCluster){function timeline(target,items,isCluster){
 const valid=clean(),max=Math.max(0,...valid.map(r=>r.end)),min=Math.min(0,...valid.map(r=>r.start)),span=Math.max(max-min,.001),ticks=5;
 if(!items.length){$(target).innerHTML='<div class="ct-empty">Add valid activities to generate the timeline.</div>';return;}
 const axis='<div class="ct-axis"><div class="ct-axis-label">PROCESS / CLUSTER</div><div class="ct-axis-scale">'+Array.from({length:ticks+1},(_,i)=>'<span>'+((min+span*i/ticks).toFixed(2).replace(/0+$/,"").replace(/\.$/,""))+' s</span>').join("")+'</div></div>';
@@ -166,7 +224,7 @@ btn.setAttribute("aria-label","Chart was not saved to the project");
 saveFeedbackTimer=setTimeout(()=>{btn.classList.remove("ct-save-warning");btn.textContent="Save to project";btn.removeAttribute("aria-label");},3200);
 }else{btn.textContent="Save to project";btn.removeAttribute("aria-label");}
 }
-function addRow(){rows.push({cluster:"",activity:"",start:"0",duration:"1",end:"1",custom:{}});renderTable();renderCharts();}
+function addRow(){const index=rows.length;rows.push({cluster:"",activity:"",start:"",duration:"",end:"",custom:{}});renderTable();renderCharts();focusCell(index,0);}
 function addCol(){const name=prompt("New column name","Parameter "+(customCols.length+1));if(!name||!name.trim())return;const n=name.trim();if(cols().some(c=>c.toLowerCase()===n.toLowerCase())){status("Column name already exists.");return;}customCols.push(n);renderTable();}
 function mergeSelected(){
 if(selected.length<2){status("Select at least two cells using click + Shift-click.");return;}
@@ -214,7 +272,7 @@ makeTimelineSheet("Cluster Overview",clusters.map(n=>{const g=valid.filter(r=>r.
 makeTimelineSheet("Activity Timeline",valid.map(r=>({cluster:r.cluster,label:r.activity,start:r.start,end:r.end,barLabel:r.activity+" · "+(r.end-r.start).toFixed(2)+" s"})));
 const buffer=await wb.xlsx.writeBuffer();download(new Blob([buffer],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}),"H871-Cycle-Time-Builder.xlsx");status("Excel workbook exported with Input Data, Summary, Cluster Overview and Activity Timeline sheets.");
 }
-$("#add-row").onclick=addRow;$("#add-col").onclick=addCol;$("#merge").onclick=mergeSelected;$("#unmerge").onclick=unmerge;$("#bold").onclick=()=>styleSelected({bold:true});$("#fill").onclick=()=>styleSelected({background:$("#cell-color").value});$("#sample").onclick=()=>{rows=defaults.map(x=>({...x,custom:{Remark:x.remark}}));renderTable();renderCharts();status("Sample activities loaded.");};$("#save").onclick=saveJson;$("#load").onclick=()=>$("input#json-file").click();$("#json-file").onchange=e=>e.target.files[0]&&loadJson(e.target.files[0]);$("#export").onclick=exportExcel;
+$("#add-row").onclick=addRow;$("#add-col").onclick=addCol;$("#merge").onclick=mergeSelected;$("#unmerge").onclick=unmerge;$("#bold").onclick=()=>styleSelected({bold:true});$("#fill").onclick=()=>styleSelected({background:$("#cell-color").value});$("#sample").onclick=()=>{rows=[{cluster:"",activity:"",start:"",duration:"",end:"",custom:{}}];renderTable();renderCharts();status("Sample activities loaded.");};$("#save").onclick=saveJson;$("#load").onclick=()=>$("input#json-file").click();$("#json-file").onchange=e=>e.target.files[0]&&loadJson(e.target.files[0]);$("#export").onclick=exportExcel;
 const params=new URLSearchParams(location.search);let projectId=params.get("project_id")||params.get("project")||"",projectName="";let supa=null,authUser=null;const projectBackLink=document.querySelector(".ct-head .back-button");if(projectId&&projectBackLink){projectBackLink.href="./project-detail.html?id="+encodeURIComponent(projectId);projectBackLink.textContent="← Project Detail";}
 const projectKey=id=>"h871-cycle-time-chart:"+id;
 function setChooserMode(show){$("#ct-project-chooser").hidden=!show;document.querySelectorAll(".ct-wrap > section:not(#ct-project-chooser),.ct-wrap > #status").forEach(el=>el.hidden=show);$("#save-project").hidden=show||!projectId;$("#load-project").hidden=show||!projectId||!chartId;}
@@ -278,7 +336,7 @@ projectName=d.projectName||projectName;
 $("#project-name").value=projectName;
 $("#chart-title").value=d.chartTitle||d.title||"Cycle Time Chart";
 $("#project-desc").value=d.projectDescription||"";
-if(!rows.length)rows=[{cluster:"",activity:"",start:"0",duration:"0",end:"0",custom:{}}];
+if(!rows.length)rows=[{cluster:"",activity:"",start:"",duration:"",end:"",custom:{}}];
 renderTable();renderCharts();
 return sourceRows.length;
 }
@@ -290,7 +348,7 @@ const matrix=text.replace(/\\r/g,"").split("\\n").filter((line,i,all)=>line!==""
 const sr=td?Number(td.dataset.r):activeCell.r,sc=td?Number(td.dataset.c):activeCell.c;
 matrix.forEach((line,ri)=>line.forEach((value,ci)=>{
 const r=sr+ri,c=sc+ci;if(c>=cols().length)return;
-while(r>=rows.length)rows.push({cluster:"",activity:"",start:"0",duration:"0",end:"0",custom:{}});
+while(r>=rows.length)rows.push({cluster:"",activity:"",start:"",duration:"",end:"",custom:{}});
 const v=value.trim();
 if(c===0)rows[r].cluster=v;else if(c===1)rows[r].activity=v;else if(c===2)rows[r].start=v;else if(c===3)rows[r].duration=v;else if(c===4){const st=Number(rows[r].start),en=Number(v);if(Number.isFinite(st)&&Number.isFinite(en))rows[r].duration=String(en-st);}else{rows[r].custom=rows[r].custom||{};rows[r].custom[cols()[c]]=v;}
 syncEnd(rows[r]);
@@ -322,12 +380,12 @@ location.href="./cycle-time-builder.html?project_id="+encodeURIComponent(p.id);
 }catch(e){$("#ct-chooser-status").textContent="Project creation failed: "+(e.message||"Unknown error");btn.disabled=false;}
 };
 }
-if(!projectId){setChooserMode(true);initProjectChooser();rows=defaults.map(x=>({...x,custom:{Remark:x.remark}}));renderTable();renderCharts();}
+if(!projectId){setChooserMode(true);initProjectChooser();rows=[{cluster:"",activity:"",start:"",duration:"",end:"",custom:{}}];renderTable();renderCharts();}
 else{
 setChooserMode(false);
 const config=window.H871_SUPABASE_CONFIG||{};
 if(config.url&&config.anonKey&&window.supabase?.createClient)supa=window.supabase.createClient(config.url,config.anonKey);
-rows=defaults.map(x=>({...x,custom:{Remark:x.remark}}));renderTable();renderCharts();
+rows=[{cluster:"",activity:"",start:"",duration:"",end:"",custom:{}}];renderTable();renderCharts();
 $("#save-project").hidden=false;$("#load-project").hidden=false;
 (async()=>{
 if(supa){
