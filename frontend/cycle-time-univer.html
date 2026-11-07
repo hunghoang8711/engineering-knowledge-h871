@@ -276,7 +276,8 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
     if(!supa||!projectId) throw new Error('Supabase project connection is not ready.');
     if(!chartId) {
       currentChartTitle=projectName+' · Time Chart';
-      document.getElementById('chart-title').value=currentChartTitle;\n      makeWorkbook([['Mechanism','Operation','Start (s)','Duration (s)','End (s)','Remark']],currentChartTitle);
+      document.getElementById('chart-title').value=currentChartTitle;
+      makeWorkbook([['Mechanism','Operation','Start (s)','Duration (s)','End (s)','Remark']],currentChartTitle);
       setStatus('New project Time Chart. Enter data, then Save to project.');
       return;
     }
