@@ -313,7 +313,23 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
     else makeWorkbook(legacyToMatrix(payload),currentChartTitle);
     document.getElementById('project-context').textContent='Project: '+projectName+' · '+currentChartTitle;
     setStatus('Loaded saved Time Chart: '+currentChartTitle+'. Changes are not saved until you click Save to project.');
-    renderTimeChart();
+    // A saved worksheet may not yet have a range mapping. Loading the spreadsheet
+    // must not depend on the optional generated-chart configuration.
+    const savedRanges=getRangeConfigFromInputs();
+    const chartTarget=document.getElementById('time-chart-output');
+    if(savedRanges.start && (savedRanges.duration || savedRanges.end)) {
+      try {
+        renderTimeChart();
+      } catch(chartError) {
+        chartTarget.innerHTML='<div class="tc-empty">Spreadsheet loaded. The Time Chart is not generated yet. Check the selected cell ranges below.</div>';
+        document.getElementById('range-status').textContent='Saved range configuration needs attention: '+chartError.message;
+        setStatus('Spreadsheet loaded, but Time Chart generation was skipped: '+chartError.message,true);
+      }
+    } else {
+      chartTarget.innerHTML='<div class="tc-empty">Spreadsheet loaded. Select the cell ranges for Cluster, Start Time, and Duration or End Time, then click Apply Ranges to generate the Time Chart.</div>';
+      document.getElementById('range-status').textContent='No complete saved range mapping. Configure the source cell ranges below, or use Auto Detect.';
+      setStatus('Saved spreadsheet loaded. Configure the source cell ranges to generate the Time Chart.');
+    }
   }
   async function saveProjectChart() {
     if(!supa||!projectId||!workbook) throw new Error('Project or workbook is not ready.');
@@ -570,8 +586,8 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
   });
   init().catch(error => {
     console.error(error);
-    app.textContent = 'Univer could not start. Check your internet connection and refresh this page.\nDetailed error: ' + (error?.stack || error?.message || String(error));
-    setStatus('Univer initialization failed. See the detailed error inside the Spreadsheet workspace.',true);
+    app.textContent = 'The Time Chart page could not finish loading.\nDetailed error: ' + (error?.stack || error?.message || String(error));
+    setStatus('Page initialization or saved-chart loading failed. See the detailed error inside the Spreadsheet workspace.',true);
     app.style.cssText = 'padding:24px;white-space:pre-wrap;overflow-wrap:anywhere;font:14px/1.5 system-ui;color:#991b1b;background:#fff;height:100%;box-sizing:border-box';
     setStatus('Univer initialization failed: ' + error.message,true);
     statusEl.classList.add('error');
