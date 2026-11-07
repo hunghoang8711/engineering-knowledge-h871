@@ -381,3 +381,271 @@ Never use these terms interchangeably.
 - Supabase setup: `docs/supabase-setup.md`
 - Latest verified Pages workflow (before this file's commit): https://github.com/hunghoang8711/engineering-knowledge-h871/actions/runs/42401288128
 - Integrated Time Chart page: https://hunghoang8711.github.io/engineering-knowledge-h871/cycle-time-univer.html
+
+
+---
+
+## 12. Full GitHub commit-history audit (2026-11-08)
+
+### 12.1 Audit scope and completeness
+
+On 2026-11-08, the GitHub REST commit collection for the repository's default branch was retrieved page by page with `per_page=100`:
+- Page 1: 100 commits
+- Page 2: 100 commits
+- Page 3: 100 commits
+- Page 4: 100 commits
+- Page 5: 28 commits
+- Page 6: 0 commits
+
+**Total: 428 commits visible in the default-branch history at audit time.**
+
+- Oldest commit: `af9f1da73e7684fc316d782e8506d1bf5823de1c`, 2026-10-27 16:10:46 UTC.
+- Newest commit at audit start: `167d3a37eb3ae3145db07bce825ae7ab6fbb51ce`, 2026-11-07 18:26:14 UTC.
+- The subsequent history-document commit `467c8ed6dcbfb8c665a819eae023421a6c92cd44` was then added on 2026-11-07 18:35:49 UTC. It is included in the 428-commit count when this file was re-audited after its creation.
+- All timestamps above are GitHub commit author timestamps in UTC. For Vietnam local time, add 7 hours.
+- This audit covers the commit history reachable from the default branch. It does not claim to enumerate orphaned/unreachable Git objects or commits existing only on unmerged/deleted branches. Pull-request merge commits visible in the default-branch history are included.
+- Commit-message keyword counts overlap; one commit can belong to multiple themes. They are directional indicators, not mutually exclusive feature counts.
+
+### 12.2 Commit activity by date
+
+| Date (UTC) | Commits | Main activity |
+|---|---:|---|
+| 2026-10-27 | 41 | Repository foundation, Pages, Supabase, authentication, workspace, project/customer/document structure |
+| 2026-10-28 | 121 | Project/customer UX, direct detail pages, routing/session fixes, tags, filters, roadmap, AI architecture and first Gemini endpoint |
+| 2026-10-29 | 120 | AI analysis UI/history, Main Concept, bilingual then Vietnamese-only output refinement, tags, customer/end-user relationship, memory/performance diagnostics, navigation fixes |
+| 2026-10-30 | 28 | Durable asynchronous AI queue, Edge Functions, worker, workflows, job contract, polling and authorization fixes |
+| 2026-11-02 | 9 | Gemini background execution, manual worker invocation, analysis comparison, PDF quality, automatic queue after upload and immediate worker trigger |
+| 2026-11-05 | 7 | AI comparison rendering, customer/end-user selection, sidebar/overview navigation corrections |
+| 2026-11-07 | 102 | Calculate Library / Cycle Time Builder, project Time Chart, spreadsheet editing, XLSX formulas, Univer integration, configurable ranges, multi-range import |
+| **Total** | **428** | |
+
+The high commit volume on 2026-10-28/29 and 2026-11-07 includes many small UI/cache-version corrections. These should not be interpreted as 121 or 102 separate major features. A number of commits only invalidate browser caches after an underlying script/style change.
+
+### 12.3 Historical development phases
+
+#### Phase A — Repository and infrastructure foundation (2026-10-27)
+
+Key commits:
+- `af9f1da73e76` — initialize Engineering Knowledge Hub.
+- `cf122eafd6e5` — safe default `.gitignore`.
+- `26e799359bea` — environment variable template.
+- `38d3a3b2ed04` — initial architecture.
+- `81f1846a5708` — security boundaries.
+- `b572f176d6ac` — initial landing page.
+- `031fe71f3437` — GitHub Pages deployment workflow.
+- `06eb9cbdf29f` — initial H871 database schema.
+- `f4e036a7cdeb` — separate Supabase project setup.
+- `0563c094159c`, `0ab18063efbc`, `de5c55ea6627` — Supabase frontend config, sign-in/search UI and connection.
+- `eab3b1042ad4`, `fe27b94aa39c`, `a5e36fe7bcfd` — workspace record forms, role-based creation and form locking until role verification.
+- `da99dc803ffd`, `b0f348881768` — project document storage and customer relationship foundations.
+
+Phase outcome:
+- Established the separate H871 repository, public Pages deployment path, Supabase-backed application foundation, authentication and role-gated record entry.
+- Began project-centric data management and private document storage.
+
+Lessons:
+- Keep environment templates free of real credentials.
+- Public frontend configuration must never contain service-role keys.
+- Verify the authenticated user's role before enabling write controls; hiding a button is not a substitute for database RLS.
+
+#### Phase B — Project/customer workspace and navigation stabilization (2026-10-28)
+
+Main work:
+- Project/customer records and document relationships were made project-centric.
+- Added reusable project tags and customer-side project linking.
+- Added customer/project detail pages and a dedicated Knowledge Library page rather than relying on hash-only navigation.
+- Added clickable customer and project cards, profile editing, project/customer selection and end-user support.
+- Added compact search/filter patterns and overview roadmap.
+- Removed redundant Global Search navigation and changed list behavior several times to ensure complete record lists are visible by default.
+- Added route-safe refresh/back behavior, session race fixes, detail loading fallbacks, sidebar active-state corrections, and protection against Overview flashing while navigating.
+- Customer/project header and typography were refined; project details can show Customer and End User separately.
+- Added read-only preflight checks and documented schema/RLS observations before AI schema work.
+
+Important commits:
+- `64cc785ad547` — reusable project tags.
+- `31dd86a651db` — load project documents in customer workspace.
+- `26ce0cb6b5e5` — page-like detail routes and browser back navigation.
+- `455232aa5337` — dedicated HTML URLs for customer/project detail routes.
+- `0cc4341f8234` — dedicated Knowledge Library page.
+- `2f9104db31c0` — dedicated customer detail page.
+- `eca8fe6a5c33` — dedicated project detail page.
+- `967dc4a1fe51` — Supabase session race fix on detail routes.
+- `5d8792796750` — prevent auth events from resetting active detail route.
+- `d9890c1ddecf` — customer profile editing.
+- `ca8aeae5a663` — project profile editing.
+- `92bdd015960a` — customer-side project linking.
+- `2a1541e6763e` — clickable project cards.
+- `0f816989abf4` — compact search/filter controls.
+- `05bce86f9f42` — overview implementation roadmap.
+- `e21cf6f161f0` — remove redundant global search navigation.
+
+Problems and lessons:
+- Hash-based routes and shared page state caused Back/refresh behavior and active-page errors; direct HTML routes with explicit identifiers were more reliable.
+- Supabase auth/session events could race with detail-page initialization; route state must be established before rendering and auth refresh must not reset the active route.
+- Query failures for related documents should not blank the entire project/customer list. Render the primary records and expose related-data errors separately.
+- Default filters/search state must not hide records before the user asks to search.
+- Cache-busting commits are often necessary for GitHub Pages static assets, but they are deployment hygiene, not business logic.
+
+#### Phase C — AI Project Intelligence design and first implementation (2026-10-28 to 2026-10-29)
+
+Architecture and backend:
+- `ff8fd91d51cc` — approved AI Project Intelligence architecture.
+- `52e6715a1170` — implementation plan.
+- `322499d3c1ee` — observed schema/RLS documentation.
+- `546dd2bda0fe` — draft additive AI migration.
+- `8647cd5f119a` — server-side Gemini document analysis function, free-tier model only.
+- `e0c36e6257c9` — authenticated analyze-document Edge Function.
+- `f655ea65f5ef` — limit initial analysis to verified PDF input.
+- `9b1bfd7c526a` — align architecture with AI-native whole-document understanding.
+- `846cac4538d2` — transactional Main Concept apply and history restore.
+- `324bbe4208db` and `12208b5067a1` — read-only migration/trigger preflight corrections.
+- `7a1c2bea67d0` — restrict AI analysis/history tables to read-only client access.
+- `f817279bce27` — Gemini PDF analysis UI and project history.
+
+Product/UI improvements:
+- Added document-scoped analysis history and expandable saved analysis details.
+- Added overview search over saved analyses, document tags and selectable AI-suggested tags.
+- Added Main Concept indicator/action, analysis progress and safeguards around history polling.
+- Experimented with bilingual English/Vietnamese output and a language toggle, then simplified to Vietnamese-only source-grounded analysis; English headings and English-prioritized tags remained preferred later.
+- Added Customer/End User information in the project header and project-specific end-user naming.
+- Improved PDF Base64 memory handling, chunk boundaries and stage diagnostics.
+- Added timeout and failure diagnostics for Gemini.
+
+Key commits:
+- `c0741608c31d` — reduce PDF analysis memory pressure and add safe stage diagnostics.
+- `1ab13ba1bf73` — keep Base64 chunk boundaries valid during memory optimization.
+- `ebbe3f9b7c32` — expandable saved AI analysis details.
+- `fdf2458af1ac` — search saved AI analyses and selectable tag saving.
+- `051111026586` — document-level tags for AI-assisted knowledge search.
+- `ea2c71e61159` — Main Concept indicator and analysis progress tracking.
+- `34f6cd242af0`, `ad91d19a954f`, `66997899a97f` — bilingual analysis experiment.
+- `50f46b607871`, `1602d2dff83a` — Vietnamese-only source-grounded analysis UI.
+- `37099305bdce`, `79789cd95729`, `731da8c8b3dc` — project-specific end-user support.
+- `824afa7c2411` — Gemini request timeout and failure diagnostics.
+
+Important lessons:
+- Main Concept must be an explicit user-selected document, not an accidental latest upload.
+- Preserve all analysis versions; applying or restoring a Main Concept should create traceable history.
+- AI output should be grounded in the whole PDF (including diagrams/images), not only a text extraction pass.
+- Client-side AI/history tables should not receive broad write access; privileged updates belong behind validated server-side functions/RPCs.
+- Memory optimization must preserve valid Base64 boundaries.
+- Do not assume a function's code being committed means it is deployed or its database migration has been applied.
+
+#### Phase D — Asynchronous AI worker and queue (2026-10-29 to 2026-11-02)
+
+Motivation:
+- Long synchronous Gemini processing ran into Edge Function time limits, memory/compute pressure and provider 503/failure conditions.
+- The solution was to separate quick enqueue requests from long-running processing.
+
+Main commits:
+- `46b554ab548d` — queue workflow.
+- `b79324fdd1e7` — AI analysis validation workflow.
+- `86f84ea9e3f4` — Supabase Functions deployment workflow.
+- `7d54ae1743e4` — async job contract documentation.
+- `1c428ab6a545` — enqueue-analysis Edge Function.
+- `ccb5d25cbb21` — process-analysis-queue worker.
+- `b0306acd932e` — analysis result validation module.
+- `c99c2c590dcb` — storage path module.
+- `ba578f2de6e4` — migration draft 0007 for async analysis jobs.
+- `282d74430654` — read-only async-analysis preflight SQL.
+- `cc7eeb3ee801` — scheduler SQL.
+- `e1d46e2412ef` — connect PDF analysis UI to durable async queue.
+- `bb9594e0fb87` — extend async PDF analysis polling window.
+- `026491cb29ef` — fix service-role claim checks in queue RPCs.
+- `17088d02ad22` — log queue claim exception message.
+- `1c9e6a6ffa05` — Gemini background execution.
+- `fdd00ec790d1` — safe one-shot manual queue worker invocation.
+- `c9316d189bb3` — manual long-wait Gemini polling.
+- `5148228772e3` — automatically queue PDFs after upload.
+- `6c01da1bea27` — trigger AI queue worker immediately after enqueue.
+
+Additional work:
+- Pull requests #2, #3, #4 and #5 merged deployment, UI, polling-window and queue-JWT fixes.
+- The workflow and function files exist in GitHub, but actual production state must still be verified against Supabase and GitHub Actions before any future worker change.
+- Earlier user-reported test with a synthetic PDF succeeded and returned an Automated Sample Handling Demonstrator summary with tags. Treat this as user-confirmed historical evidence, not proof of current scheduler health.
+
+Failure lessons:
+- Supabase Cron was absent in a prior environment check; the scheduler SQL file alone does not install or activate pg_cron.
+- Queue RPC authorization must validate service-role claims correctly; do not weaken RLS to make a worker pass.
+- A longer frontend polling window does not fix a worker that never starts. Verify enqueue, queue claim, worker execution, Gemini interaction, persistence and UI refresh as separate stages.
+- Manual one-shot invocation is a diagnostic/operational path, not proof of reliable recurring scheduling.
+- Retry behavior and provider failures must remain observable; never silently route to a paid model.
+
+#### Phase E — AI comparison, quality and navigation refinements (2026-11-02 to 2026-11-05)
+
+- `c9989dfdfc9b` — AI analysis version comparison.
+- `29b19274de92` — document format compatibility guidance.
+- `e58292a07bf5` — improve full-PDF technical analysis quality.
+- `4e93a0226f0b` — improve AI analysis rendering and comparison disclosure.
+- `a9a2c90ca56a` — fix structured AI comparison rendering.
+- `e17e0f9b244a` — fix project customer and end-user selection.
+- `705049ea34ed`, `0b56d26e866a`, `e2e8575fda6c` — prevent Overview flash and initialize sidebar active state before paint.
+
+Outcome:
+- Analysis versions can be compared, full-PDF prompt quality was refined, format support limitations are disclosed, and customer/end-user selection and initial navigation rendering were corrected.
+- Comparison UI must disclose what is being compared and must handle structured output fields without assuming every analysis has every field.
+
+#### Phase F — Calculate Library and Cycle Time / Time Chart (2026-11-07)
+
+This was the most concentrated feature-development day in the repository history (102 commits including many cache-bust/small correction commits).
+
+Initial module and routing:
+- `0327e3129719` — Calculate Library page.
+- `5b5f188bdbf6` — H871 Cycle Time Builder.
+- `57df6194292e` — link Cycle Time Builder to H871 projects.
+- `497fd4c4176b` — integrate Time Chart into Knowledge Library.
+- `779a38530377` — safe migration draft for multiple project Time Charts.
+- Later removed obsolete Calculate Library navigation and duplicate Knowledge Library entries; clarified that Time Charts are project-specific and should not have a separate global Time Chart listing.
+
+Spreadsheet evolution:
+- `e8bee1c6944d` — editable spreadsheet-style worksheet.
+- `634670ab016d` — flexible row/column editing, resizing, text wrapping.
+- `48001c9e5a07` — XLSX import with formula preservation.
+- `c0c81ae02993` — improve import, formulas and editing.
+- `54bead42ff13` — configurable column roles and worksheet formatting.
+- `c2620d2434dc` — formula reference translation and export recalculation.
+- `aaebefbdfe22` — persist column names and preserve manual End Time overrides.
+- `6640cfdc13a2` — worksheet selection and saved formula restoration.
+- Added undo/redo, select-all/range-clear, Excel-style formula entry, absolute cell references and a standalone Univer lab.
+
+Univer integration:
+- `ba565a20573f` — isolated Univer spreadsheet evaluation lab.
+- `6eeb6b53f211` — Univer-backed project Time Chart editor with Supabase persistence.
+- Added project/chart routing, editable title, default End Time formulas and chart generation from worksheet cells.
+- `d4a361d78a15` — configurable worksheet ranges for Time Chart generation.
+- `6e22cac06dbd` — prevent missing range mapping from blocking saved worksheet load.
+- `9bf79d79eb0d` — make bars represent Start-to-End and preserve Excel row order.
+
+Latest multi-range XLSX import:
+- `36710f641145` — add multiple rectangular XLSX import regions and improve formula handling.
+- `0bdcaadd5ae6` — correct formula offsets when vertically appending regions.
+- `d51e3354f30d` — import flow and selected range previews.
+- `7e55896300b9` — preview formatting.
+- `167d3a37eb3a` — restore project save completion after import refactor.
+
+Time Chart-specific lessons:
+- Do not create a separate Time Chart Library page; keep charts within their project context.
+- Separate worksheet load from chart rendering; a missing Start Time mapping must not prevent a saved spreadsheet from opening.
+- Preserve Excel row order. Each activity bar must span its actual Start Time through End Time on a shared time axis.
+- A successful GitHub Actions Pages workflow only confirms deployment automation, not Excel formula correctness.
+- Current outstanding issue remains formula/data completeness in later imported cells and verification of the multiple-rectangle import using a representative workbook.
+
+### 12.4 Repeated correction patterns and systemic lessons from the commit history
+
+1. **Cache invalidation was repeatedly needed.** Static GitHub Pages can continue serving old JS/CSS after a code commit. When a user reports that a change is not visible, check the deployed workflow, asset version/cache headers and hard refresh before making a second implementation change.
+2. **Routing and authentication have race conditions.** Detail route, active sidebar state, auth event, and initial module loading should be coordinated. Do not allow a delayed auth event to reset navigation.
+3. **Primary data should survive secondary query failures.** Project/customer lists should not disappear because a related document/tag query failed.
+4. **Role-based UI and RLS are separate layers.** UI controls improve usability; database policies remain the security boundary.
+5. **Spreadsheet formulas need reference-aware transformations.** When copying or concatenating ranges, relative references shift, absolute references remain fixed, and mixed references shift only the relative coordinate.
+6. **Spreadsheet source formula and cached value are different.** Preserve formulas for editing and cached/calculated values for downstream charting; explicitly document cases where formula engines cannot recalculate.
+7. **Save/reload is a critical regression path.** Any import/editor refactor must retest Save to project, reload, export and backup/restore.
+8. **A feature can be committed but not operationally verified.** Maintain separate states for commit, workflow, deployment, browser test, live backend test and user confirmation.
+9. **Avoid overcorrecting with many small code edits without a reproducible test.** Build a minimal synthetic workbook and regression checklist before further XLSX changes.
+10. **Do not infer root cause solely from the commit immediately preceding a failure.** The Univer `makeCurrent` change was reverted, but the missing-range stack trace proved the actual failure was unconditional chart rendering.
+
+### 12.5 Current repository history baseline after this audit
+
+- Canonical project history file: `docs/PROJECT_MASTER_HISTORY.md`.
+- Commit that created the file: `467c8ed6dcbfb8c665a819eae023421a6c92cd44`.
+- This addendum is intended to be committed as the next update to the same file.
+- Next task should start by checking this file and the actual default-branch HEAD again; this audit is a historical snapshot, not a substitute for checking live state at the start of future work.
