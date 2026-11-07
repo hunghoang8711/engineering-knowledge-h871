@@ -284,7 +284,8 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
     const {data,error}=await supa.from('project_cycle_time_charts').select('id,title,chart_data').eq('id',chartId).eq('project_id',projectId).maybeSingle();
     if(error) throw error;
     if(!data) throw new Error('Saved Time Chart not found or access denied.');
-    chartId=data.id; currentChartTitle=data.title||'Cycle Time Chart';\n    document.getElementById('chart-title').value=currentChartTitle;
+    chartId=data.id; currentChartTitle=data.title||'Cycle Time Chart';
+    document.getElementById('chart-title').value=currentChartTitle;
     const payload=data.chart_data||{};
     if(payload.univerSnapshot && payload.engine==='univer') workbook=univerAPI.createWorkbook(payload.univerSnapshot);
     else makeWorkbook(legacyToMatrix(payload),currentChartTitle);
@@ -296,7 +297,8 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
     const {data:userData,error:userError}=await supa.auth.getUser();
     if(userError) throw userError;
     if(!userData?.user) throw new Error('Your H871 session has expired. Sign in again.');
-    currentChartTitle=document.getElementById('chart-title').value.trim()||projectName+' · Time Chart';\n    const snapshot=workbook.save();
+    currentChartTitle=document.getElementById('chart-title').value.trim()||projectName+' · Time Chart';
+    const snapshot=workbook.save();
     const compat=makeLegacyCompatibility(snapshot);
     const payload={version:5,engine:'univer',engineVersion:'1.4.0',chartId,chartTitle:currentChartTitle,projectName,projectDescription:'Univer-powered project Time Chart',univerSnapshot:snapshot,...compat,univerUpdatedAt:new Date().toISOString()};
     const record={title:currentChartTitle||projectName+' · Time Chart',chart_data:payload};
