@@ -298,7 +298,7 @@ function unmerge(){if(!selected.length)return;const k=selected[0];merges=merges.
 function styleSelected(patch){selected.forEach(k=>cellStyles[k]={...(cellStyles[k]||{}),...patch});renderTable();}
 function download(blob,name){const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=name;a.click();URL.revokeObjectURL(url);}
 function saveJson(){const data={version:4,projectName:$("#project-name").value,description:$("#project-desc").value,rows,customCols,columnRoles,columnLabels,merges,cellStyles,columnWidths,rowHeights,cellFormulas};download(new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),"h871-cycle-time.json");status("JSON project saved.");}
-function loadJson(file){const reader=new FileReader();reader.onload=()=>{try{const d=JSON.parse(reader.result);rows=Array.isArray(d.rows)?d.rows:[];customCols=Array.isArray(d.customCols)?d.customCols:["Remark"];columnLabels=d.columnLabels&&typeof d.columnLabels==="object"?d.columnLabels:{};merges=d.merges||[];cellStyles=d.cellStyles||{};columnWidths=d.columnWidths||{};rowHeights=d.rowHeights||{};cellFormulas=d.cellFormulas||{};columnRoles=d.columnRoles&&typeof d.columnRoles==="object"?d.columnRoles:{0:"cluster",1:"text",2:"start",3:"duration",4:"end"};$("#project-name").value=d.projectName||"";$("#project-desc").value=d.description||"";selected=[];renderTable();renderCharts();status("JSON project loaded.");}catch(e){status("Could not read JSON: "+e.message);}};reader.readAsText(file);}
+function loadJson(file){const reader=new FileReader();reader.onload=()=>{try{const d=JSON.parse(reader.result);rows=Array.isArray(d.rows)?d.rows:[];customCols=Array.isArray(d.customCols)?d.customCols:["Remark"];columnLabels=d.columnLabels&&typeof d.columnLabels==="object"?d.columnLabels:{};merges=d.merges||[];cellStyles=d.cellStyles||{};columnWidths=d.columnWidths||{};rowHeights=d.rowHeights||{};cellFormulas=d.cellFormulas||{};recalculateFormulas();columnRoles=d.columnRoles&&typeof d.columnRoles==="object"?d.columnRoles:{0:"cluster",1:"text",2:"start",3:"duration",4:"end"};$("#project-name").value=d.projectName||"";$("#project-desc").value=d.description||"";selected=[];renderTable();renderCharts();status("JSON project loaded.");}catch(e){status("Could not read JSON: "+e.message);}};reader.readAsText(file);}
 function excelCellPlain(value){
  if(value===null||value===undefined)return "";
  if(value instanceof Date)return value.toISOString();
@@ -328,8 +328,6 @@ async function importXlsx(file){
  try{
   status("Reading XLSX workbook…");
   const wb=new ExcelJS.Workbook();await wb.xlsx.load(await file.arrayBuffer());
-  const sheet=wb.worksheets.find(sh=>sh.rowCount>0&&sh.actualRowCount>0);
-  if(!sheet)throw new Error("The workbook does not contain a worksheet with data.");
   const sheetNames=wb.worksheets.map((sh,i)=>i+": "+sh.name).join("\n");const chosenSheet=prompt("Choose worksheet by number:\n"+sheetNames,"0");if(chosenSheet===null)return;const sheet=wb.worksheets[Number(chosenSheet)];if(!sheet||!sheet.rowCount)throw new Error("Invalid worksheet selection.");const rangeInput=prompt("Enter import range (example: A1:G25). The first row in the range is used as column headers.","A1:"+colLetters(Math.max(0,sheet.columnCount-1))+Math.max(1,sheet.rowCount));if(rangeInput===null)return;const rangeMatch=rangeInput.trim().match(/^([A-Z]+)(\d+):([A-Z]+)(\d+)$/i);if(!rangeMatch)throw new Error("Invalid range. Use a format such as A1:G25.");const parseCol=x=>{let n=0;for(const ch of x.toUpperCase())n=n*26+ch.charCodeAt(0)-64;return n;};const startCol=parseCol(rangeMatch[1]),startRow=Number(rangeMatch[2]),endCol=parseCol(rangeMatch[3]),endRow=Number(rangeMatch[4]);if(startCol<1||startRow<1||endCol<startCol||endRow<startRow)throw new Error("Invalid range boundaries.");const headerRow=sheet.getRow(startRow),sourceCols=[];for(let c=startCol;c<=endCol;c++){const v=headerRow.getCell(c).value;sourceCols.push({source:c,header:excelCellPlain(v).trim()||("Column "+colLetters(c-1))});}
   const dataCols=sourceCols.filter(x=>!(x.source===1&&["#","no","no.","index","stt"].includes(normalizeHeader(x.header))));
   if(!dataCols.length)throw new Error("No columns were found in the first worksheet.");
@@ -499,7 +497,7 @@ rows=sourceRows.map(r=>({...r,duration:r.duration??(Number(r.end)-Number(r.start
 customCols=Array.isArray(d.customCols)&&d.customCols.length?d.customCols:["Remark"];columnLabels=d.columnLabels&&typeof d.columnLabels==="object"?d.columnLabels:{};
 merges=Array.isArray(d.merges)?d.merges:[];
 cellStyles=d.cellStyles&&typeof d.cellStyles==="object"?d.cellStyles:{};
-columnWidths=d.columnWidths&&typeof d.columnWidths==="object"?d.columnWidths:{};columnRoles=d.columnRoles&&typeof d.columnRoles==="object"?d.columnRoles:{0:"cluster",1:"text",2:"start",3:"duration",4:"end"};
+columnWidths=d.columnWidths&&typeof d.columnWidths==="object"?d.columnWidths:{};rowHeights=d.rowHeights&&typeof d.rowHeights==="object"?d.rowHeights:{};cellFormulas=d.cellFormulas&&typeof d.cellFormulas==="object"?d.cellFormulas:{};recalculateFormulas();columnRoles=d.columnRoles&&typeof d.columnRoles==="object"?d.columnRoles:{0:"cluster",1:"text",2:"start",3:"duration",4:"end"};
 selected=[];activeCell={r:0,c:0};selectionAnchor={r:0,c:0};
 projectName=d.projectName||projectName;
 $("#project-name").value=projectName;
