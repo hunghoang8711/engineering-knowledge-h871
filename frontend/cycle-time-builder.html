@@ -83,7 +83,7 @@ else if(td){td.focus();}
 }
 function renderTable(){
 const head=$("#input-table thead"),body=$("#input-table tbody"),names=cols();
-head.innerHTML="<tr><th class=\\"ct-row-number\\">#</th>"+names.map((n,i)=>"<th data-c=\\""+i+"\\"><div class=\\"ct-th-content\\"><span class=\\"ct-col-title\\" data-title-col=\\""+i+"\\" title=\\"Double-click to rename\\">"+escapeHtml(n)+"</span><select class=\\"ct-role-select\\" data-role-col=\\""+i+"\\">"+Object.entries(roleLabels).map(([v,label])=>"<option value=\\""+v+"\\" "+((columnRoles[i]||"text")===v?"selected":v!=="text"&&Object.keys(columnRoles).some(k=>+k!==i&&columnRoles[k]===v)?"disabled":"")+">"+label+"</option>").join("")+"</select></div><span class=\\"ct-col-resizer\\" data-resize-col=\\""+i+"\\"></span></th>").join("")+"</tr>";
+head.innerHTML="<tr><th class=\"ct-row-number\">#</th>"+names.map((n,i)=>"<th data-c=\""+i+"\"><div class=\"ct-th-content\"><span class=\"ct-col-title\" data-title-col=\""+i+"\" title=\"Double-click to rename\">"+escapeHtml(n)+"</span><select class=\"ct-role-select\" data-role-col=\""+i+"\">"+Object.entries(roleLabels).map(([v,label])=>"<option value=\""+v+"\" "+((columnRoles[i]||"text")===v?"selected":v!=="text"&&Object.keys(columnRoles).some(k=>+k!==i&&columnRoles[k]===v)?"disabled":"")+">"+label+"</option>").join("")+"</select></div><span class=\"ct-col-resizer\" data-resize-col=\""+i+"\"></span></th>").join("")+"</tr>";
 body.innerHTML="";
 if(!rows.length)rows.push({cluster:"",activity:"",start:"",duration:"",end:"",custom:{}});
 rows.forEach((r,ri)=>{
