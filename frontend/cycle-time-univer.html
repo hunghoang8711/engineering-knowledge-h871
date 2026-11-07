@@ -279,7 +279,8 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
       currentChartTitle=projectName+' · Time Chart';
       document.getElementById('chart-title').value=currentChartTitle;
       makeWorkbook([['Mechanism','Operation','Start (s)','Duration (s)','End (s)','Remark']],currentChartTitle);
-      const activeSheet=workbook.getActiveSheet();\n      activeSheet.getRange('E2:E101').setValues(Array.from({length:100},(_,i)=>['=IF(OR(C'+(i+2)+'="",D'+(i+2)+'=""),"",C'+(i+2)+'+D'+(i+2)+')']));
+      const activeSheet=workbook.getActiveSheet();
+      activeSheet.getRange('E2:E101').setValues(Array.from({length:100},(_,i)=>['=IF(OR(C'+(i+2)+'="",D'+(i+2)+'=""),"",C'+(i+2)+'+D'+(i+2)+')']));
       setStatus('New project Time Chart. Enter data, then Save to project.');
       return;
     }
