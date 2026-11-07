@@ -40,7 +40,7 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
 <button class="uv-btn" id="save-json">Backup JSON</button>
 <button class="uv-btn" id="load-json">Restore JSON</button>
 <input id="json-file" type="file" accept=".json,application/json" hidden>
-<input id="xlsx-file" type="file" accept=".xlsx,.xls,.csv" hidden>
+<input id="xlsx-file" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden>
 </div>
 </div>
 <section class="uv-panel">
@@ -150,6 +150,7 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
     }
     throw new Error('Could not load ' + path + ' from jsDelivr or unpkg.');
   }
+  function columnName(index) { let n=index+1, out=''; while(n){const r=(n-1)%26;out=String.fromCharCode(65+r)+out;n=Math.floor((n-1)/26);}return out; }
   function sampleData() {
     return [
       ['Mechanism', 'Operation', 'Start (s)', 'Duration (s)', 'End (s)', 'Status', 'Check'],
@@ -278,6 +279,7 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
       currentChartTitle=projectName+' · Time Chart';
       document.getElementById('chart-title').value=currentChartTitle;
       makeWorkbook([['Mechanism','Operation','Start (s)','Duration (s)','End (s)','Remark']],currentChartTitle);
+      const activeSheet=workbook.getActiveSheet();\n      activeSheet.getRange('E2:E101').setValues(Array.from({length:100},(_,i)=>['=IF(OR(C'+(i+2)+'="",D'+(i+2)+'=""),"",C'+(i+2)+'+D'+(i+2)+')']));
       setStatus('New project Time Chart. Enter data, then Save to project.');
       return;
     }
