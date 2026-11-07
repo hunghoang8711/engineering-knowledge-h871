@@ -333,13 +333,13 @@ async function importXlsx(file){
    dataCols.slice(0,5).forEach((col,i)=>{if(!mapped.has(col.source)&&!used.has(i)){mapped.set(col.source,i);used.add(i);}});
   }
   let nextCustom=5;const targetNames={0:"Cluster",1:"Activity",2:"Start (s)",3:"Duration (s)",4:"End (s)"};
-  const importCols=[];
+  const importCols=[],importedRoles={};
   dataCols.forEach(col=>{
    let target=mapped.get(col.source);
    if(target===undefined){target=nextCustom++;targetNames[target]=col.header;}
-importCols.push({...col,target});if(target<=4)importedRoles[target]=["cluster","text","start","duration","end"][target];
+   importCols.push({...col,target});if(target<=4)importedRoles[target]=["cluster","text","start","duration","end"][target];
   });
-const importedRows=[],importedFormulas={},importedStyles={},importedWidths={},importedHeights={},importedRoles={};
+  const importedRows=[],importedFormulas={},importedStyles={},importedWidths={},importedHeights={};
   let formulaCount=0;
   for(let sr=2;sr<=sheet.rowCount;sr++){
    const sourceRow=sheet.getRow(sr),row={cluster:"",activity:"",start:"",duration:"",end:"",custom:{}},targetRi=importedRows.length;
@@ -430,6 +430,8 @@ makeTimelineSheet("Activity Timeline",valid.map(r=>({cluster:r.cluster,label:r.a
 Object.entries(cellFormulas).forEach(([key,meta])=>{const [r,c]=key.split(":").map(Number),cell=ws.getCell(r+2,c+2);if(meta?.formula)cell.value={formula:String(meta.formula).replace(/^=/,""),result:meta.result??null};});
  const buffer=await wb.xlsx.writeBuffer();download(new Blob([buffer],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}),"H871-Cycle-Time-Builder.xlsx");status("Excel workbook exported with Input Data, Summary, Cluster Overview and Activity Timeline sheets.");
 }
+$("#import-xlsx").addEventListener("click",()=>$("#xlsx-file").click());
+$("#xlsx-file").addEventListener("change",async e=>{const file=e.target.files?.[0];if(file)await importXlsx(file);e.target.value="";});
 $("#export").onclick=exportExcel;$("#font-color").addEventListener("input",()=>styleSelected({color:$("#font-color").value}));$("#align-left").onclick=()=>styleSelected({horizontalAlign:"left"});$("#align-center").onclick=()=>styleSelected({horizontalAlign:"center"});$("#align-right").onclick=()=>styleSelected({horizontalAlign:"right"});$("#valign-top").onclick=()=>styleSelected({verticalAlign:"top"});$("#valign-middle").onclick=()=>styleSelected({verticalAlign:"middle"});$("#valign-bottom").onclick=()=>styleSelected({verticalAlign:"bottom"});
 const params=new URLSearchParams(location.search);let projectId=params.get("project_id")||params.get("project")||"",projectName="";let supa=null,authUser=null;const projectBackLink=document.querySelector(".ct-head .back-button");if(projectId&&projectBackLink){projectBackLink.href="./project-detail.html?id="+encodeURIComponent(projectId);projectBackLink.textContent="← Project Detail";}
 const projectKey=id=>"h871-cycle-time-chart:"+id;
