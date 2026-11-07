@@ -41,14 +41,7 @@
 (()=>{
 const $=s=>document.querySelector(s), colors=["#67d5b5","#78b9f2","#f5bd68","#c49af2","#ef8f9d","#9bd16f","#e9a7d4","#83cbd0"];
 let rows=[],customCols=["Remark"],selected=[],merges=[],cellStyles={},chartId=new URLSearchParams(location.search).get("chart_id")||null;
-const defaults=[
-{cluster:"Robot",activity:"Pick component",start:"0",duration:"1.2",end:"1.2",remark:"Vacuum ON"},
-{cluster:"Robot",activity:"Transfer to fixture",start:"1.2",duration:"1.6",end:"2.8",remark:""},
-{cluster:"Fixture",activity:"Clamp workpiece",start:"2.0",duration:"0.7",end:"2.7",remark:"Parallel"},
-{cluster:"Robot",activity:"Place component",start:"2.8",duration:"0.8",end:"3.6",remark:"Vacuum OFF"},
-{cluster:"Process",activity:"Inspection",start:"3.6",duration:"1.5",end:"5.1",remark:"Camera check"},
-{cluster:"Fixture",activity:"Unclamp",start:"5.1",duration:"0.6",end:"5.7",remark:""}
-];
+
 const cols=()=>["Cluster","Activity","Start (s)","Duration (s)","End (s)",...customCols];
 function syncEnd(r){const e=Number(r.start)+Number(r.duration??(Number(r.end)-Number(r.start)));r.end=Number.isFinite(e)?String(Number(e.toFixed(6))):"";return r.end;}
 const keyFor=(r,c)=>r+":"+c;
