@@ -10,7 +10,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="./supabase-config.js"></script>
 <style>
-html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}.uv-actions{display:flex;gap:8px;flex-wrap:wrap}.uv-btn{border:1px solid #38516b;border-radius:8px;background:#16283d;color:#dceafa;padding:9px 12px;font:inherit;font-size:12px;font-weight:700;cursor:pointer}.uv-btn.primary{background:#0e5368;border-color:#16758b;color:#e5fbff}.uv-panel{padding:16px;border:1px solid #293f56;border-radius:13px;background:#101d2e;min-width:0}.uv-panel h2{font-size:15px;margin:0 0 8px;color:#edf6ff}.uv-note{font-size:11px;color:#9fb3c9;line-height:1.6;margin:6px 0}.uv-status{font-size:12px;color:#9fb3c9;min-height:20px}.uv-status.error{color:#fca5a5}.uv-editor-shell{height:680px;min-height:520px;overflow:hidden;border:1px solid #38516b;border-radius:10px;background:#fff}.uv-editor-shell #app{height:100%;width:100%}.uv-checks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.uv-check{padding:12px;border:1px solid #2c4259;border-radius:9px;background:#0c1929}.uv-check strong{display:block;color:#e7f4ff;font-size:12px}.uv-check span{display:block;color:#9fb3c9;font-size:11px;margin-top:5px;line-height:1.5}.uv-callout{border-left:3px solid #d49a42;padding:8px 12px;background:#292315;border-radius:5px;color:#f4d9a4;font-size:11px;line-height:1.6}@media(max-width:760px){.uv-checks{grid-template-columns:1fr}.uv-editor-shell{height:620px;min-height:480px}}
+html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}.uv-actions{display:flex;gap:8px;flex-wrap:wrap}.uv-btn{border:1px solid #38516b;border-radius:8px;background:#16283d;color:#dceafa;padding:9px 12px;font:inherit;font-size:12px;font-weight:700;cursor:pointer}.uv-btn.primary{background:#0e5368;border-color:#16758b;color:#e5fbff}.uv-panel{padding:16px;border:1px solid #293f56;border-radius:13px;background:#101d2e;min-width:0}.uv-panel h2{font-size:15px;margin:0 0 8px;color:#edf6ff}.uv-note{font-size:11px;color:#9fb3c9;line-height:1.6;margin:6px 0}.uv-status{font-size:12px;color:#9fb3c9;min-height:20px}.uv-status.error{color:#fca5a5}.uv-editor-shell{height:680px;min-height:520px;overflow:hidden;border:1px solid #38516b;border-radius:10px;background:#fff}.uv-editor-shell #app{height:100%;width:100%}.uv-checks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.uv-check{padding:12px;border:1px solid #2c4259;border-radius:9px;background:#0c1929}.uv-check strong{display:block;color:#e7f4ff;font-size:12px}.uv-check span{display:block;color:#9fb3c9;font-size:11px;margin-top:5px;line-height:1.5}.uv-callout{border-left:3px solid #d49a42;padding:8px 12px;background:#292315;border-radius:5px;color:#f4d9a4;font-size:11px;line-height:1.6}.tc-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.tc-summary{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}.tc-stat{padding:9px 12px;border:1px solid #2c4259;border-radius:8px;background:#0c1929;color:#dceafa;font-size:12px}.tc-stat strong{display:block;font-size:16px;color:#fff;margin-bottom:2px}.tc-chart{display:grid;gap:8px;overflow-x:auto}.tc-axis,.tc-row{display:grid;grid-template-columns:minmax(150px,220px) minmax(280px,1fr) 90px;gap:10px;align-items:center;min-width:560px}.tc-axis{font-size:10px;color:#9fb3c9;padding-bottom:5px;border-bottom:1px solid #38516b}.tc-axis-track{display:flex;justify-content:space-between}.tc-label{min-width:0}.tc-label strong{display:block;color:#e7f4ff;font-size:12px;overflow-wrap:anywhere}.tc-label span{display:block;color:#91a8c1;font-size:10px;margin-top:3px;overflow-wrap:anywhere}.tc-track{height:26px;position:relative;border-radius:5px;background:repeating-linear-gradient(90deg,#1b2b40 0,#1b2b40 calc(10% - 1px),#30435b calc(10% - 1px),#30435b 10%);overflow:hidden}.tc-bar{position:absolute;top:3px;height:20px;min-width:3px;border-radius:4px;display:flex;align-items:center;justify-content:center;padding:0 5px;box-sizing:border-box;color:#07111e;font-size:10px;font-weight:800;white-space:nowrap;overflow:hidden}.tc-duration{text-align:right;color:#cbd5e1;font-size:11px;font-variant-numeric:tabular-nums}.tc-empty{padding:18px;border:1px dashed #38516b;border-radius:9px;color:#9fb3c9;font-size:12px;line-height:1.6}@media(max-width:760px){.uv-checks{grid-template-columns:1fr}.uv-editor-shell{height:620px;min-height:480px}}
 </style>
 </head>
 <body data-start-tab="knowledge">
@@ -56,13 +56,17 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
 <div class="uv-head"><div><h2>Spreadsheet workspace</h2><p class="uv-note">The workbook is held in this browser tab until you export its JSON snapshot.</p></div></div>
 <div class="uv-editor-shell"><div id="app"><p style="padding:24px;color:#334155;font:14px system-ui">Loading Univer spreadsheet engine…</p></div></div>
 </section>
+<section class="uv-panel" id="time-chart-panel">
+<div class="uv-head"><div><h2>Generated Time Chart</h2><p class="uv-note">Automatically converts the worksheet rows into a timeline. Edit the cells above, then rebuild to refresh the chart.</p></div><div class="tc-toolbar"><button class="uv-btn primary" id="build-time-chart">Build Time Chart from cells</button></div></div>
+<div id="time-chart-output" aria-live="polite"><div class="tc-empty">Import or enter worksheet data with Mechanism, Operation, Start and Duration/End columns, then select Build Time Chart from cells.</div></div>
+</section>
 <section class="uv-panel">
-<h2>Integration boundary</h2>
-<div class="uv-callout">This lab is intentionally isolated. It does not save to Supabase or update project_cycle_time_charts. XLSX conversion/import-export and project persistence will be assessed separately after formula and editing tests pass.</div>
+<h2>Project connection</h2>
+<div class="uv-callout">The worksheet and its Univer snapshot are saved in the selected H871 project. The generated Time Chart is derived from the current worksheet cells and can be rebuilt at any time; it does not overwrite the source cells.</div>
 <p class="uv-status" id="uv-status" role="status" aria-live="polite">Connecting to H871…</p>
 </section>
 </div>
-<footer>H871 Engineering Knowledge Hub <span>·</span> Univer Spreadsheet Lab <span>·</span> Evaluation only</footer>
+<footer>H871 Engineering Knowledge Hub <span>·</span> Project Time Chart <span>·</span> Spreadsheet + Timeline</footer>
 </main>
 </div>
 <script>
@@ -295,6 +299,7 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
     else makeWorkbook(legacyToMatrix(payload),currentChartTitle);
     document.getElementById('project-context').textContent='Project: '+projectName+' · '+currentChartTitle;
     setStatus('Loaded saved Time Chart: '+currentChartTitle+'. Changes are not saved until you click Save to project.');
+    renderTimeChart();
   }
   async function saveProjectChart() {
     if(!supa||!projectId||!workbook) throw new Error('Project or workbook is not ready.');
@@ -339,7 +344,8 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
     currentChartTitle=file.name.replace(/\.(xlsx|xls|csv)$/i,'')||'Imported Time Chart';
     document.getElementById('chart-title').value=currentChartTitle;
     makeWorkbook(matrix,currentChartTitle);
-    setStatus('Imported worksheet "'+sheet.name+'" from '+file.name+'. Review it and click Save to project.');
+    renderTimeChart();
+    setStatus('Imported worksheet "'+sheet.name+'" from '+file.name+'. Review the generated Time Chart and click Save to project.');
   }
   async function exportXlsx() {
     if(!window.ExcelJS||!workbook) throw new Error('Workbook or ExcelJS is not ready.');
@@ -366,6 +372,74 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
     setStatus('Exported current workbook to XLSX.');
   }
 
+  function normalizeHeader(value) { return String(value ?? '').trim().toLowerCase().replace(/[\\s_()-]+/g,''); }
+  function numericCell(value) {
+    if (value === null || value === undefined || value === '') return null;
+    if (typeof value === 'number' && Number.isFinite(value)) return value;
+    const n = Number.parseFloat(String(value).trim().replace(',', '.').replace(/[^0-9.+-]/g,''));
+    return Number.isFinite(n) ? n : null;
+  }
+  function readWorksheetRecords() {
+    if (!workbook) throw new Error('Worksheet is not ready.');
+    const matrix = snapshotToRows(workbook.save());
+    if (!matrix.length) return [];
+    const headers = matrix[0].map(normalizeHeader);
+    const findCol = (patterns, fallback) => {
+      const i = headers.findIndex(h => patterns.some(p => p.test(h)));
+      return i >= 0 ? i : fallback;
+    };
+    const mechanismCol = findCol([/^(mechanism|cluster|equipment|actuator|device|resource|station|cơcấu|cụm|thiếtbị)$/],0);
+    const operationCol = findCol([/^(operation|activity|description|process|step|task|operationdescription|hoạtđộng|côngđoạn|môtả)$/],1);
+    const startCol = findCol([/^(start|starttime|begin|begintime|startsec|startseconds|thờigianbắtđầu|bắtđầu)$/],2);
+    const durationCol = findCol([/^(duration|time|cycletime|operationtime|durationsec|durationseconds|thờigianhoạtđộng|thờigian)$/],3);
+    const endCol = findCol([/^(end|endtime|finish|finishtime|endsec|endseconds|thờigiankếtthúc|kếtthúc)$/],4);
+    const records = [];
+    matrix.slice(1).forEach((row,index) => {
+      const start = numericCell(row[startCol]);
+      let duration = numericCell(row[durationCol]);
+      let end = numericCell(row[endCol]);
+      if (start === null) return;
+      if (end === null && duration !== null) end = start + duration;
+      if (duration === null && end !== null) duration = end - start;
+      if (end === null || duration === null || duration < 0 || end < start) return;
+      const mechanism = String(row[mechanismCol] ?? '').trim() || 'Unassigned';
+      const operation = String(row[operationCol] ?? '').trim() || ('Operation ' + (index + 1));
+      records.push({mechanism,operation,start,end,duration,sourceRow:index+2});
+    });
+    return records;
+  }
+  function colorForMechanism(name) {
+    let hash=0; for(let i=0;i<name.length;i++) hash=(hash*31+name.charCodeAt(i))|0;
+    return 'hsl('+((Math.abs(hash)%300)+20)+' 68% 68%)';
+  }
+  function renderTimeChart() {
+    const target=document.getElementById('time-chart-output');
+    const records=readWorksheetRecords();
+    if(!records.length) {
+      target.innerHTML='<div class="tc-empty">No plottable rows found. The chart needs a numeric Start value and either Duration or End value. Check the header row and the imported cell values.</div>';
+      setStatus('No valid timeline rows found. Check Start, Duration and End columns.',true);
+      return;
+    }
+    const min=Math.min(0,...records.map(r=>r.start));
+    const max=Math.max(...records.map(r=>r.end));
+    const span=Math.max(max-min,0.001);
+    const groups=[...new Set(records.map(r=>r.mechanism))];
+    const ticks=Array.from({length:6},(_,i)=>min+span*i/5);
+    const fmt=n=>Number(n.toFixed(2)).toString();
+    const summary='<div class="tc-summary"><div class="tc-stat"><strong>'+records.length+'</strong>Operations</div><div class="tc-stat"><strong>'+groups.length+'</strong>Mechanisms</div><div class="tc-stat"><strong>'+fmt(max-min)+' s</strong>Timeline span</div><div class="tc-stat"><strong>'+fmt(Math.max(...records.map(r=>r.duration)))+' s</strong>Longest operation</div></div>';
+    const axis='<div class="tc-axis"><div>Mechanism / Operation</div><div class="tc-axis-track">'+ticks.map(t=>'<span>'+fmt(t)+' s</span>').join('')+'</div><div style="text-align:right">Duration</div></div>';
+    const rows=records.map(r=>{
+      const left=Math.max(0,(r.start-min)/span*100);
+      const width=Math.max(0.6,(r.end-r.start)/span*100);
+      const color=colorForMechanism(r.mechanism);
+      return '<div class="tc-row"><div class="tc-label"><strong>'+escapeHtml(r.mechanism)+'</strong><span>'+escapeHtml(r.operation)+'</span></div><div class="tc-track" title="'+escapeHtml(r.operation)+' · '+fmt(r.start)+'–'+fmt(r.end)+' s"><div class="tc-bar" style="left:'+left+'%;width:'+Math.min(width,100-left)+'%;background:'+color+'">'+(width>10?fmt(r.duration)+' s':'')+'</div></div><div class="tc-duration">'+fmt(r.duration)+' s</div></div>';
+    }).join('');
+    target.innerHTML=summary+'<div class="tc-chart">'+axis+rows+'</div>';
+    setStatus('Time Chart generated from '+records.length+' worksheet rows. The source cells remain unchanged.');
+  }
+  function escapeHtml(value) {
+    return String(value).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+  }
   async function init() {
     for (const path of styles) await loadResource(path, 'link');
     for (const path of reactScripts) await loadResource(path);
@@ -409,6 +483,7 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
     await initSupabase();
     await loadProjectChart();
   }
+  document.getElementById('build-time-chart').addEventListener('click', () => { try { renderTimeChart(); } catch(error) { setStatus('Could not build Time Chart: '+error.message,true); } });
   document.getElementById('save-project').addEventListener('click', async () => {
     const btn=document.getElementById('save-project');btn.disabled=true;btn.textContent='Saving…';
     try { await saveProjectChart(); btn.textContent='Saved ✓'; } catch(error) { setStatus('Save failed: '+error.message,true); btn.textContent='Save to project'; }
