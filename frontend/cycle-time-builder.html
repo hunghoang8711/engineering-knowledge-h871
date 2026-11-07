@@ -86,12 +86,35 @@ function loadJson(file){const reader=new FileReader();reader.onload=()=>{try{con
 async function exportExcel(){
 if(!window.ExcelJS){status("Excel export library did not load. Check network access and retry.");return;}
 const wb=new ExcelJS.Workbook();wb.creator="H871 Engineering Hub";wb.subject="Cycle time analysis";wb.created=new Date();
-const valid=clean(),cm=colorMap(),ws=wb.addWorksheet("Input Data");ws.columns=[{header:"#",key:"n",width:6},...cols().map((c,i)=>({header:c,key:"c"+i,width:i===1?30:i<4?16:22}))];
-rows.forEach((r,i)=>ws.addRow({n:i+1,...Object.fromEntries(cols().map((c,j)=>["c"+j,[r.cluster,r.activity,r.start,r.end][j]??r.custom?.[c]??""]))}));
-ws.views=[{state:"frozen",ySplit:1}];ws.getRow(1).font={bold:true,color:{argb:"FFFFFFFF"}};ws.getRow(1).fill={type:"pattern",pattern:"solid",fgColor:{argb:"FF18324A"}};ws.eachRow((row,idx)=>{row.eachCell(cell=>{cell.border={bottom:{style:"hair",color:{argb:"FFCBD5E1"}}};if(idx>1&&cell.col===2){const c=cm[String(cell.value)]||"#1d354b";cell.fill={type:"pattern",pattern:"solid",fgColor:{argb:"FF"+c.slice(1).toUpperCase()}};}});});
-const sum=wb.addWorksheet("Summary");sum.addRows([["Cycle Time Builder H871"],["Project",$("#project-name").value],["Description",$("#project-desc").value],["Total cycle time (s)",valid.length?Math.max(...valid.map(r=>r.end)):0],["Activity count",valid.length],["Cluster count",new Set(valid.map(r=>r.cluster)).size]]);sum.getColumn(1).width=28;sum.getColumn(2).width=55;sum.getRow(1).font={bold:true,size:16};
-const chart=wb.addWorksheet("Activity Timeline");chart.columns=[{width:28},{width:20},{width:20},{width:22},{width:22}];chart.addRow(["Cluster","Activity","Start (s)","End (s)","Duration (s)"]);valid.forEach(r=>chart.addRow([r.cluster,r.activity,r.start,r.end,r.end-r.start]));chart.getRow(1).font={bold:true,color:{argb:"FFFFFFFF"}};chart.getRow(1).fill={type:"pattern",pattern:"solid",fgColor:{argb:"FF18324A"}};valid.forEach((r,i)=>{const cell=chart.getRow(i+2).getCell(1);cell.fill={type:"pattern",pattern:"solid",fgColor:{argb:"FF"+cm[r.cluster].slice(1).toUpperCase()}};});
-const buffer=await wb.xlsx.writeBuffer();download(new Blob([buffer],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}),"H871-Cycle-Time-Builder.xlsx");status("Excel workbook exported (Input Data, Summary, Activity Timeline).");
+const valid=clean(),cm=colorMap(),names=cols(),ws=wb.addWorksheet("Input Data");
+ws.columns=[{header:"#",key:"n",width:6},...names.map((c,i)=>({header:c,key:"c"+i,width:i===1?30:i<4?16:22}))];
+rows.forEach((r,i)=>ws.addRow({n:i+1,...Object.fromEntries(names.map((name,j)=>["c"+j,[r.cluster,r.activity,r.start,r.end][j]??r.custom?.[name]??""]))}));
+ws.views=[{state:"frozen",ySplit:1}];ws.getRow(1).font={bold:true,color:{argb:"FFFFFFFF"}};ws.getRow(1).fill={type:"pattern",pattern:"solid",fgColor:{argb:"FF18324A"}};
+ws.eachRow((row,idx)=>row.eachCell(cell=>{cell.border={bottom:{style:"hair",color:{argb:"FFCBD5E1"}}};if(idx>1&&cell.col===2){const color=cm[String(cell.value)];if(color)cell.fill={type:"pattern",pattern:"solid",fgColor:{argb:"FF"+color.slice(1).toUpperCase()}};}}));
+merges.forEach(m=>{const [r0,c0]=m.master.split(":").map(Number),r1=r0+m.rowspan-1,c1=c0+m.colspan-1;ws.mergeCells(r0+2,c0+2,r1+2,c1+2);});
+Object.entries(cellStyles).forEach(([key,style])=>{const [r,col]=key.split(":").map(Number),cell=ws.getCell(r+2,col+2);if(style.bold)cell.font={...(cell.font||{}),bold:true};if(style.background)cell.fill={type:"pattern",pattern:"solid",fgColor:{argb:"FF"+style.background.replace("#","").toUpperCase()}};if(style.color)cell.font={...(cell.font||{}),color:{argb:"FF"+style.color.replace("#","").toUpperCase()}};});
+const summary=wb.addWorksheet("Summary");summary.addRows([["Cycle Time Builder H871"],["Project",$("#project-name").value],["Description",$("#project-desc").value],["Total cycle time (s)",valid.length?Math.max(...valid.map(r=>r.end)):0],["Activity count",valid.length],["Cluster count",new Set(valid.map(r=>r.cluster)).size]]);summary.getColumn(1).width=28;summary.getColumn(2).width=55;summary.getRow(1).font={bold:true,size:16};
+const min=valid.length?Math.min(0,...valid.map(r=>r.start)):0,max=valid.length?Math.max(...valid.map(r=>r.end)):1,span=Math.max(max-min,.01),step=span/80,buckets=Math.max(1,Math.ceil(span/step)),timeCol=5;
+function makeTimelineSheet(title,items){
+const sh=wb.addWorksheet(title);sh.getColumn(1).width=22;sh.getColumn(2).width=28;sh.getColumn(3).width=13;sh.getColumn(4).width=13;
+for(let i=0;i<buckets;i++)sh.getColumn(timeCol+i).width=2.8;
+sh.addRow(["Cluster","Activity / Group","Start (s)","End (s)","Timeline"]);
+const axis=sh.addRow(["","","","",...Array.from({length:buckets},(_,i)=>i%10===0?(min+i*step).toFixed(2):"")]);
+[1,2].forEach(n=>{sh.getRow(n).font={bold:true,color:{argb:"FFFFFFFF"}};sh.getRow(n).fill={type:"pattern",pattern:"solid",fgColor:{argb:"FF18324A"}};});
+items.forEach(item=>{
+const row=sh.addRow([item.cluster,item.label,item.start,item.end]);const r=row.number;
+const a=Math.max(0,Math.min(buckets-1,Math.floor((item.start-min)/step)));
+const b=Math.max(a,Math.min(buckets-1,Math.ceil((item.end-min)/step)-1));
+if(b>a)sh.mergeCells(r,timeCol,r,timeCol+b-a);
+const bar=sh.getCell(r,timeCol);bar.value=item.barLabel;bar.alignment={horizontal:"center",vertical:"middle"};bar.font={bold:true,color:{argb:"FF07111E"},size:9};bar.fill={type:"pattern",pattern:"solid",fgColor:{argb:"FF"+(cm[item.cluster]||"#9ca3af").slice(1).toUpperCase()}};
+row.height=22;
+});
+sh.views=[{state:"frozen",xSplit:4,ySplit:2}];sh.autoFilter={from:{row:1,column:1},to:{row:1,column:4}};
+}
+const clusters=[...new Set(valid.map(r=>r.cluster))];
+makeTimelineSheet("Cluster Overview",clusters.map(n=>{const g=valid.filter(r=>r.cluster===n),s=Math.min(...g.map(r=>r.start)),e=Math.max(...g.map(r=>r.end));return{cluster:n,label:n,start:s,end:e,barLabel:n+" · "+(e-s).toFixed(2)+" s"};}));
+makeTimelineSheet("Activity Timeline",valid.map(r=>({cluster:r.cluster,label:r.activity,start:r.start,end:r.end,barLabel:r.activity+" · "+(r.end-r.start).toFixed(2)+" s"})));
+const buffer=await wb.xlsx.writeBuffer();download(new Blob([buffer],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}),"H871-Cycle-Time-Builder.xlsx");status("Excel workbook exported with Input Data, Summary, Cluster Overview and Activity Timeline sheets.");
 }
 $("#add-row").onclick=addRow;$("#add-col").onclick=addCol;$("#merge").onclick=mergeSelected;$("#unmerge").onclick=unmerge;$("#bold").onclick=()=>styleSelected({bold:true});$("#fill").onclick=()=>styleSelected({background:$("#cell-color").value});$("#add-row").onclick=addRow;$("#sample").onclick=()=>{rows=defaults.map(x=>({...x,custom:{Remark:x.remark}}));renderTable();renderCharts();status("Sample activities loaded.");};$("#save").onclick=saveJson;$("#load").onclick=()=>$("input#json-file").click();$("#json-file").onchange=e=>e.target.files[0]&&loadJson(e.target.files[0]);$("#export").onclick=exportExcel;
 rows=defaults.map(x=>({...x,custom:{Remark:x.remark}}));renderTable();renderCharts();
