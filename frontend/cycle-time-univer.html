@@ -197,7 +197,7 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
           cellData: {}
         }
       }
-    });
+    }, { makeCurrent: true });
     const sheet = workbook.getActiveSheet();
     const rowCount = Math.max(120, dataRows.length + 20);
     sheet.setRowCount(rowCount);
@@ -222,7 +222,7 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
       try {
         const snapshot = JSON.parse(String(reader.result || ''));
         if (!snapshot || typeof snapshot !== 'object' || !snapshot.sheets) throw new Error('Unsupported Univer workbook snapshot.');
-        workbook = univerAPI.createWorkbook(snapshot);
+        workbook = univerAPI.createWorkbook(snapshot, { makeCurrent: true });
         statusEl.textContent = 'Workbook JSON loaded into Univer. Check the active sheet selector if multiple workbooks are open.';
       } catch (error) {
         statusEl.textContent = 'Could not load workbook JSON: ' + error.message;
@@ -309,7 +309,7 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
     document.getElementById('chart-title').value=currentChartTitle;
     const payload=data.chart_data||{};
     setRangeInputs(payload.dataRangeConfig||{});
-    if(payload.univerSnapshot && payload.engine==='univer') workbook=univerAPI.createWorkbook(payload.univerSnapshot);
+    if(payload.univerSnapshot && payload.engine==='univer') workbook=univerAPI.createWorkbook(payload.univerSnapshot,{makeCurrent:true});
     else makeWorkbook(legacyToMatrix(payload),currentChartTitle);
     document.getElementById('project-context').textContent='Project: '+projectName+' · '+currentChartTitle;
     setStatus('Loaded saved Time Chart: '+currentChartTitle+'. Changes are not saved until you click Save to project.');
