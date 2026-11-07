@@ -233,7 +233,7 @@
   const docs=documents.filter(d=>d.project_id===p.id);const preview=make("div","project-file-preview");
   docs.slice(0,3).forEach(d=>preview.append(make("span","file-chip",d.original_filename||d.title)));
   if(docs.length>3)preview.append(make("button","file-overflow","+"+(docs.length-3)));if(!docs.length)preview.append(make("span","no-files","No files attached yet"));
-  const row=make("button","project-expand",docs.length?"Show file list":"Add the first file");row.type="button";row.addEventListener("click",()=>openProject(p.id));card.append(preview,row);return card;
+  const row=make("button","project-expand",docs.length?"Show file list":"Add the first file");row.type="button";row.addEventListener("click",()=>openProject(p.id));card.append(preview,row);const cycleChart=make("button","project-open","＋ Create Time Chart");cycleChart.type="button";cycleChart.addEventListener("click",e=>{e.stopPropagation();location.href="./cycle-time-builder.html?project_id="+encodeURIComponent(p.id);});card.append(cycleChart);return card;
  }
  function customerCard(c){
   const card=make("article","customer-card");card.tabIndex=0;card.setAttribute("role","link");card.setAttribute("aria-label","View customer "+c.name);card.title="Click to view customer details";
