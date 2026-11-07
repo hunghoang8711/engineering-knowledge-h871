@@ -11,6 +11,7 @@
 <script src="./supabase-config.js"></script>
 <style>
 html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}.uv-actions{display:flex;gap:8px;flex-wrap:wrap}.uv-btn{border:1px solid #38516b;border-radius:8px;background:#16283d;color:#dceafa;padding:9px 12px;font:inherit;font-size:12px;font-weight:700;cursor:pointer}.uv-btn.primary{background:#0e5368;border-color:#16758b;color:#e5fbff}.uv-panel{padding:16px;border:1px solid #293f56;border-radius:13px;background:#101d2e;min-width:0}.uv-panel h2{font-size:15px;margin:0 0 8px;color:#edf6ff}.uv-note{font-size:11px;color:#9fb3c9;line-height:1.6;margin:6px 0}.uv-status{font-size:12px;color:#9fb3c9;min-height:20px}.uv-status.error{color:#fca5a5}.uv-editor-shell{height:680px;min-height:520px;overflow:hidden;border:1px solid #38516b;border-radius:10px;background:#fff}.uv-editor-shell #app{height:100%;width:100%}.uv-checks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.uv-check{padding:12px;border:1px solid #2c4259;border-radius:9px;background:#0c1929}.uv-check strong{display:block;color:#e7f4ff;font-size:12px}.uv-check span{display:block;color:#9fb3c9;font-size:11px;margin-top:5px;line-height:1.5}.uv-callout{border-left:3px solid #d49a42;padding:8px 12px;background:#292315;border-radius:5px;color:#f4d9a4;font-size:11px;line-height:1.6}.tc-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.tc-summary{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}.tc-stat{padding:9px 12px;border:1px solid #2c4259;border-radius:8px;background:#0c1929;color:#dceafa;font-size:12px}.tc-stat strong{display:block;font-size:16px;color:#fff;margin-bottom:2px}.tc-chart{display:grid;gap:8px;overflow-x:auto}.tc-axis,.tc-row{display:grid;grid-template-columns:minmax(150px,220px) minmax(280px,1fr) 90px;gap:10px;align-items:center;min-width:560px}.tc-axis{font-size:10px;color:#9fb3c9;padding-bottom:5px;border-bottom:1px solid #38516b}.tc-axis-track{display:flex;justify-content:space-between}.tc-label{min-width:0}.tc-label strong{display:block;color:#e7f4ff;font-size:12px;overflow-wrap:anywhere}.tc-label span{display:block;color:#91a8c1;font-size:10px;margin-top:3px;overflow-wrap:anywhere}.tc-track{height:26px;position:relative;border-radius:5px;background:repeating-linear-gradient(90deg,#1b2b40 0,#1b2b40 calc(10% - 1px),#30435b calc(10% - 1px),#30435b 10%);overflow:hidden}.tc-bar{position:absolute;top:3px;height:20px;min-width:3px;border-radius:4px;display:flex;align-items:center;justify-content:center;padding:0 5px;box-sizing:border-box;color:#07111e;font-size:10px;font-weight:800;white-space:nowrap;overflow:hidden}.tc-duration{text-align:right;color:#cbd5e1;font-size:11px;font-variant-numeric:tabular-nums}.tc-empty{padding:18px;border:1px dashed #38516b;border-radius:9px;color:#9fb3c9;font-size:12px;line-height:1.6}.tc-mapping-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:14px}.tc-map-field{display:grid;gap:6px;min-width:0}.tc-map-field label{font-size:11px;color:#cbd5e1;font-weight:700}.tc-map-field input{width:100%;box-sizing:border-box;background:#091321;border:1px solid #38516b;border-radius:7px;padding:9px 10px;color:#e5edf7;font:12px inherit}.tc-map-field small{font-size:10px;color:#91a8c1}.tc-map-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}@media(max-width:760px){.tc-mapping-grid{grid-template-columns:1fr 1fr}}@media(max-width:760px){.uv-checks{grid-template-columns:1fr}.uv-editor-shell{height:620px;min-height:480px}}
+.import-dialog-backdrop{position:fixed;inset:0;z-index:10000;background:rgba(2,8,18,.78);display:flex;align-items:center;justify-content:center;padding:20px}.import-dialog-backdrop[hidden]{display:none}.import-dialog-card{width:min(680px,100%);max-height:90vh;overflow:auto;background:#101d2c;border:1px solid #38516b;border-radius:14px;padding:20px;box-shadow:0 24px 80px rgba(0,0,0,.45);color:#e5edf7}.import-label{display:block;color:#b9c9da;font-size:12px;font-weight:700;margin:10px 0 6px}.import-control{width:100%;box-sizing:border-box;background:#091321;border:1px solid #38516b;border-radius:8px;padding:10px;color:#e5edf7;font:inherit;font-size:13px}.import-range-entry{display:grid;grid-template-columns:1fr auto;align-items:end;gap:10px;margin-top:8px}.import-range-entry .uv-btn{height:38px}.import-range-list{display:grid;gap:7px;margin:14px 0}.import-range-item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 11px;background:#0a1725;border:1px solid #29435c;border-radius:8px;font-size:12px}.import-check{display:flex;align-items:center;gap:8px;font-size:12px;color:#b9c9da;margin:12px 0}.import-dialog-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}@media(max-width:560px){.import-range-entry{grid-template-columns:1fr}.import-dialog-card{padding:14px}}
 </style>
 </head>
 <body data-start-tab="knowledge">
@@ -41,6 +42,18 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
 <button class="uv-btn" id="load-json">Restore JSON</button>
 <input id="json-file" type="file" accept=".json,application/json" hidden>
 <input id="xlsx-file" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden>
+<div class="import-dialog-backdrop" id="import-dialog" hidden>
+  <section class="import-dialog-card" role="dialog" aria-modal="true" aria-labelledby="import-dialog-title">
+    <div class="uv-head"><div><h2 id="import-dialog-title">Select Excel data regions</h2><p class="uv-note">Choose multiple rectangular ranges with the same column structure. They will be appended vertically in the order listed.</p></div><button class="uv-btn" id="cancel-import">Close</button></div>
+    <label class="import-label" for="import-sheet">Worksheet</label><select id="import-sheet" class="import-control"></select>
+    <div class="import-range-entry"><div><label class="import-label" for="import-range-input">Cell range</label><input id="import-range-input" class="import-control" placeholder="A1:F30"></div><button class="uv-btn primary" id="add-import-range">＋ Add region</button></div>
+    <p class="uv-note">Example: A1:F20, then A25:F40. Every region must have the same number of columns.</p>
+    <div id="import-range-list" class="import-range-list"></div>
+    <label class="import-check"><input type="checkbox" id="skip-duplicate-headers" checked> Skip repeated header row when it matches the first region</label>
+    <p id="import-preview" class="uv-status">Add one or more rectangular ranges to preview the selected data.</p>
+    <div class="import-dialog-actions"><button class="uv-btn" id="cancel-import-bottom">Cancel</button><button class="uv-btn primary" id="confirm-import-ranges" disabled>Import selected regions</button></div>
+  </section>
+</div>
 </div>
 </div>
 <section class="uv-panel">
@@ -245,7 +258,8 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
       const line=[];
       for(let c=0;c<=maxCol;c++){
         const cell=cells[r]?.[c] || {};
-        line.push(cell.f ? '='+String(cell.f).replace(/^=/,'') : (cell.v ?? null));
+        // Use calculated values for chart extraction; formulas remain stored in Univer cell data.
+        line.push(cell.v !== undefined && cell.v !== null ? cell.v : (cell.f ? '='+String(cell.f).replace(/^=/,'') : null));
       }
       result.push(line);
     }
@@ -350,32 +364,115 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
     if(result.error) throw result.error;
     payload.chartId=chartId;
     document.getElementById('project-context').textContent='Project: '+projectName+' · '+currentChartTitle+' · Saved';
-    const url=new URL(location.href);url.searchParams.set('chart_id',chartId);history.replaceState({},'',url);
-    setStatus('Saved successfully to project '+projectName+'.');
+    const url=new URL(location.href);url  let pendingExcelWorkbook=null, pendingExcelFileName='', pendingExcelSheet=null;
+  let selectedImportRanges=[];
+  function parseRectRange(address) {
+    const text=String(address||'').trim().replace(/\$/g,'').toUpperCase();
+    const m=text.match(/^([A-Z]+)([1-9]\d*):([A-Z]+)([1-9]\d*)$/);
+    if(!m) throw new Error('Use a rectangular range such as A1:F30.');
+    const colNum=x=>x.split('').reduce((n,ch)=>n*26+ch.charCodeAt(0)-64,0);
+    const c1=colNum(m[1]),c2=colNum(m[3]),r1=Number(m[2]),r2=Number(m[4]);
+    if(c2<c1||r2<r1) throw new Error('The end cell must be after the start cell.');
+    return {address:text,startRow:r1,startCol:c1,endRow:r2,endCol:c2,width:c2-c1+1,height:r2-r1+1};
+  }
+  function shiftFormulaReferences(formula,rowDelta,colDelta) {
+    return String(formula).replace(/(^|[^A-Z0-9_!])(\$?)([A-Z]{1,3})(\$?)(\d+)/g,(all,prefix,absCol,col,absRow,rowText)=>{
+      const colNum=col.split('').reduce((n,ch)=>n*26+ch.charCodeAt(0)-64,0)+(absCol?0:colDelta);
+      const rowNum=Number(rowText)+(absRow?0:rowDelta);
+      if(colNum<1||rowNum<1)return all;
+      let x=colNum,out='';while(x){const rem=(x-1)%26;out=String.fromCharCode(65+rem)+out;x=Math.floor((x-1)/26);}
+      return prefix+absCol+out+absRow+rowNum;
+    });
+  }
+  function cellToImportValue(cell, sourceSheet) {
+    const v=cell.value;
+    if(v===null||v===undefined) return null;
+    if(typeof v!=='object') return v;
+    let formula=v.formula||cell.formula||'';
+    if(!formula && v.sharedFormula) {
+      const master=sourceSheet.getCell(v.sharedFormula);
+      const masterFormula=master.value?.formula||master.formula;
+      if(masterFormula) formula=shiftFormulaReferences(masterFormula,cell.row-master.row,cell.col-master.col);
+    }
+    if(!formula && v.arrayFormula) formula=typeof v.arrayFormula==='string'?v.arrayFormula:String(v.arrayFormula.formula||'');
+    if(formula) return '='+String(formula).replace(/^=/,'');
+    if(v.result!==undefined) return v.result;
+    if(v.text!==undefined) return v.text;
+    if(v.richText) return v.richText.map(part=>part.text||'').join('');
+    if(v.hyperlink) return v.text||v.hyperlink;
+    return null;
+  }
+  function showImportDialog(wb,fileName) {
+    pendingExcelWorkbook=wb;pendingExcelFileName=fileName;
+    const select=document.getElementById('import-sheet');select.innerHTML='';
+    wb.worksheets.forEach((sheet,i)=>{const option=document.createElement('option');option.value=String(i);option.textContent=sheet.name;select.appendChild(option);});
+    select.value='0';pendingExcelSheet=wb.worksheets[0];selectedImportRanges=[];
+    document.getElementById('import-range-input').value='';
+    document.getElementById('import-range-list').innerHTML='';
+    document.getElementById('import-preview').textContent='Add one or more rectangular ranges to preview the selected data.';
+    document.getElementById('import-dialog').hidden=false;
+    document.getElementById('import-range-input').focus();
+  }
+  function renderImportRangeList() {
+    const list=document.getElementById('import-range-list');list.innerHTML='';
+    selectedImportRanges.forEach((item,index)=>{
+      const row=document.createElement('div');row.className='import-range-item';
+      const label=document.createElement('span');label.textContent=(index+1)+'. '+item.address+' · '+item.height+' rows × '+item.width+' cols';
+      const remove=document.createElement('button');remove.type='button';remove.className='uv-btn';remove.textContent='Remove';remove.addEventListener('click',()=>{selectedImportRanges.splice(index,1);renderImportRangeList();});
+      row.append(label,remove);list.appendChild(row);
+    });
+    const widths=[...new Set(selectedImportRanges.map(x=>x.width))];
+    document.getElementById('confirm-import-ranges').disabled=!selectedImportRanges.length||widths.length>1;
+    if(widths.length>1) document.getElementById('import-preview').textContent='All selected regions must have the same number of columns to append into one continuous table.';
+    else if(selectedImportRanges.length) document.getElementById('import-preview').textContent='Selected regions will be appended vertically in this order. The first region defines the table columns.';
+  }
+  function addImportRange() {
+    if(!pendingExcelSheet)throw new Error('Choose an Excel worksheet first.');
+    const range=parseRectRange(document.getElementById('import-range-input').value);
+    if(selectedImportRanges.some(x=>x.address===range.address))throw new Error('This range has already been added.');
+    if(range.endRow>pendingExcelSheet.rowCount||range.endCol>pendingExcelSheet.columnCount)throw new Error('The selected range exceeds the worksheet dimensions.');
+    if(selectedImportRanges.length&&selectedImportRanges[0].width!==range.width)throw new Error('All selected regions must have the same number of columns.');
+    selectedImportRanges.push(range);renderImportRangeList();document.getElementById('import-range-input').value='';
+  }
+  function importSelectedRanges() {
+    if(!pendingExcelSheet||!selectedImportRanges.length)throw new Error('Add at least one data range.');
+    const matrix=[];let outputRow=1;
+    selectedImportRanges.forEach((range,rangeIndex)=>{
+      const block=[];
+      for(let r=range.startRow;r<=range.endRow;r++){
+        const row=[];
+        for(let c=range.startCol;c<=range.endCol;c++){
+          let value=cellToImportValue(pendingExcelSheet.getCell(r,c),pendingExcelSheet);
+          if(typeof value==='string'&&value.startsWith('=')) value='='+shiftFormulaReferences(value.slice(1),outputRow-r,1-range.startCol);
+          row.push(value);
+        }
+        block.push(row);outputRow++;
+      }
+      if(rangeIndex>0&&document.getElementById('skip-duplicate-headers').checked&&matrix.length&&block.length){
+        const first=matrix[0].map(v=>String(v??'').trim().toLowerCase());
+        const next=block[0].map(v=>String(v??'').trim().toLowerCase());
+        if(next.length===first.length&&next.every((v,i)=>v===first[i])) block.shift();
+      }
+      matrix.push(...block);
+    });
+    if(!matrix.length)throw new Error('The selected ranges contain no rows.');
+    const importedCount=selectedImportRanges.length, sheetName=pendingExcelSheet.name;
+    const title=pendingExcelFileName.replace(/\.(xlsx|xls)$/i,'')||'Imported Time Chart';
+    currentChartTitle=title;document.getElementById('chart-title').value=title;
+    makeWorkbook(matrix,title);
+    try{detectDataRanges();}catch(_){}
+    try{renderTimeChart();}catch(error){document.getElementById('time-chart-output').innerHTML='<div class="tc-empty">Spreadsheet imported. Configure the source ranges below to generate the Time Chart.</div>';document.getElementById('range-status').textContent=error.message;}
+    document.getElementById('import-dialog').hidden=true;
+    setStatus('Imported '+importedCount+' rectangular region(s) from "'+sheetName+'". Regions were appended vertically. Review and Save to project.');
+    pendingExcelWorkbook=null;pendingExcelSheet=null;selectedImportRanges=[];
   }
   async function importXlsx(file) {
     if(!window.ExcelJS) throw new Error('ExcelJS did not load.');
-    const wb=new ExcelJS.Workbook();
-    await wb.xlsx.load(await file.arrayBuffer());
-    const sheet=wb.worksheets[0];
-    if(!sheet) throw new Error('The Excel file contains no worksheet.');
-    const matrix=[];
-    sheet.eachRow({includeEmpty:true},row=>{
-      const values=[];
-      for(let c=1;c<=sheet.columnCount;c++){
-        const v=row.getCell(c).value;
-        if(v&&typeof v==='object'&&v.formula) values.push('='+v.formula);
-        else if(v&&typeof v==='object'&&v.text) values.push(v.text);
-        else values.push(v??null);
-      }
-      matrix.push(values);
-    });
-    if(!matrix.length) throw new Error('The selected worksheet is empty.');
-    currentChartTitle=file.name.replace(/\.(xlsx|xls|csv)$/i,'')||'Imported Time Chart';
-    document.getElementById('chart-title').value=currentChartTitle;
-    makeWorkbook(matrix,currentChartTitle);
-    try { detectDataRanges(); } catch (_) {}
-    renderTimeChart();
+    const wb=new ExcelJS.Workbook();await wb.xlsx.load(await file.arrayBuffer());
+    if(!wb.worksheets.length) throw new Error('The Excel file contains no worksheet.');
+    showImportDialog(wb,file.name);
+  }
+);
     setStatus('Imported worksheet "'+sheet.name+'" from '+file.name+'. Review the generated Time Chart and click Save to project.');
   }
   async function exportXlsx() {
@@ -572,6 +669,13 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
     try { await loadProjectChart(); } catch(error) { setStatus('Load failed: '+error.message,true); }
     finally { btn.disabled=false; }
   });
+  document.getElementById('add-import-range').addEventListener('click',()=>{try{addImportRange();}catch(error){document.getElementById('import-preview').textContent=error.message;}});
+  document.getElementById('import-range-input').addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();document.getElementById('add-import-range').click();}});
+  document.getElementById('import-sheet').addEventListener('change',event=>{pendingExcelSheet=pendingExcelWorkbook?.worksheets[Number(event.target.value)]||null;selectedImportRanges=[];renderImportRangeList();});
+  const closeImportDialog=()=>{document.getElementById('import-dialog').hidden=true;pendingExcelWorkbook=null;pendingExcelSheet=null;selectedImportRanges=[];};
+  document.getElementById('cancel-import').addEventListener('click',closeImportDialog);
+  document.getElementById('cancel-import-bottom').addEventListener('click',closeImportDialog);
+  document.getElementById('confirm-import-ranges').addEventListener('click',()=>{try{importSelectedRanges();}catch(error){document.getElementById('import-preview').textContent=error.message;}});
   document.getElementById('import-xlsx').addEventListener('click',()=>document.getElementById('xlsx-file').click());
   document.getElementById('xlsx-file').addEventListener('change',async event=>{
     const file=event.target.files&&event.target.files[0];if(!file)return;
