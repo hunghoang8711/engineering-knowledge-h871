@@ -187,7 +187,7 @@ setCellValue(r,c,value);
 }));
 renderTable();renderCharts();focusCell(sr,sc);status("Pasted worksheet range. End Time values recalculated.");
 });
-function timeline(target,items,isCluster){function timeline(target,items,isCluster){
+function timeline(target,items,isCluster){
 const valid=clean(),max=Math.max(0,...valid.map(r=>r.end)),min=Math.min(0,...valid.map(r=>r.start)),span=Math.max(max-min,.001),ticks=5;
 if(!items.length){$(target).innerHTML='<div class="ct-empty">Add valid activities to generate the timeline.</div>';return;}
 const axis='<div class="ct-axis"><div class="ct-axis-label">PROCESS / CLUSTER</div><div class="ct-axis-scale">'+Array.from({length:ticks+1},(_,i)=>'<span>'+((min+span*i/ticks).toFixed(2).replace(/0+$/,"").replace(/\.$/,""))+' s</span>').join("")+'</div></div>';
