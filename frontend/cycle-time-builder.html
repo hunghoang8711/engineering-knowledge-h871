@@ -85,8 +85,8 @@ const tr=document.createElement("tr");
 const number=document.createElement("td");number.textContent=String(ri+1);number.className="ct-row-number";number.style.position="relative";number.innerHTML=escapeHtml(String(ri+1))+"<span class=\"ct-row-resizer\" data-resize-row=\""+ri+"\"></span>";tr.append(number);if(rowHeights[ri])tr.style.height=rowHeights[ri]+"px";
 names.forEach((name,ci)=>{
 const field=["cluster","activity","start","duration","end"][ci];
-const formula=cellFormulas[k],value=formula?(formula.result!==undefined&&formula.result!==null?formula.result:"="+formula.formula):(field?(ci===4?syncEnd(r):r[field]??""):(r.custom?.[name]??""));
-const k=keyFor(ri,ci),style=cellStyles[k]||{},merge=merges.find(m=>m.cells.includes(k));
+const k=keyFor(ri,ci),formula=cellFormulas[k],style=cellStyles[k]||{},merge=merges.find(m=>m.cells.includes(k));
+const value=formula?(formula.result!==undefined&&formula.result!==null?formula.result:"="+formula.formula):(field?(ci===4?syncEnd(r):r[field]??""):(r.custom?.[name]??""));
 const td=document.createElement("td");td.tabIndex=0;td.dataset.r=String(ri);td.dataset.c=String(ci);
 td.className=(ci<4?"fixed-col ":"")+(selected.includes(k)?"selected ":"")+(merge&&merge.master!==k?"merged-hidden ":"");
 if(style.background)td.style.background=style.background;if(style.color)td.style.color=style.color;if(style.bold)td.style.fontWeight="800";if(formula)td.title="Excel formula: ="+formula.formula+" · cached value: "+String(formula.result??"not available");
@@ -149,7 +149,7 @@ document.addEventListener("mousemove",e=>{
 });
 document.addEventListener("mouseup",()=>{if(resizeState){resizeState=null;status("Dimensions changed. Save the chart to keep them.");}});
 function cellValue(r,c){
-const formula=cellFormulas[keyFor(r,c)];if(formula&&formula.result!==undefined&&formula.result!==null)return formula.result;
+const formula=cellFormulas[keyFor(r,c)];if(formula)return formula.result!==undefined&&formula.result!==null?formula.result:"="+formula.formula;
 const field=["cluster","activity","start","duration","end"][c];
 return field?(c===4?syncEnd(rows[r]):rows[r][field]??""):(rows[r].custom?.[cols()[c]]??"");
 }
