@@ -364,7 +364,10 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
     if(result.error) throw result.error;
     payload.chartId=chartId;
     document.getElementById('project-context').textContent='Project: '+projectName+' · '+currentChartTitle+' · Saved';
-    const url=new URL(location.href);url  let pendingExcelWorkbook=null, pendingExcelFileName='', pendingExcelSheet=null;
+    const url=new URL(location.href);url.searchParams.set('chart_id',chartId);history.replaceState({},'',url);
+    setStatus('Saved successfully to project '+projectName+'.');
+  }
+  let pendingExcelWorkbook=null, pendingExcelFileName='', pendingExcelSheet=null;
   let selectedImportRanges=[];
   function parseRectRange(address) {
     const text=String(address||'').trim().replace(/\$/g,'').toUpperCase();
