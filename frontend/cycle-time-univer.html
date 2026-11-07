@@ -387,7 +387,7 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
   function cellToImportValue(cell, sourceSheet) {
     const v=cell.value;
     if(v===null||v===undefined) return null;
-    if(typeof v!=='object') return v;
+    if(typeof v!=='object'||v instanceof Date) return v;
     let formula=v.formula||cell.formula||'';
     if(!formula && v.sharedFormula) {
       const master=sourceSheet.getCell(v.sharedFormula);
@@ -436,24 +436,24 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
   }
   function importSelectedRanges() {
     if(!pendingExcelSheet||!selectedImportRanges.length)throw new Error('Add at least one data range.');
-    const matrix=[];let outputRow=1;
+    const matrix=[];
     selectedImportRanges.forEach((range,rangeIndex)=>{
-      const block=[];
+      const sourceRows=[];
       for(let r=range.startRow;r<=range.endRow;r++){
         const row=[];
-        for(let c=range.startCol;c<=range.endCol;c++){
-          let value=cellToImportValue(pendingExcelSheet.getCell(r,c),pendingExcelSheet);
-          if(typeof value==='string'&&value.startsWith('=')) value='='+shiftFormulaReferences(value.slice(1),outputRow-r,1-range.startCol);
-          row.push(value);
-        }
-        block.push(row);outputRow++;
+        for(let c=range.startCol;c<=range.endCol;c++) row.push(cellToImportValue(pendingExcelSheet.getCell(r,c),pendingExcelSheet));
+        sourceRows.push({sourceRow:r,values:row});
       }
-      if(rangeIndex>0&&document.getElementById('skip-duplicate-headers').checked&&matrix.length&&block.length){
+      if(rangeIndex>0&&document.getElementById('skip-duplicate-headers').checked&&matrix.length&&sourceRows.length){
         const first=matrix[0].map(v=>String(v??'').trim().toLowerCase());
-        const next=block[0].map(v=>String(v??'').trim().toLowerCase());
-        if(next.length===first.length&&next.every((v,i)=>v===first[i])) block.shift();
+        const next=sourceRows[0].values.map(v=>String(v??'').trim().toLowerCase());
+        if(next.length===first.length&&next.every((v,i)=>v===first[i])) sourceRows.shift();
       }
-      matrix.push(...block);
+      sourceRows.forEach(item=>{
+        const destinationRow=matrix.length+1;
+        const values=item.values.map(value=>typeof value==='string'&&value.startsWith('=')?'='+shiftFormulaReferences(value.slice(1),destinationRow-item.sourceRow,1-range.startCol):value);
+        matrix.push(values);
+      });
     });
     if(!matrix.length)throw new Error('The selected ranges contain no rows.');
     const importedCount=selectedImportRanges.length, sheetName=pendingExcelSheet.name;
