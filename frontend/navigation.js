@@ -752,7 +752,7 @@
   client.auth.onAuthStateChange(()=>setTimeout(async()=>{await sync(false);},0));
   window.addEventListener("popstate",()=>{renderRoute();});
   await sync();await renderRoute();
-  document.querySelectorAll("[data-tab]").forEach(a=>a.addEventListener("click",e=>{e.preventDefault();const tab=a.dataset.tab;const pages={overview:"index.html",projects:"projects.html",customers:"customers.html",knowledge:"knowledge.html"};if(pages[tab]){const target="./"+pages[tab];if(location.pathname.split("/").pop()!==pages[tab])location.href=target;else if(location.hash)history.replaceState({h871Route:tab},"",target);activate(tab);return;}history.replaceState({h871Route:tab},"",location.pathname+location.search);activate(tab);}));
+  document.querySelectorAll("[data-tab]").forEach(a=>a.addEventListener("click",e=>{e.preventDefault();const tab=a.dataset.tab;const pages={overview:"index.html",projects:"projects.html",customers:"customers.html",knowledge:"knowledge.html",calculate:"calculate.html"};if(pages[tab]){const target="./"+pages[tab];if(location.pathname.split("/").pop()!==pages[tab])location.href=target;else if(location.hash)history.replaceState({h871Route:tab},"",target);activate(tab);return;}history.replaceState({h871Route:tab},"",location.pathname+location.search);activate(tab);}));
   const globalForm=$("#search-form"),globalInput=$("#global-search"),globalResults=$("#search-results"),globalMessage=$("#search-message");
   if(globalForm&&globalInput&&globalResults&&!globalForm.dataset.h871Bound){
    globalForm.dataset.h871Bound="1";

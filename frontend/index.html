@@ -18,7 +18,8 @@
         "projects.html": "projects",
         "customer-detail.html": "customers",
         "project-detail.html": "projects",
-        "knowledge.html": "knowledge"
+        "knowledge.html": "knowledge",
+        "calculate.html": "calculate"
       };
       const legacyRoute = location.hash.replace(/^#/, "").split("/")[0];
       const route = routeByPath[path] || ({ project: "projects", customer: "customers" }[legacyRoute] || legacyRoute || "overview");
@@ -41,6 +42,7 @@
         <a class="nav-item" href="#projects" data-tab="projects">Projects</a>
         <a class="nav-item" href="#customers" data-tab="customers">Customers</a>
         <a class="nav-item" href="#knowledge" data-tab="knowledge">Knowledge Library</a>
+        <a class="nav-item" href="./calculate.html" data-tab="calculate">Calculate Library</a>
         <a class="nav-item" href="#intake" data-tab="intake">Review Queue</a>
       </nav>
       <div class="sidebar-foot">
