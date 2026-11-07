@@ -32,6 +32,7 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
 <div class="uv-head">
 <div><a class="back-button" id="back-link" href="./knowledge.html">← Back</a><p class="uv-note" id="project-context">Loading project context…</p></div>
 <div class="uv-actions">
+<input id="chart-title" type="text" aria-label="Time Chart title" placeholder="Time Chart title" style="min-width:210px;background:#091321;border:1px solid #38516b;border-radius:8px;padding:9px 10px;color:#e5edf7;font:inherit;font-size:12px">
 <button class="uv-btn primary" id="save-project">Save to project</button>
 <button class="uv-btn" id="load-project">Reload from project</button>
 <button class="uv-btn" id="import-xlsx">Import XLSX</button>
@@ -274,8 +275,7 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
   async function loadProjectChart() {
     if(!supa||!projectId) throw new Error('Supabase project connection is not ready.');
     if(!chartId) {
-      currentChartTitle=projectName+' · Time Chart';
-      makeWorkbook([['Mechanism','Operation','Start (s)','Duration (s)','End (s)','Remark']],currentChartTitle);
+      currentChartTitle=projectName+' · Time Chart';\n      document.getElementById('chart-title').value=currentChartTitle;\n      makeWorkbook([['Mechanism','Operation','Start (s)','Duration (s)','End (s)','Remark']],currentChartTitle);
       setStatus('New project Time Chart. Enter data, then Save to project.');
       return;
     }
@@ -283,7 +283,7 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
     const {data,error}=await supa.from('project_cycle_time_charts').select('id,title,chart_data').eq('id',chartId).eq('project_id',projectId).maybeSingle();
     if(error) throw error;
     if(!data) throw new Error('Saved Time Chart not found or access denied.');
-    chartId=data.id; currentChartTitle=data.title||'Cycle Time Chart';
+    chartId=data.id; currentChartTitle=data.title||'Cycle Time Chart';\n    document.getElementById('chart-title').value=currentChartTitle;
     const payload=data.chart_data||{};
     if(payload.univerSnapshot && payload.engine==='univer') workbook=univerAPI.createWorkbook(payload.univerSnapshot);
     else makeWorkbook(legacyToMatrix(payload),currentChartTitle);
@@ -295,7 +295,7 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
     const {data:userData,error:userError}=await supa.auth.getUser();
     if(userError) throw userError;
     if(!userData?.user) throw new Error('Your H871 session has expired. Sign in again.');
-    const snapshot=workbook.save();
+    currentChartTitle=document.getElementById('chart-title').value.trim()||projectName+' · Time Chart';\n    const snapshot=workbook.save();
     const compat=makeLegacyCompatibility(snapshot);
     const payload={version:5,engine:'univer',engineVersion:'1.4.0',chartId,chartTitle:currentChartTitle,projectName,projectDescription:'Univer-powered project Time Chart',univerSnapshot:snapshot,...compat,univerUpdatedAt:new Date().toISOString()};
     const record={title:currentChartTitle||projectName+' · Time Chart',chart_data:payload};
