@@ -83,7 +83,7 @@ else if(td){td.focus();}
 }
 function renderTable(){
 const head=$("#input-table thead"),body=$("#input-table tbody"),names=cols();
-head.innerHTML="<tr><th class=\"ct-row-number\">#</th>"+names.map((n,i)=>"<th data-c=\""+i+"\"><div class=\"ct-th-content\"><span>"+escapeHtml(n)+"</span><select class=\"ct-role-select\" data-role-col=\""+i+"\">"+Object.entries(roleLabels).map(([v,label])=>"<option value=\""+v+"\" "+((columnRoles[i]||"text")===v?"selected":Object.keys(columnRoles).some(k=>+k!==i&&columnRoles[k]===v)?"disabled":"")+">"+label+"</option>").join("")+"</select></div><span class=\"ct-col-resizer\" data-resize-col=\""+i+"\"></span></th>").join("")+"</tr>";
+head.innerHTML="<tr><th class=\"ct-row-number\">#</th>"+names.map((n,i)=>"<th data-c=\""+i+"\"><div class=\"ct-th-content\"><span>"+escapeHtml(n)+"</span><select class=\"ct-role-select\" data-role-col=\""+i+"\">"+Object.entries(roleLabels).map(([v,label])=>"<option value=\""+v+"\" "+((columnRoles[i]||"text")===v?"selected":v!=="text"&&Object.keys(columnRoles).some(k=>+k!==i&&columnRoles[k]===v)?"disabled":"")+">"+label+"</option>").join("")+"</select></div><span class=\"ct-col-resizer\" data-resize-col=\""+i+"\"></span></th>").join("")+"</tr>";
 body.innerHTML="";
 if(!rows.length)rows.push({cluster:"",activity:"",start:"",duration:"",end:"",custom:{}});
 rows.forEach((r,ri)=>{
@@ -161,7 +161,7 @@ document.addEventListener("mousemove",e=>{
  else{const h=Math.max(34,Math.min(400,resizeState.size+e.clientY-resizeState.start));rowHeights[resizeState.index]=Math.round(h);const tr=table.querySelectorAll("tbody tr")[resizeState.index];if(tr)tr.style.height=h+"px";}
 });
 document.addEventListener("mouseup",()=>{if(resizeState){resizeState=null;status("Dimensions changed. Save the chart to keep them.");}});
-function cellValue(r,c){const formula=cellFormulas[keyFor(r,c)];return formula?(formula.result??"="+formula.formula):rawColumnValue(rows[r],c);}
+function cellValue(r,c){const formula=cellFormulas[keyFor(r,c)];if(formula)return formula.result??"="+formula.formula;if(columnRoles[c]==="end"&&roleColumn("start")>=0&&roleColumn("duration")>=0)return syncEnd(rows[r])||rawColumnValue(rows[r],c);return rawColumnValue(rows[r],c);}
 function setCellValue(r,c,value){if(!rows[r])rows[r]={cluster:"",activity:"",start:"",duration:"",end:"",custom:{}};delete cellFormulas[keyFor(r,c)];const v=String(value??"");if(v.trim().startsWith("=")){cellFormulas[keyFor(r,c)]={formula:v.trim().slice(1),result:null};writeRawColumnValue(rows[r],c,"");return;}writeRawColumnValue(rows[r],c,v);}
 
 table.addEventListener("input",e=>{
@@ -276,7 +276,7 @@ function addRow(){const index=rows.length;rows.push({cluster:"",activity:"",star
 function addCol(){const name=prompt("New column name","Parameter "+(customCols.length+1));if(!name||!name.trim())return;const n=name.trim();if(cols().some(c=>c.toLowerCase()===n.toLowerCase())){status("Column name already exists.");return;}customCols.push(n);columnRoles[cols().length-1]="text";renderTable();}
 function deleteSelectedRow(r){if(rows.length<=1){rows[0]={cluster:"",activity:"",start:"",duration:"",end:"",custom:{}};cellFormulas={};cellStyles={};rowHeights={};}else rows.splice(r,1);const remap=k=>{const [rr,c]=k.split(":").map(Number);return rr<r?k:rr>r?keyFor(rr-1,c):null;};const styles={},forms={};Object.entries(cellStyles).forEach(([k,v])=>{const n=remap(k);if(n)styles[n]=v;});Object.entries(cellFormulas).forEach(([k,v])=>{const n=remap(k);if(n)forms[n]=v;});cellStyles=styles;cellFormulas=forms;const heights={};Object.entries(rowHeights).forEach(([k,v])=>{const n=+k;if(n<r)heights[n]=v;else if(n>r)heights[n-1]=v;});rowHeights=heights;activeCell={r:Math.min(r,rows.length-1),c:0};selectionAnchor={...activeCell};selected=[];renderTable();renderCharts();setSelection(activeCell.r,activeCell.c);status("Row deleted.");}
 function deleteCustomColumnAt(c){if(c<5){status("Built-in columns are reserved; only additional columns can be deleted.");return;}const name=customCols[c-5];if(!name)return;customCols.splice(c-5,1);const roles={};Object.entries(columnRoles).forEach(([k,v])=>{const n=+k;if(n!==c)roles[n>c?n-1:n]=v;});columnRoles=roles;rows.forEach(r=>{if(r.custom)delete r.custom[name];});const remap=k=>{const [r,cc]=k.split(":").map(Number);return cc===c?null:cc>c?keyFor(r,cc-1):k;};const styles={},forms={};Object.entries(cellStyles).forEach(([k,v])=>{const n=remap(k);if(n)styles[n]=v;});Object.entries(cellFormulas).forEach(([k,v])=>{const n=remap(k);if(n)forms[n]=v;});cellStyles=styles;cellFormulas=forms;const widths={};Object.entries(columnWidths).forEach(([k,v])=>{const n=+k;if(n!==c)widths[n>c?n-1:n]=v;});columnWidths=widths;merges=[];renderTable();renderCharts();status("Column deleted.");}
-function changeColumnRole(c,role){if(!roleLabels[role])return;const duplicate=Object.keys(columnRoles).map(Number).find(i=>i!==c&&columnRoles[i]===role);if(duplicate!==undefined){status(roleLabels[role]+" is already assigned to "+cols()[duplicate]+".");renderTable();return;}columnRoles[c]=role;renderTable();renderCharts();status(cols()[c]+" assigned as "+roleLabels[role]+".");}
+function changeColumnRole(c,role){if(!roleLabels[role])return;const duplicate=role==="text"?undefined:Object.keys(columnRoles).map(Number).find(i=>i!==c&&columnRoles[i]===role);if(duplicate!==undefined){status(roleLabels[role]+" is already assigned to "+cols()[duplicate]+".");renderTable();return;}columnRoles[c]=role;renderTable();renderCharts();status(cols()[c]+" assigned as "+roleLabels[role]+".");}
 
 function mergeSelected(){
 if(selected.length<2){status("Select at least two cells using click + Shift-click.");return;}
@@ -362,6 +362,8 @@ const importedRows=[],importedFormulas={},importedStyles={},importedWidths={},im
     if(st.font?.bold)style.bold=true;
     const fg=st.fill?.fgColor?.argb;if(fg&&String(fg).length>=6)style.background="#"+String(fg).slice(-6);
     const fontColor=st.font?.color?.argb;if(fontColor&&String(fontColor).length>=6)style.color="#"+String(fontColor).slice(-6);
+    if(st.alignment?.horizontal)style.horizontalAlign=st.alignment.horizontal==="center"?"center":st.alignment.horizontal;
+    if(st.alignment?.vertical)style.verticalAlign=st.alignment.vertical==="middle"?"middle":st.alignment.vertical;
     if(Object.keys(style).length)importedStyles[keyFor(targetRi,targetC)]=style;
    });
    importedRows.push(row);
