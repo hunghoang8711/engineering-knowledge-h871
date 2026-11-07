@@ -236,8 +236,52 @@ status("Chart saved to H871 project: "+projectName+".");saveFeedback("saved");
 }catch(e){status("Could not save chart: "+e.message);saveFeedback("reset");}
 finally{if(btn)btn.disabled=false;}
 }
-async function loadProjectChart(){if(!projectId){status("Choose a project first.");return;}if(!chartId){status("To open another saved Time Chart, return to this project detail page and select it from the project chart list.");return;}try{if(supa){const {data,error}=await supa.from("project_cycle_time_charts").select("id,title,chart_data").eq("id",chartId).eq("project_id",projectId).maybeSingle();if(!error&&data?.chart_data){applyChartPayload({...data.chart_data,chartId:data.id,chartTitle:data.chart_data.chartTitle||data.title});status("Loaded chart: "+(data.title||"Time Chart"));return;}if(error)throw error;}const raw=localStorage.getItem(projectKey(projectId)+":"+chartId);if(!raw){status("Saved chart data was not found.");return;}applyChartPayload(JSON.parse(raw));status("Saved chart loaded from this browser.");}catch(e){status("Could not load chart: "+e.message);}}
-function applyChartPayload(d){chartId=d.chartId||chartId||null;rows=Array.isArray(d.rows)?d.rows.map(r=>({...r,duration:r.duration??(Number(r.end)-Number(r.start))})):[];customCols=Array.isArray(d.customCols)?d.customCols:["Remark"];merges=d.merges||[];cellStyles=d.cellStyles||{};projectName=d.projectName||projectName;$("#project-name").value=projectName;$("#chart-title").value=d.chartTitle||d.title||"Cycle Time Chart";$("#project-desc").value=d.projectDescription||"";renderTable();renderCharts();}
+async function loadProjectChart(){
+if(!projectId){status("Choose a project first.");return;}
+if(!chartId){status("No saved chart ID was provided.");return;}
+status("Loading saved Time Chart…");
+try{
+if(supa){
+await supa.auth.getSession();
+const {data,error}=await supa.from("project_cycle_time_charts").select("id,title,chart_data").eq("id",chartId).eq("project_id",projectId).maybeSingle();
+if(error)throw error;
+if(data?.chart_data){
+const count=applyChartPayload({...data.chart_data,chartId:data.id,chartTitle:data.chart_data.chartTitle||data.title});
+status(count?"Loaded saved chart: "+(data.title||"Time Chart")+".":"The saved chart has no activity rows yet. You can enter data in the first row.");
+return;
+}
+}
+const raw=localStorage.getItem(projectKey(projectId)+":"+chartId);
+if(raw){
+const count=applyChartPayload(JSON.parse(raw));
+status(count?"Loaded chart from this browser.":"This saved chart is empty. Enter data in the first row.");
+return;
+}
+throw new Error("No chart data was returned for this chart ID. Check that you are signed in and have access to this project.");
+}catch(e){
+status("Could not load saved chart: "+(e.message||"Unknown error")+". The current worksheet remains editable; do not overwrite the saved chart until it has loaded correctly.");
+}
+}
+function applyChartPayload(payload){
+let d=payload;
+if(typeof d==="string"){try{d=JSON.parse(d);}catch(_){throw new Error("Saved chart data is not valid JSON.");}}
+if(d?.chart_data)d=typeof d.chart_data==="string"?JSON.parse(d.chart_data):d.chart_data;
+if(!d||typeof d!=="object")throw new Error("Saved chart data is empty or has an unsupported format.");
+chartId=d.chartId||d.id||chartId||null;
+const sourceRows=Array.isArray(d.rows)?d.rows:(Array.isArray(d.worksheet?.rows)?d.worksheet.rows:[]);
+rows=sourceRows.map(r=>({...r,duration:r.duration??(Number(r.end)-Number(r.start)),custom:r.custom||{}}));
+customCols=Array.isArray(d.customCols)&&d.customCols.length?d.customCols:["Remark"];
+merges=Array.isArray(d.merges)?d.merges:[];
+cellStyles=d.cellStyles&&typeof d.cellStyles==="object"?d.cellStyles:{};
+selected=[];activeCell={r:0,c:0};selectionAnchor={r:0,c:0};
+projectName=d.projectName||projectName;
+$("#project-name").value=projectName;
+$("#chart-title").value=d.chartTitle||d.title||"Cycle Time Chart";
+$("#project-desc").value=d.projectDescription||"";
+if(!rows.length)rows=[{cluster:"",activity:"",start:"0",duration:"0",end:"0",custom:{}}];
+renderTable();renderCharts();
+return sourceRows.length;
+}
 $("#save-project").onclick=saveProjectChart;$("#load-project").onclick=loadProjectChart;
 $("#input-table").addEventListener("paste",e=>{
 const td=e.target.closest("td[data-r][data-c]");if(!td&&!selected.length)return;
@@ -279,7 +323,24 @@ location.href="./cycle-time-builder.html?project_id="+encodeURIComponent(p.id);
 };
 }
 if(!projectId){setChooserMode(true);initProjectChooser();rows=defaults.map(x=>({...x,custom:{Remark:x.remark}}));renderTable();renderCharts();}
-else{setChooserMode(false);const config=window.H871_SUPABASE_CONFIG||{};if(config.url&&config.anonKey&&window.supabase?.createClient)supa=window.supabase.createClient(config.url,config.anonKey);rows=defaults.map(x=>({...x,custom:{Remark:x.remark}}));renderTable();renderCharts();if(supa){supa.from("projects").select("name,code,description").eq("id",projectId).maybeSingle().then(({data})=>{if(data){projectName=(data.code?data.code+" · ":"")+data.name;showProjectContext(projectName);}});}$("#save-project").hidden=false;$("#load-project").hidden=false;if(chartId)loadProjectChart();}
+else{
+setChooserMode(false);
+const config=window.H871_SUPABASE_CONFIG||{};
+if(config.url&&config.anonKey&&window.supabase?.createClient)supa=window.supabase.createClient(config.url,config.anonKey);
+rows=defaults.map(x=>({...x,custom:{Remark:x.remark}}));renderTable();renderCharts();
+$("#save-project").hidden=false;$("#load-project").hidden=false;
+(async()=>{
+if(supa){
+try{
+await supa.auth.getSession();
+const {data,error}=await supa.from("projects").select("name,code,description").eq("id",projectId).maybeSingle();
+if(error)throw error;
+if(data){projectName=(data.code?data.code+" · ":"")+data.name;showProjectContext(projectName);}
+}catch(e){status("Project information could not be loaded: "+(e.message||"Unknown error"));}
+}
+if(chartId)await loadProjectChart();
+})();
+}
 
 })();
 </script>
