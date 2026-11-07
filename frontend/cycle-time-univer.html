@@ -387,7 +387,7 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
     setStatus('Exported current workbook to XLSX.');
   }
 
-  function normalizeHeader(value) { return String(value ?? '').trim().toLowerCase().replace(/[\\s_()-]+/g,''); }
+  function normalizeHeader(value) { return String(value ?? '').trim().toLowerCase().replace(/[\s_()-]+/g,''); }
   function numericCell(value) {
     if (value === null || value === undefined || value === '') return null;
     if (typeof value === 'number' && Number.isFinite(value)) return value;
@@ -397,9 +397,9 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
   const rangeFieldIds = {cluster:'range-cluster',operation:'range-operation',start:'range-start',duration:'range-duration',end:'range-end',remark:'range-remark'};
   let dataRangeConfig = null;
   function parseA1Range(value) {
-    const text=String(value||'').trim().replace(/\\$/g,'').toUpperCase();
+    const text=String(value||'').trim().replace(/\$/g,'').toUpperCase();
     if(!text) return null;
-    const match=text.match(/^([A-Z]+)([1-9]\\d*):([A-Z]+)([1-9]\\d*)$/);
+    const match=text.match(/^([A-Z]+)([1-9]\d*):([A-Z]+)([1-9]\d*)$/);
     if(!match || match[1]!==match[3]) throw new Error('Use a single-column range such as A2:A15.');
     const col=match[1].split('').reduce((n,ch)=>n*26+ch.charCodeAt(0)-64,0)-1;
     const start=Number(match[2])-1, end=Number(match[4])-1;
@@ -419,7 +419,7 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
     if(!workbook) throw new Error('Worksheet is not ready.');
     const matrix=snapshotToRows(workbook.save());
     if(!matrix.length) throw new Error('The worksheet is empty.');
-    const norm=v=>String(v??'').trim().toLowerCase().replace(/[\\s_()-]+/g,'');
+    const norm=v=>String(v??'').trim().toLowerCase().replace(/[\s_()-]+/g,'');
     const headers=matrix[0].map(norm);
     const find=(patterns)=>headers.findIndex(h=>patterns.some(p=>p.test(h)));
     const cols={
