@@ -83,7 +83,7 @@ else if(td){td.focus();}
 }
 function renderTable(){
 const head=$("#input-table thead"),body=$("#input-table tbody"),names=cols();
-head.innerHTML="<tr><th class=\"ct-row-number\">#</th>"+names.map((n,i)=>"<th data-c=\""+i+"\"><div class=\"ct-th-content\"><span>"+escapeHtml(n)+"</span><select class=\"ct-role-select\" data-role-col=\""+i+"\">"+Object.entries(roleLabels).map(([v,label])=>"<option value=\""+v+"\" "+((columnRoles[i]||"text")===v?"selected":"")+">"+label+"</option>").join("")+"</select></div><span class=\"ct-col-resizer\" data-resize-col=\""+i+"\"></span></th>").join("")+"</tr>";
+head.innerHTML="<tr><th class=\"ct-row-number\">#</th>"+names.map((n,i)=>"<th data-c=\""+i+"\"><div class=\"ct-th-content\"><span>"+escapeHtml(n)+"</span><select class=\"ct-role-select\" data-role-col=\""+i+"\">"+Object.entries(roleLabels).map(([v,label])=>"<option value=\""+v+"\" "+((columnRoles[i]||"text")===v?"selected":Object.keys(columnRoles).some(k=>+k!==i&&columnRoles[k]===v)?"disabled":"")+">"+label+"</option>").join("")+"</select></div><span class=\"ct-col-resizer\" data-resize-col=\""+i+"\"></span></th>").join("")+"</tr>";
 body.innerHTML="";
 if(!rows.length)rows.push({cluster:"",activity:"",start:"",duration:"",end:"",custom:{}});
 rows.forEach((r,ri)=>{
@@ -100,7 +100,7 @@ const role=columnRoles[ci]||"text",defaultAlign=role==="cluster"?"left":(["start
 if(style.background)td.style.background=style.background;if(style.color)td.style.color=style.color;if(style.bold)td.style.fontWeight="800";if(formula)td.title="Formula: ="+formula.formula+" · cached value: "+String(formula.result??"not available");
 if(merge&&merge.master===k){td.colSpan=merge.colspan;td.rowSpan=merge.rowspan;}
 if(!(merge&&merge.master!==k)){
-const input=document.createElement("textarea");input.className="ct-cell-input";input.value=String(value??"");input.rows=1;input.autocomplete="off";input.spellcheck=false;input.wrap="soft";if(["start","end","duration"].includes(columnRoles[ci]))input.inputMode="decimal";input.setAttribute("aria-label",name+" row "+(ri+1));
+const input=document.createElement("textarea");input.className="ct-cell-input";input.value=String(value??"");input.rows=1;input.autocomplete="off";input.spellcheck=false;input.wrap="soft";if(["start","end","duration"].includes(columnRoles[ci]))input.inputMode="decimal";input.setAttribute("aria-label",name+" row "+(ri+1));input.style.textAlign=style.horizontalAlign||defaultAlign;if(["cluster","start","end","duration"].includes(role)){const rh=Number(rowHeights[ri])||36;input.style.paddingTop=Math.max(7,Math.round((rh-16)/2))+"px";}
 if(columnRoles[ci]==="end"&&roleColumn("start")>=0&&roleColumn("duration")>=0){input.readOnly=true;input.tabIndex=-1;input.title="Automatically calculated from Start Time + Duration Time";}
 td.append(input);
 }
@@ -128,7 +128,7 @@ function insertCustomColumnAt(ci){
  if(ci<5){status("Only custom columns can be inserted.");return;}
  const name=prompt("New column name","Parameter "+(customCols.length+1));if(!name||!name.trim())return;
  const n=name.trim();if(cols().some(c=>c.toLowerCase()===n.toLowerCase())){status("Column name already exists.");return;}
- shiftCellMetadata("col",ci,1);customCols.splice(ci-5,0,n);selected=[];renderTable();renderCharts();focusCell(0,ci);status("Column inserted.");
+shiftCellMetadata("col",ci,1);const shiftedRoles={};Object.entries(columnRoles).forEach(([k,v])=>{const c=+k;shiftedRoles[c>=ci?c+1:c]=v;});columnRoles=shiftedRoles;columnRoles[ci]="text";customCols.splice(ci-5,0,n);selected=[];
 }
 let contextMenu=null,resizeState=null;
 function hideMenu(){if(contextMenu)contextMenu.hidden=true;}
@@ -141,8 +141,8 @@ function showMenu(x,y,items){
 document.addEventListener("click",hideMenu);document.addEventListener("keydown",e=>{if(e.key==="Escape")hideMenu();});
 table.querySelector("thead").addEventListener("change",e=>{const select=e.target.closest("[data-role-col]");if(select)changeColumnRole(+select.dataset.roleCol,select.value);});
 table.addEventListener("contextmenu",e=>{
- const td=e.target.closest("td[data-r][data-c]"),th=e.target.closest("th[data-c]");if(!td&&!th)return;e.preventDefault();const items=[];
- if(td){const r=+td.dataset.r;items.push({caption:"Row"},{label:"Insert row above",action:()=>insertRowAt(r)},{label:"Insert row below",action:()=>insertRowAt(r+1)},{label:"Delete this row",action:()=>deleteSelectedRow(r)});}
+ const td=e.target.closest("td[data-r][data-c]"),rowHead=e.target.closest("td[data-row-index]"),th=e.target.closest("th[data-c]");if(!td&&!rowHead&&!th)return;e.preventDefault();const items=[];
+ if(td||rowHead){const r=td?+td.dataset.r:+rowHead.dataset.rowIndex;items.push({caption:"Row"},{label:"Insert row above",action:()=>insertRowAt(r)},{label:"Insert row below",action:()=>insertRowAt(r+1)},{label:"Delete this row",action:()=>deleteSelectedRow(r)});}
  const c=td?+td.dataset.c:th?+th.dataset.c:-1;
 if(c>=5)items.push({caption:"Custom column"},{label:"Insert column left",action:()=>insertCustomColumnAt(c)},{label:"Insert column right",action:()=>insertCustomColumnAt(c+1)},{label:"Delete this column",action:()=>deleteCustomColumnAt(c)});
  if(items.length)showMenu(e.clientX,e.clientY,items);
@@ -227,7 +227,7 @@ if(!selected.length)return;e.preventDefault();e.clipboardData.setData("text/plai
 });
 table.addEventListener("cut",e=>{
 if(!selected.length)return;e.preventDefault();e.clipboardData.setData("text/plain",selectedTsv());
-selected.forEach(k=>{const [r,c]=k.split(":").map(Number);if(c!==4)setCellValue(r,c,"");});
+selected.forEach(k=>{const [r,c]=k.split(":").map(Number);if(!(columnRoles[c]==="end"&&roleColumn("start")>=0&&roleColumn("duration")>=0))setCellValue(r,c,"");});
 renderTable();renderCharts();focusCell(activeCell.r,activeCell.c);
 });
 table.addEventListener("paste",e=>{
@@ -383,7 +383,7 @@ cellFormulas=importedFormulas;cellStyles=importedStyles;columnWidths=importedWid
 }
 function applyFormulaBar(){
  const k=keyFor(activeCell.r,activeCell.c),raw=$("#formula-input").value;
-if(columnRoles[activeCell.c]==="end"&&roleColumn("start")>=0&&roleColumn("duration")>=0)
+if(columnRoles[activeCell.c]==="end"&&roleColumn("start")>=0&&roleColumn("duration")>=0){status("End Time is calculated from Start Time + Duration Time.");return;}
  if(raw.trim().startsWith("=")){
   const previous=cellFormulas[k],current=cellValue(activeCell.r,activeCell.c);
   cellFormulas[k]={formula:raw.trim().slice(1),result:previous?.formula===raw.trim().slice(1)?previous.result:null};
@@ -403,7 +403,7 @@ rows.forEach((r,i)=>ws.addRow({n:i+1,...Object.fromEntries(names.map((name,j)=>[
 ws.views=[{state:"frozen",ySplit:1}];ws.getRow(1).font={bold:true,color:{argb:"FFFFFFFF"}};ws.getRow(1).fill={type:"pattern",pattern:"solid",fgColor:{argb:"FF18324A"}};
 ws.eachRow((row,idx)=>row.eachCell(cell=>{cell.border={bottom:{style:"hair",color:{argb:"FFCBD5E1"}}};if(idx>1&&cell.col===2){const color=cm[String(cell.value)];if(color)cell.fill={type:"pattern",pattern:"solid",fgColor:{argb:"FF"+color.slice(1).toUpperCase()}};}}));
 merges.forEach(m=>{const [r0,c0]=m.master.split(":").map(Number),r1=r0+m.rowspan-1,c1=c0+m.colspan-1;ws.mergeCells(r0+2,c0+2,r1+2,c1+2);});
-Object.entries(cellStyles).forEach(([key,style])=>{const [r,col]=key.split(":").map(Number),cell=ws.getCell(r+2,col+2);if(style.bold)cell.font={...(cell.font||{}),bold:true};if(style.background)cell.fill={type:"pattern",pattern:"solid",fgColor:{argb:"FF"+style.background.replace("#","").toUpperCase()}};if(style.color)cell.font={...(cell.font||{}),color:{argb:"FF"+style.color.replace("#","").toUpperCase()}};});
+Object.entries(cellStyles).forEach(([key,style])=>{const [r,col]=key.split(":").map(Number),cell=ws.getCell(r+2,col+2);if(style.bold)cell.font={...(cell.font||{}),bold:true};if(style.background)cell.fill={type:"pattern",pattern:"solid",fgColor:{argb:"FF"+style.background.replace("#","").toUpperCase()}};if(style.color)cell.font={...(cell.font||{}),color:{argb:"FF"+style.color.replace("#","").toUpperCase()}};if(style.horizontalAlign||style.verticalAlign)cell.alignment={...(cell.alignment||{}),horizontal:style.horizontalAlign||"left",vertical:style.verticalAlign||"middle",wrapText:true};});
 const summary=wb.addWorksheet("Summary");summary.addRows([["Cycle Time Builder H871"],["Project",$("#project-name").value],["Description",$("#project-desc").value],["Total cycle time (s)",valid.length?Math.max(...valid.map(r=>r.end)):0],["Activity count",valid.length],["Cluster count",new Set(valid.map(r=>r.cluster)).size]]);summary.getColumn(1).width=28;summary.getColumn(2).width=55;summary.getRow(1).font={bold:true,size:16};
 const min=valid.length?Math.min(0,...valid.map(r=>r.start)):0,max=valid.length?Math.max(...valid.map(r=>r.end)):1,span=Math.max(max-min,.01),step=span/80,buckets=Math.max(1,Math.ceil(span/step)),timeCol=5;
 function makeTimelineSheet(title,items){
