@@ -55,13 +55,81 @@ const keyFor=(r,c)=>r+":"+c;
 function escapeHtml(v){return String(v??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
 function clean(){return rows.map(r=>{const start=Number(r.start),duration=(r.duration!==undefined&&r.duration!==""?Number(r.duration):Number(r.end)-start),end=start+duration;return({...r,cluster:String(r.cluster||"").trim(),activity:String(r.activity||"").trim(),start,duration,end});}).filter(r=>r.cluster&&r.activity&&Number.isFinite(r.start)&&Number.isFinite(r.duration)&&r.duration>0&&Number.isFinite(r.end));}
 function colorMap(){const names=[...new Set(clean().map(r=>r.cluster))];return Object.fromEntries(names.map((n,i)=>[n,colors[i%colors.length]]));}
+let activeCell={r:0,c:0},selectionAnchor={r:0,c:0},dragSelecting=false;
+function cellAt(r,c){return $("#input-table").querySelector('td[data-r="'+r+'"][data-c="'+c+'"]');}
+function paintSelection(){
+$("#input-table").querySelectorAll("td.selected").forEach(td=>td.classList.remove("selected"));
+selected.forEach(k=>{const [r,c]=k.split(":").map(Number),td=cellAt(r,c);if(td)td.classList.add("selected");});
+}
+function setSelection(r,c,extend=false){
+r=Math.max(0,Math.min(rows.length-1,r));c=Math.max(0,Math.min(cols().length-1,c));
+if(!extend)selectionAnchor={r,c};
+activeCell={r,c};selected=[];
+const r0=Math.min(selectionAnchor.r,r),r1=Math.max(selectionAnchor.r,r),c0=Math.min(selectionAnchor.c,c),c1=Math.max(selectionAnchor.c,c);
+for(let rr=r0;rr<=r1;rr++)for(let cc=c0;cc<=c1;cc++)selected.push(keyFor(rr,cc));
+paintSelection();
+}
+function focusCell(r,c,extend=false){
+setSelection(r,c,extend);
+const td=cellAt(r,c);if(td){if(td.getAttribute("contenteditable")==="true"){td.focus();const range=document.createRange();range.selectNodeContents(td);range.collapse(false);const sel=window.getSelection();sel.removeAllRanges();sel.addRange(range);}else td.focus();}
+}
 function renderTable(){
 const head=$("#input-table thead"),body=$("#input-table tbody"),names=cols();head.innerHTML="<tr>"+["#"].concat(names).map((n,i)=>"<th>"+escapeHtml(n)+"</th>").join("")+"</tr>";
 body.innerHTML="";
-rows.forEach((r,ri)=>{const tr=document.createElement("tr");tr.innerHTML="<td>"+(ri+1)+"</td>"+names.map((name,ci)=>{const field=["cluster","activity","start","duration","end"][ci],value=field?(ci===4?syncEnd(r):r[field]??""):(r.custom?.[name]??"");const editable=ci!==4;const k=keyFor(ri,ci);const style=cellStyles[k]||{};const merge=merges.find(m=>m.cells.includes(k));return '<td contenteditable="'+editable+'" data-r="'+ri+'" data-c="'+ci+'" class="'+(ci<4?"fixed-col ":"")+(selected.includes(k)?"selected ":"")+(merge&&merge.master!==k?"merged-hidden ":"")+'" style="'+(style.background?"background:"+style.background+";":"")+(style.color?"color:"+style.color+";":"")+(style.bold?"font-weight:800;":"")+'" '+(merge&&merge.master===k?'colspan="'+merge.colspan+'" rowspan="'+merge.rowspan+'"':"")+'>'+escapeHtml(value)+'</td>';}).join("");body.append(tr);});
-body.querySelectorAll("td[contenteditable=true]").forEach(td=>td.addEventListener("input",()=>{const r=+td.dataset.r,c=+td.dataset.c,v=td.textContent.trim();if(c===0)rows[r].cluster=v;else if(c===1)rows[r].activity=v;else if(c===2)rows[r].start=v;else if(c===3)rows[r].duration=v;else if(c>=5){rows[r].custom=rows[r].custom||{};rows[r].custom[cols()[c]]=v;}syncEnd(rows[r]);renderCharts();}));
-body.querySelectorAll("td[data-r]").forEach(td=>td.addEventListener("click",e=>{const k=keyFor(+td.dataset.r,+td.dataset.c);if(e.shiftKey&&selected.length){const [ar,ac]=selected[0].split(":").map(Number),br=+td.dataset.r,bc=+td.dataset.c;selected=[];for(let rr=Math.min(ar,br);rr<=Math.max(ar,br);rr++)for(let cc=Math.min(ac,bc);cc<=Math.max(ac,bc);cc++)selected.push(keyFor(rr,cc));}else selected=[k];renderTable();}));
+rows.forEach((r,ri)=>{const tr=document.createElement("tr");tr.innerHTML="<td>"+(ri+1)+"</td>"+names.map((name,ci)=>{const field=["cluster","activity","start","duration","end"][ci],value=field?(ci===4?syncEnd(r):r[field]??""):(r.custom?.[name]??"");const editable=ci!==4;const k=keyFor(ri,ci);const style=cellStyles[k]||{};const merge=merges.find(m=>m.cells.includes(k));return '<td tabindex="0" contenteditable="'+editable+'" data-r="'+ri+'" data-c="'+ci+'" class="'+(ci<4?"fixed-col ":"")+(selected.includes(k)?"selected ":"")+(merge&&merge.master!==k?"merged-hidden ":"")+'" style="'+(style.background?"background:"+style.background+";":"")+(style.color?"color:"+style.color+";")+(style.bold?"font-weight:800;":"")+'" '+(merge&&merge.master===k?'colspan="'+merge.colspan+'" rowspan="'+merge.rowspan+'"':"")+'>'+escapeHtml(value)+'</td>';}).join("");body.append(tr);});
 }
+const table=$("#input-table");
+table.addEventListener("input",e=>{
+const td=e.target.closest("td[data-r][data-c]");if(!td)return;
+const r=+td.dataset.r,c=+td.dataset.c,v=td.textContent.replace(/[\\r\\n]/g,"").trim();if(c===0)rows[r].cluster=v;else if(c===1)rows[r].activity=v;else if(c===2)rows[r].start=v;else if(c===3)rows[r].duration=v;else if(c>=5){rows[r].custom=rows[r].custom||{};rows[r].custom[cols()[c]]=v;}
+syncEnd(rows[r]);const endCell=cellAt(r,4);if(endCell)endCell.textContent=rows[r].end;renderCharts();
+});
+table.addEventListener("mousedown",e=>{
+const td=e.target.closest("td[data-r][data-c]");if(!td)return;
+const r=+td.dataset.r,c=+td.dataset.c;
+if(e.shiftKey){e.preventDefault();setSelection(r,c,true);return;}
+if(c===4){e.preventDefault();setSelection(r,c);return;}
+if(e.buttons===1){dragSelecting=true;selectionAnchor={r,c};setSelection(r,c);if(document.activeElement!==td)td.focus();}
+});
+table.addEventListener("mouseover",e=>{
+if(!dragSelecting)return;const td=e.target.closest("td[data-r][data-c]");if(td)setSelection(+td.dataset.r,+td.dataset.c,true);
+});
+document.addEventListener("mouseup",()=>{dragSelecting=false;});
+table.addEventListener("click",e=>{
+const td=e.target.closest("td[data-r][data-c]");if(!td)return;
+const r=+td.dataset.r,c=+td.dataset.c;
+if(e.shiftKey)setSelection(r,c,true);else if(!dragSelecting)setSelection(r,c);
+});
+table.addEventListener("keydown",e=>{
+const td=e.target.closest("td[data-r][data-c]");if(!td)return;
+const r=+td.dataset.r,c=+td.dataset.c;
+if((e.ctrlKey||e.metaKey)&&["c","x"].includes(e.key.toLowerCase())){return;}
+if(e.key==="ArrowUp"||e.key==="ArrowDown"||e.key==="ArrowLeft"||e.key==="ArrowRight"||e.key==="Enter"||e.key==="Tab"){
+e.preventDefault();let nr=r,nc=c;
+if(e.key==="ArrowUp")nr--;if(e.key==="ArrowDown"||e.key==="Enter")nr++;
+if(e.key==="ArrowLeft")nc--;if(e.key==="ArrowRight"||e.key==="Tab")nc+=e.shiftKey?-1:1;
+if(e.key==="Tab"&&e.shiftKey)nc=c-1;
+if(nc<0){nc=cols().length-1;nr--;}if(nc>=cols().length){nc=0;nr++;}
+if(nr>=rows.length){rows.push({cluster:"",activity:"",start:"0",duration:"0",end:"0",custom:{}});renderTable();renderCharts();}
+focusCell(nr,nc,e.shiftKey);
+}
+});
+table.addEventListener("copy",e=>{
+if(!selected.length)return;e.preventDefault();
+const coords=selected.map(k=>k.split(":").map(Number)),r0=Math.min(...coords.map(x=>x[0])),r1=Math.max(...coords.map(x=>x[0])),c0=Math.min(...coords.map(x=>x[1])),c1=Math.max(...coords.map(x=>x[1]));
+const text=Array.from({length:r1-r0+1},(_,ri)=>Array.from({length:c1-c0+1},(_,ci)=>{const r=r0+ri,c=c0+ci,field=["cluster","activity","start","duration","end"][c];return field?(c===4?syncEnd(rows[r]):rows[r][field]??""):(rows[r].custom?.[cols()[c]]??"");}).join("\\t")).join("\\n");
+e.clipboardData.setData("text/plain",text);
+});
+table.addEventListener("cut",e=>{
+if(!selected.length)return;e.preventDefault();
+const keys=[...selected];const coords=keys.map(k=>k.split(":").map(Number));
+const r0=Math.min(...coords.map(x=>x[0])),r1=Math.max(...coords.map(x=>x[0])),c0=Math.min(...coords.map(x=>x[1])),c1=Math.max(...coords.map(x=>x[1]));
+const text=Array.from({length:r1-r0+1},(_,ri)=>Array.from({length:c1-c0+1},(_,ci)=>{const r=r0+ri,c=c0+ci,field=["cluster","activity","start","duration","end"][c];return field?(c===4?syncEnd(rows[r]):rows[r][field]??""):(rows[r].custom?.[cols()[c]]??"");}).join("\\t")).join("\\n");
+e.clipboardData.setData("text/plain",text);
+keys.forEach(k=>{const [r,c]=k.split(":").map(Number);if(c===0)rows[r].cluster="";else if(c===1)rows[r].activity="";else if(c===2)rows[r].start="";else if(c===3)rows[r].duration="";else if(c>=5&&c<cols().length){rows[r].custom=rows[r].custom||{};rows[r].custom[cols()[c]]="";}syncEnd(rows[r]);});
+renderTable();renderCharts();focusCell(r0,c0);
+});
+
 function timeline(target,items,isCluster){
 const valid=clean(),max=Math.max(0,...valid.map(r=>r.end)),min=Math.min(0,...valid.map(r=>r.start)),span=Math.max(max-min,.001),ticks=5;
 if(!items.length){$(target).innerHTML='<div class="ct-empty">Add valid activities to generate the timeline.</div>';return;}
@@ -165,7 +233,20 @@ finally{if(btn)btn.disabled=false;}
 async function loadProjectChart(){if(!projectId){status("Choose a project first.");return;}if(!chartId){status("To open another saved Time Chart, return to this project detail page and select it from the project chart list.");return;}try{if(supa){const {data,error}=await supa.from("project_cycle_time_charts").select("id,title,chart_data").eq("id",chartId).eq("project_id",projectId).maybeSingle();if(!error&&data?.chart_data){applyChartPayload({...data.chart_data,chartId:data.id,chartTitle:data.chart_data.chartTitle||data.title});status("Loaded chart: "+(data.title||"Time Chart"));return;}if(error)throw error;}const raw=localStorage.getItem(projectKey(projectId)+":"+chartId);if(!raw){status("Saved chart data was not found.");return;}applyChartPayload(JSON.parse(raw));status("Saved chart loaded from this browser.");}catch(e){status("Could not load chart: "+e.message);}}
 function applyChartPayload(d){chartId=d.chartId||chartId||null;rows=Array.isArray(d.rows)?d.rows.map(r=>({...r,duration:r.duration??(Number(r.end)-Number(r.start))})):[];customCols=Array.isArray(d.customCols)?d.customCols:["Remark"];merges=d.merges||[];cellStyles=d.cellStyles||{};projectName=d.projectName||projectName;$("#project-name").value=projectName;$("#chart-title").value=d.chartTitle||d.title||"Cycle Time Chart";$("#project-desc").value=d.projectDescription||"";renderTable();renderCharts();}
 $("#save-project").onclick=saveProjectChart;$("#load-project").onclick=loadProjectChart;
-$("#input-table").addEventListener("paste",e=>{const td=e.target.closest("td[data-r][data-c]");if(!td)return;const text=e.clipboardData?.getData("text/plain");if(!text)return;e.preventDefault();const matrix=text.replace(/\r/g,"").split("\n").filter((line,i,all)=>line!==""||i<all.length-1).map(line=>line.split("\t"));const sr=Number(td.dataset.r),sc=Number(td.dataset.c);matrix.forEach((line,ri)=>line.forEach((value,ci)=>{const r=sr+ri,c=sc+ci;if(r>=rows.length)rows.push({cluster:"",activity:"",start:"0",duration:"0",end:"0",custom:{}});const v=value.trim();if(c===0)rows[r].cluster=v;else if(c===1)rows[r].activity=v;else if(c===2)rows[r].start=v;else if(c===3)rows[r].duration=v;else if(c===4){const st=Number(rows[r].start),en=Number(v);if(Number.isFinite(st)&&Number.isFinite(en))rows[r].duration=String(en-st);}else if(c<cols().length){rows[r].custom=rows[r].custom||{};rows[r].custom[cols()[c]]=v;}syncEnd(rows[r]);}));selected=[];renderTable();renderCharts();status("Excel range pasted. End Time values recalculated.");});
+$("#input-table").addEventListener("paste",e=>{
+const td=e.target.closest("td[data-r][data-c]");if(!td&&!selected.length)return;
+const text=e.clipboardData?.getData("text/plain");if(!text)return;e.preventDefault();
+const matrix=text.replace(/\\r/g,"").split("\\n").filter((line,i,all)=>line!==""||i<all.length-1).map(line=>line.split("\\t"));
+const sr=td?Number(td.dataset.r):activeCell.r,sc=td?Number(td.dataset.c):activeCell.c;
+matrix.forEach((line,ri)=>line.forEach((value,ci)=>{
+const r=sr+ri,c=sc+ci;if(c>=cols().length)return;
+while(r>=rows.length)rows.push({cluster:"",activity:"",start:"0",duration:"0",end:"0",custom:{}});
+const v=value.trim();
+if(c===0)rows[r].cluster=v;else if(c===1)rows[r].activity=v;else if(c===2)rows[r].start=v;else if(c===3)rows[r].duration=v;else if(c===4){const st=Number(rows[r].start),en=Number(v);if(Number.isFinite(st)&&Number.isFinite(en))rows[r].duration=String(en-st);}else{rows[r].custom=rows[r].custom||{};rows[r].custom[cols()[c]]=v;}
+syncEnd(rows[r]);
+}));
+renderTable();renderCharts();focusCell(sr,sc);status("Range pasted. End Time values recalculated.");
+});
 async function initProjectChooser(){
 const config=window.H871_SUPABASE_CONFIG||{};
 if(!config.url||!config.anonKey||!window.supabase?.createClient){$("#ct-chooser-status").textContent="Supabase configuration is not available. Open this tool from a Project detail page instead.";return;}
