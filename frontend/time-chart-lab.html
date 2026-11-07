@@ -150,12 +150,12 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
   function makeWorkbook() {
     if (!univerAPI) throw new Error('Univer API is not ready.');
     workbook = univerAPI.createWorkbook({
-      id: 'h871-univer-time-chart-lab',
+      id: 'h871-univer-time-chart-lab-' + Date.now(),
       name: 'H871 Time Chart Formula Test',
-      sheetOrder: ['time-chart'],
+      sheetOrder: ['time-chart-' + Date.now()],
       sheets: {
-        'time-chart': {
-          id: 'time-chart',
+        ['time-chart-' + Date.now()]: {
+          id: 'time-chart-' + Date.now(),
           name: 'Time Chart',
           rowCount: 100,
           columnCount: 16,
