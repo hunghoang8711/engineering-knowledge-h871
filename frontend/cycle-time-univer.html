@@ -475,7 +475,7 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
       if(end===null||duration===null||duration<0||end<start)continue;
       const mechanism=String(valueAt(parsed.cluster,i)??'').trim()||'Unassigned';
       const operation=String(valueAt(parsed.operation,i)??'').trim()||('Operation '+(i+1));
-      records.push({mechanism,operation,start,end,duration,sourceRow:i+1,remark:String(valueAt(parsed.remark,i)??'').trim()});
+      records.push({mechanism,operation,start,end,duration,sourceRow:parsed.start.start+i+1,remark:String(valueAt(parsed.remark,i)??'').trim()});
     }
     if(active.some(r=>r.length!==count)) document.getElementById('range-status').textContent='Note: selected ranges have different row counts. Only the first '+count+' aligned rows will be used.';
     else document.getElementById('range-status').textContent='Using '+count+' aligned worksheet rows from the configured ranges.';
@@ -493,22 +493,25 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
       setStatus('No valid timeline rows found. Check Start, Duration and End columns.',true);
       return;
     }
-    const min=Math.min(0,...records.map(r=>r.start));
+    // Use the actual time window, not an artificial zero origin, so the bars
+    // occupy the space between the earliest Start and latest End values.
+    const min=Math.min(...records.map(r=>r.start));
     const max=Math.max(...records.map(r=>r.end));
     const span=Math.max(max-min,0.001);
     const groups=[...new Set(records.map(r=>r.mechanism))];
     const ticks=Array.from({length:6},(_,i)=>min+span*i/5);
     const fmt=n=>Number(n.toFixed(2)).toString();
-    const summary='<div class="tc-summary"><div class="tc-stat"><strong>'+records.length+'</strong>Operations</div><div class="tc-stat"><strong>'+groups.length+'</strong>Mechanisms</div><div class="tc-stat"><strong>'+fmt(max-min)+' s</strong>Timeline span</div><div class="tc-stat"><strong>'+fmt(Math.max(...records.map(r=>r.duration)))+' s</strong>Longest operation</div></div>';
-    const axis='<div class="tc-axis"><div>Mechanism / Operation</div><div class="tc-axis-track">'+ticks.map(t=>'<span>'+fmt(t)+' s</span>').join('')+'</div><div style="text-align:right">Duration</div></div>';
-    const rows=records.map(r=>{
-      const left=Math.max(0,(r.start-min)/span*100);
-      const width=Math.max(0.6,(r.end-r.start)/span*100);
+    const summary='<div class="tc-summary"><div class="tc-stat"><strong>'+records.length+'</strong>Operations · Excel row order</div><div class="tc-stat"><strong>'+groups.length+'</strong>Mechanisms</div><div class="tc-stat"><strong>'+fmt(min)+'–'+fmt(max)+' s</strong>Start → End range</div><div class="tc-stat"><strong>'+fmt(Math.max(...records.map(r=>r.duration)))+' s</strong>Longest duration</div></div>';
+    const axis='<div class="tc-axis"><div>Operation sequence (Excel order)</div><div class="tc-axis-track">'+ticks.map(t=>'<span>'+fmt(t)+' s</span>').join('')+'</div><div style="text-align:right">Start → End</div></div>';
+    const rows=[...records].sort((a,b)=>a.sourceRow-b.sourceRow).map(r=>{
+      const left=Math.max(0,Math.min(100,(r.start-min)/span*100));
+      const right=Math.max(left,Math.min(100,(r.end-min)/span*100));
+      const width=Math.max(0.6,right-left);
       const color=colorForMechanism(r.mechanism);
-      return '<div class="tc-row"><div class="tc-label"><strong>'+escapeHtml(r.mechanism)+'</strong><span>'+escapeHtml(r.operation)+'</span></div><div class="tc-track" title="'+escapeHtml(r.operation)+' · '+fmt(r.start)+'–'+fmt(r.end)+' s"><div class="tc-bar" style="left:'+left+'%;width:'+Math.min(width,100-left)+'%;background:'+color+'">'+(width>10?fmt(r.duration)+' s':'')+'</div></div><div class="tc-duration">'+fmt(r.duration)+' s</div></div>';
+      return '<div class="tc-row"><div class="tc-label"><strong>'+escapeHtml(r.mechanism)+'</strong><span>Excel row '+r.sourceRow+' · '+escapeHtml(r.operation)+'</span></div><div class="tc-track" title="'+escapeHtml(r.operation)+' · Start '+fmt(r.start)+' s · End '+fmt(r.end)+' s"><div class="tc-bar" style="left:'+left+'%;width:'+Math.min(width,100-left)+'%;background:'+color+'">'+(width>10?fmt(r.start)+' → '+fmt(r.end)+' s':'')+'</div></div><div class="tc-duration">'+fmt(r.start)+' → '+fmt(r.end)+' s</div></div>';
     }).join('');
     target.innerHTML=summary+'<div class="tc-chart">'+axis+rows+'</div>';
-    setStatus('Time Chart generated from '+records.length+' worksheet rows. The source cells remain unchanged.');
+    setStatus('Time Chart generated in Excel row order. Each bar spans from Start Time to End Time; source cells remain unchanged.');
   }
   function escapeHtml(value) {
     return String(value).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
