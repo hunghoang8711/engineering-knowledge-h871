@@ -302,7 +302,7 @@ function shiftFormulaColumns(formula,delta){
  if(!delta)return formula;
  const toNumber=letters=>{let n=0;for(const ch of letters)n=n*26+ch.charCodeAt(0)-64;return n;};
  const toLetters=n=>{let out="";while(n>0){const r=(n-1)%26;out=String.fromCharCode(65+r)+out;n=Math.floor((n-1)/26);}return out;};
- return formula.replace(/(^|[^A-Z0-9_.])(\$?)([A-Z]{1,3})(\$?)(\d+)/gi,(match,prefix,col,colAbs,rowAbs,row)=>{const shifted=toNumber(col.toUpperCase())+delta;if(shifted<1)return match;return prefix+colAbs+toLetters(shifted)+rowAbs+row;});
+ return formula.replace(/(^|[^A-Z0-9_.])(\$?)([A-Z]{1,3})(\$?)(\d+)/gi,(match,prefix,colAbs,col,rowAbs,row)=>{const shifted=toNumber(col.toUpperCase())+delta;if(shifted<1)return match;return prefix+colAbs+toLetters(shifted)+rowAbs+row;});
 }
 function mapImportedHeader(header,index){
  const h=normalizeHeader(header);
@@ -394,7 +394,7 @@ function applyFormulaBar(){
 
 async function exportExcel(){
 if(!window.ExcelJS){status("Excel export library did not load. Check network access and retry.");return;}
-const wb=new ExcelJS.Workbook();wb.creator="H871 Engineering Hub";wb.subject="Cycle time analysis";wb.created=new Date();
+const wb=new ExcelJS.Workbook();wb.creator="H871 Engineering Hub";wb.subject="Cycle time analysis";wb.created=new Date();wb.calcProperties={fullCalcOnLoad:true,forceFullCalc:true,calcMode:"auto"};
 const valid=clean(),cm=colorMap(),names=cols(),ws=wb.addWorksheet("Input Data");
 ws.columns=[{header:"#",key:"n",width:6},...names.map((c,i)=>({header:c,key:"c"+i,width:i===1?30:i<4?16:22}))];
 rows.forEach((r,i)=>ws.addRow({n:i+1,...Object.fromEntries(names.map((name,j)=>["c"+j,[r.cluster,r.activity,r.start,r.duration,syncEnd(r)][j]??r.custom?.[name]??""]))}));
