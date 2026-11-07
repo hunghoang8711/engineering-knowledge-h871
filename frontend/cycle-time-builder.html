@@ -30,7 +30,7 @@
 </section><section class="ct-panel"><h2>Cycle information</h2><div class="ct-meta"><label class="ct-field">Time Chart title<input id="chart-title" value="Cycle Time Chart 1" placeholder="Name this chart"></label><label class="ct-field">Project / Machine name<input id="project-name" value="Automation Cycle Time Study" placeholder="Enter project or machine name"></label><label class="ct-field">Description<input id="project-desc" value="Cycle time breakdown by cluster and activity" placeholder="Optional description"></label></div></section>
 <section class="ct-panel"><div class="ct-chart-title"><h2>Activity worksheet</h2><div class="ct-toolbar"><button class="ct-btn" id="add-row">＋ Add row</button><button class="ct-btn" id="add-col">＋ Add column</button><button class="ct-btn" id="merge">Merge selected cells</button><button class="ct-btn" id="unmerge">Unmerge</button><button class="ct-btn" id="bold">Bold</button><input id="cell-color" type="color" value="#24435b" title="Cell fill" aria-label="Cell fill"><button class="ct-btn" id="fill">Apply fill</button></div></div>
 <div class="ct-table-wrap"><table class="ct-table" id="input-table"><thead></thead><tbody></tbody></table></div>
-<p class="ct-note">Paste a rectangular Excel range (Ctrl+V) directly into the worksheet. Start Time + Duration Time calculate End Time automatically; the timeline uses Start and End only. Calculation columns cannot be merged.</p></section>
+<p class="ct-note">Spreadsheet shortcuts: click / drag to select cells · Arrow keys to move · Shift + arrows to extend selection · Ctrl + A to select all · Ctrl + C / X / V to copy, cut and paste ranges from H871, Excel or Google Sheets. Start Time + Duration calculate End Time automatically; End Time is read-only.</p></section>
 <section class="ct-panel"><div class="ct-metrics" id="metrics"></div></section>
 <section class="ct-panel ct-chart-block"><div class="ct-chart-title"><h2>Cluster overview</h2><span class="ct-note">One bar per cluster · earliest start to latest end</span></div><div id="cluster-chart" class="ct-chart"></div></section>
 <section class="ct-panel ct-chart-block"><div class="ct-chart-title"><h2>Activity timeline</h2><span class="ct-note">One row per activity · parallel processes share the same time axis</span></div><div id="activity-chart" class="ct-chart"></div></section>
@@ -103,6 +103,12 @@ if(e.shiftKey)setSelection(r,c,true);else if(!dragSelecting)setSelection(r,c);
 table.addEventListener("keydown",e=>{
 const td=e.target.closest("td[data-r][data-c]");if(!td)return;
 const r=+td.dataset.r,c=+td.dataset.c;
+if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="a"){
+e.preventDefault();selectionAnchor={r:0,c:0};setSelection(rows.length-1,cols().length-1,true);return;
+}
+if((e.key==="Delete"||e.key==="Backspace")&&selected.length>1){
+e.preventDefault();selected.forEach(k=>{const [rr,cc]=k.split(":").map(Number);if(cc===0)rows[rr].cluster="";else if(cc===1)rows[rr].activity="";else if(cc===2)rows[rr].start="";else if(cc===3)rows[rr].duration="";else if(cc>=5){rows[rr].custom=rows[rr].custom||{};rows[rr].custom[cols()[cc]]="";}syncEnd(rows[rr]);});renderTable();renderCharts();focusCell(activeCell.r,activeCell.c);return;
+}
 if((e.ctrlKey||e.metaKey)&&["c","x"].includes(e.key.toLowerCase())){return;}
 if(e.key==="ArrowUp"||e.key==="ArrowDown"||e.key==="ArrowLeft"||e.key==="ArrowRight"||e.key==="Enter"||e.key==="Tab"){
 e.preventDefault();let nr=r,nc=c;
