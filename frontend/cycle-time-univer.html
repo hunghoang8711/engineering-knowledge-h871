@@ -421,16 +421,16 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
     if(!matrix.length) throw new Error('The worksheet is empty.');
     const norm=v=>String(v??'').trim().toLowerCase().replace(/[\\s_()-]+/g,'');
     const headers=matrix[0].map(norm);
-    const find=(patterns,fallback)=>{const i=headers.findIndex(h=>patterns.some(p=>p.test(h)));return i>=0?i:fallback;};
+    const find=(patterns)=>headers.findIndex(h=>patterns.some(p=>p.test(h)));
     const cols={
-      cluster:find([/^(mechanism|cluster|equipment|actuator|device|resource|station|cơcấu|cụm|thiếtbị)$/],0),
-      operation:find([/^(operation|activity|description|process|step|task|hoạtđộng|côngđoạn|môtả)$/],1),
-      start:find([/^(start|starttime|begin|begintime|startsec|startseconds|starts|starttimes|thờigianbắtđầu|bắtđầu)$/],2),
-      duration:find([/^(duration|time|cycletime|operationtime|durationsec|durationseconds|thờigianhoạtđộng)$/],3),
-      end:find([/^(end|endtime|finish|finishtime|endsec|endseconds|ends|endtimes|thờigiankếtthúc|kếtthúc)$/],4),
-      remark:find([/^(remark|note|comment|ghi chú|ghichu)$/],5)
+      cluster:find([/^(mechanism|cluster|equipment|actuator|device|resource|station|cơcấu|cụm|thiếtbị)$/]),
+      operation:find([/^(operation|activity|description|process|step|task|hoạtđộng|côngđoạn|môtả)$/]),
+      start:find([/^(start|starttime|begin|begintime|startsec|startseconds|starts|starttimes|thờigianbắtđầu|bắtđầu)$/]),
+      duration:find([/^(duration|durations|time|cycletime|operationtime|durationsec|durationseconds|thờigianhoạtđộng)$/]),
+      end:find([/^(end|endtime|finish|finishtime|endsec|endseconds|ends|endtimes|thờigiankếtthúc|kếtthúc)$/]),
+      remark:find([/^(remark|note|comment|ghichu)$/])
     };
-    const last=matrix.length;
+    const last=Math.max(2,matrix.length);
     const make=(col)=>col>=0&&col<matrix[0].length?columnName(col)+'2:'+columnName(col)+last:'';
     const config={};Object.entries(cols).forEach(([key,col])=>config[key]=make(col));
     setRangeInputs(config);
