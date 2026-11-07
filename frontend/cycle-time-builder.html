@@ -80,7 +80,7 @@ function updateFormulaBar(){
  const address=(n)=>{let s="";while(n>=0){s=String.fromCharCode(n%26+65)+s;n=Math.floor(n/26)-1;}return s;};
  const k=keyFor(activeCell.r,activeCell.c),formula=cellFormulas[k];
  $("#formula-address").textContent=colLetters(activeCell.c)+(activeCell.r+1);
- $("#formula-input").value=formula?"="+formula.formula:String(cellValue(activeCell.r,activeCell.c)??"");
+ if(!(formulaEdit?.source==="bar"&&document.activeElement===$("#formula-input")))$("#formula-input").value=formula?"="+formula.formula:String(cellValue(activeCell.r,activeCell.c)??"");
  $("#formula-input").disabled=columnRoles[activeCell.c]==="end"&&roleColumn("start")>=0&&roleColumn("duration")>=0;
 }
 function focusCell(r,c,extend=false){
