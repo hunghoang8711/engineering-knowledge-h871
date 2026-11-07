@@ -70,10 +70,10 @@ paintSelection();updateFormulaBar();
 }
 function updateFormulaBar(){
  const address=(n)=>{let s="";while(n>=0){s=String.fromCharCode(n%26+65)+s;n=Math.floor(n/26)-1;}return s;};
- const k=keyFor(activeCell.r,activeCell.c),formula=cellFormulas[k],field=["cluster","activity","start","duration","end"][activeCell.c];
+ const k=keyFor(activeCell.r,activeCell.c),formula=cellFormulas[k];
  $("#formula-address").textContent=address(activeCell.c)+(activeCell.r+1);
- $("#formula-input").value=formula?"="+formula.formula:String(field?(activeCell.c===4?syncEnd(rows[activeCell.r]):rows[activeCell.r]?.[field]??""):(rows[activeCell.r]?.custom?.[cols()[activeCell.c]]??""));
- $("#formula-input").disabled=activeCell.c===4;
+ $("#formula-input").value=formula?"="+formula.formula:String(cellValue(activeCell.r,activeCell.c)??"");
+ $("#formula-input").disabled=columnRoles[activeCell.c]==="end"&&roleColumn("start")>=0&&roleColumn("duration")>=0;
 }
 function focusCell(r,c,extend=false){
 setSelection(r,c,extend);
@@ -83,12 +83,12 @@ else if(td){td.focus();}
 }
 function renderTable(){
 const head=$("#input-table thead"),body=$("#input-table tbody"),names=cols();
-head.innerHTML="<tr><th class=\\\"ct-row-number\\\">#</th>"+names.map((n,i)=>"<th data-c=\\\""+i+"\\\"><div class=\\\"ct-th-content\\\"><span>"+escapeHtml(n)+"</span><select class=\\\"ct-role-select\\\" data-role-col=\\\""+i+"\\\">"+Object.entries(roleLabels).map(([v,label])=>"<option value=\\\""+v+"\\\" "+((columnRoles[i]||"text")===v?"selected":"")+">"+label+"</option>").join("")+"</select></div><span class=\\\"ct-col-resizer\\\" data-resize-col=\\\""+i+"\\\"></span></th>").join("")+"</tr>";
+head.innerHTML="<tr><th class=\"ct-row-number\">#</th>"+names.map((n,i)=>"<th data-c=\""+i+"\"><div class=\"ct-th-content\"><span>"+escapeHtml(n)+"</span><select class=\"ct-role-select\" data-role-col=\""+i+"\">"+Object.entries(roleLabels).map(([v,label])=>"<option value=\""+v+"\" "+((columnRoles[i]||"text")===v?"selected":"")+">"+label+"</option>").join("")+"</select></div><span class=\"ct-col-resizer\" data-resize-col=\""+i+"\"></span></th>").join("")+"</tr>";
 body.innerHTML="";
 if(!rows.length)rows.push({cluster:"",activity:"",start:"",duration:"",end:"",custom:{}});
 rows.forEach((r,ri)=>{
 const tr=document.createElement("tr");
-const number=document.createElement("td");number.textContent=String(ri+1);number.className="ct-row-number";number.dataset.rowIndex=String(ri);number.style.position="relative";number.innerHTML=escapeHtml(String(ri+1))+"<span class=\\\"ct-row-resizer\\\" data-resize-row=\\\""+ri+"\\\"></span>";tr.append(number);if(rowHeights[ri])tr.style.height=rowHeights[ri]+"px";
+const number=document.createElement("td");number.textContent=String(ri+1);number.className="ct-row-number";number.dataset.rowIndex=String(ri);number.style.position="relative";number.innerHTML=escapeHtml(String(ri+1))+"<span class=\"ct-row-resizer\" data-resize-row=\""+ri+"\"></span>";tr.append(number);if(rowHeights[ri])tr.style.height=rowHeights[ri]+"px";
 names.forEach((name,ci)=>{
 const field=["cluster","activity","start","duration","end"][ci];
 const k=keyFor(ri,ci),formula=cellFormulas[k],style=cellStyles[k]||{},merge=merges.find(m=>m.cells.includes(k));
@@ -97,11 +97,11 @@ const baseValue=rawColumnValue(r,ci),computedEnd=columnRoles[ci]==="end"&&roleCo
 const td=document.createElement("td");td.tabIndex=0;td.dataset.r=String(ri);td.dataset.c=String(ci);
 td.className=(ci<4?"fixed-col ":"")+(selected.includes(k)?"selected ":"")+(merge&&merge.master!==k?"merged-hidden ":"");
 const role=columnRoles[ci]||"text",defaultAlign=role==="cluster"?"left":(["start","end","duration"].includes(role)?"center":"left");td.style.textAlign=style.horizontalAlign||defaultAlign;td.style.verticalAlign=style.verticalAlign||((role==="cluster"||["start","end","duration"].includes(role))?"middle":"top");
- if(style.background)td.style.background=style.background;
+if(style.background)td.style.background=style.background;if(style.color)td.style.color=style.color;if(style.bold)td.style.fontWeight="800";if(formula)td.title="Formula: ="+formula.formula+" · cached value: "+String(formula.result??"not available");
 if(merge&&merge.master===k){td.colSpan=merge.colspan;td.rowSpan=merge.rowspan;}
 if(!(merge&&merge.master!==k)){
-const input=document.createElement("textarea");input.className="ct-cell-input";input.value=String(value??"");input.rows=1;input.autocomplete="off";input.spellcheck=false;input.wrap="soft";if(ci===2||ci===3)input.inputMode="decimal";input.setAttribute("aria-label",name+" row "+(ri+1));
-if(columnRoles[ci]==="end"&&roleColumn("start")>=0&&roleColumn("duration")>=0){input.readOnly=true;
+const input=document.createElement("textarea");input.className="ct-cell-input";input.value=String(value??"");input.rows=1;input.autocomplete="off";input.spellcheck=false;input.wrap="soft";if(["start","end","duration"].includes(columnRoles[ci]))input.inputMode="decimal";input.setAttribute("aria-label",name+" row "+(ri+1));
+if(columnRoles[ci]==="end"&&roleColumn("start")>=0&&roleColumn("duration")>=0){input.readOnly=true;input.tabIndex=-1;input.title="Automatically calculated from Start Time + Duration Time";}
 td.append(input);
 }
 tr.append(td);
@@ -147,10 +147,14 @@ table.addEventListener("contextmenu",e=>{
 if(c>=5)items.push({caption:"Custom column"},{label:"Insert column left",action:()=>insertCustomColumnAt(c)},{label:"Insert column right",action:()=>insertCustomColumnAt(c+1)},{label:"Delete this column",action:()=>deleteCustomColumnAt(c)});
  if(items.length)showMenu(e.clientX,e.clientY,items);
 });
-table.addEventListener("mousedown",e=>{const th=e.target.closest("th[data-c]"),rowHead=e.target.closest("td[data-row-index]");if(th){const c=+th.dataset.c;selectionAnchor={r:0,c};setSelection(rows.length-1,c);return;}if(rowHead){const r=+rowHead.dataset.rowIndex;selectionAnchor={r,c:0};setSelection(r,cols().length-1,true);return;}
- const ch=e.target.closest("[data-resize-col]"),rh=e.target.closest("[data-resize-row]");if(!ch&&!rh)return;e.preventDefault();e.stopPropagation();
- resizeState=ch?{type:"col",index:+ch.dataset.resizeCol,start:e.clientX,size:ch.parentElement.getBoundingClientRect().width}:{type:"row",index:+rh.dataset.resizeRow,start:e.clientY,size:rh.closest("tr").getBoundingClientRect().height};
+table.addEventListener("mousedown",e=>{
+ const ch=e.target.closest("[data-resize-col]"),rh=e.target.closest("[data-resize-row]");
+ if(ch||rh){e.preventDefault();e.stopPropagation();resizeState=ch?{type:"col",index:+ch.dataset.resizeCol,start:e.clientX,size:ch.parentElement.getBoundingClientRect().width}:{type:"row",index:+rh.dataset.resizeRow,start:e.clientY,size:rh.closest("tr").getBoundingClientRect().height};return;}
+ const th=e.target.closest("th[data-c]"),rowHead=e.target.closest("td[data-row-index]");
+ if(th){const c=+th.dataset.c;selectionAnchor={r:0,c};setSelection(rows.length-1,c);return;}
+ if(rowHead){const r=+rowHead.dataset.rowIndex;selectionAnchor={r,c:0};setSelection(r,cols().length-1,true);}
 });
+
 document.addEventListener("mousemove",e=>{
  if(!resizeState)return;
  if(resizeState.type==="col"){const w=Math.max(65,Math.min(700,resizeState.size+e.clientX-resizeState.start));columnWidths[resizeState.index]=Math.round(w);table.querySelectorAll("tr").forEach(tr=>{const cell=tr.children[resizeState.index+1];if(cell){cell.style.width=w+"px";cell.style.minWidth=w+"px";}});}
@@ -164,7 +168,7 @@ table.addEventListener("input",e=>{
 const input=e.target.closest(".ct-cell-input");if(!input||input.readOnly)return;
 const td=input.closest("td[data-r][data-c]");if(!td)return;
 const r=+td.dataset.r,c=+td.dataset.c;setCellValue(r,c,input.value);
-const end=cellAt(r,4)?.querySelector("textarea");if(end)end.value=rows[r].end;
+const endCol=roleColumn("end"),end=cellAt(r,endCol)?.querySelector("textarea");if(end&&roleColumn("duration")>=0)end.value=syncEnd(rows[r]);
 renderCharts();
 });
 table.addEventListener("mousedown",e=>{
@@ -190,7 +194,7 @@ if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="a"){
 e.preventDefault();selectionAnchor={r:0,c:0};setSelection(rows.length-1,cols().length-1,true);return;
 }
 if((e.key==="Delete"||e.key==="Backspace")&&selected.length>1){
-e.preventDefault();selected.forEach(k=>{const [rr,cc]=k.split(":").map(Number);if(cc!==4)setCellValue(rr,cc,"");});
+e.preventDefault();selected.forEach(k=>{const [rr,cc]=k.split(":").map(Number);if(!(columnRoles[cc]==="end"&&roleColumn("start")>=0&&roleColumn("duration")>=0))setCellValue(rr,cc,"");});
 renderTable();renderCharts();focusCell(activeCell.r,activeCell.c);return;
 }
 if((e.ctrlKey||e.metaKey)&&["c","x"].includes(e.key.toLowerCase()))return;
@@ -232,7 +236,7 @@ const text=e.clipboardData?.getData("text/plain");if(text==null)return;e.prevent
 const matrix=text.replace(/\r/g,"").split("\n").map(line=>line.split("\t"));
 const sr=td?Number(td.dataset.r):activeCell.r,sc=td?Number(td.dataset.c):activeCell.c;
 matrix.forEach((line,ri)=>line.forEach((value,ci)=>{
-const r=sr+ri,c=sc+ci;if(c>=cols().length||c===4)return;
+const r=sr+ri,c=sc+ci;if(c>=cols().length||(columnRoles[c]==="end"&&roleColumn("start")>=0&&roleColumn("duration")>=0))return;
 while(r>=rows.length)rows.push({cluster:"",activity:"",start:"",duration:"",end:"",custom:{}});
 setCellValue(r,c,value);
 }));
