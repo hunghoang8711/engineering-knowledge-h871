@@ -184,7 +184,7 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
     sheet.setRowCount(rowCount);
     const colCount = Math.max(16, ...dataRows.map(row => row.length));
     sheet.setColumnCount(colCount);
-    if (dataRows.length) sheet.getRange(0, 0, dataRows.length, colCount).setValues(dataRows.map(row => [...row, ...Array(Math.max(0, colCount-row.length)).fill(null)]));
+    if (dataRows.length) sheet.getRange('A1:'+columnName(colCount-1)+dataRows.length).setValues(dataRows.map(row => [...row, ...Array(Math.max(0, colCount-row.length)).fill(null)]));
     setStatus('Univer is ready. Edit the worksheet and save it to the project.');
   }
   function downloadJson() {
@@ -243,7 +243,7 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
     return {rows,customCols:headers.slice(5),columnRoles:{0:'cluster',1:'text',2:'start',3:'duration',4:'end'},columnLabels:{}};
   }
   function legacyToMatrix(data) {
-    const names=['Mechanism','Operation','Start (s)','Duration (s)','End (s)',...(data.customCols||['Remark'])];
+    const names=['Mechanism','Operation','Start (s)','Duration (s)','End (s)',...(data.customCols||['Remark'])].map((name,i)=>data.columnLabels?.[i]||name);
     const rows=(data.rows||[]).map(row=>{
       const values=[row.cluster??'',row.activity??'',row.start??'',row.duration??'',row.end??''];
       for(const name of (data.customCols||['Remark'])) values.push(row.custom?.[name]??'');
