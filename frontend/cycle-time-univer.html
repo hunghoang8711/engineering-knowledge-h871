@@ -10,7 +10,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="./supabase-config.js"></script>
 <style>
-html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}.uv-actions{display:flex;gap:8px;flex-wrap:wrap}.uv-btn{border:1px solid #38516b;border-radius:8px;background:#16283d;color:#dceafa;padding:9px 12px;font:inherit;font-size:12px;font-weight:700;cursor:pointer}.uv-btn.primary{background:#0e5368;border-color:#16758b;color:#e5fbff}.uv-panel{padding:16px;border:1px solid #293f56;border-radius:13px;background:#101d2e;min-width:0}.uv-panel h2{font-size:15px;margin:0 0 8px;color:#edf6ff}.uv-note{font-size:11px;color:#9fb3c9;line-height:1.6;margin:6px 0}.uv-status{font-size:12px;color:#9fb3c9;min-height:20px}.uv-status.error{color:#fca5a5}.uv-editor-shell{height:680px;min-height:520px;overflow:hidden;border:1px solid #38516b;border-radius:10px;background:#fff}.uv-editor-shell #app{height:100%;width:100%}.uv-checks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.uv-check{padding:12px;border:1px solid #2c4259;border-radius:9px;background:#0c1929}.uv-check strong{display:block;color:#e7f4ff;font-size:12px}.uv-check span{display:block;color:#9fb3c9;font-size:11px;margin-top:5px;line-height:1.5}.uv-callout{border-left:3px solid #d49a42;padding:8px 12px;background:#292315;border-radius:5px;color:#f4d9a4;font-size:11px;line-height:1.6}.tc-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.tc-summary{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}.tc-stat{padding:9px 12px;border:1px solid #2c4259;border-radius:8px;background:#0c1929;color:#dceafa;font-size:12px}.tc-stat strong{display:block;font-size:16px;color:#fff;margin-bottom:2px}.tc-chart{display:grid;gap:8px;overflow-x:auto}.tc-axis,.tc-row{display:grid;grid-template-columns:minmax(150px,220px) minmax(280px,1fr) 90px;gap:10px;align-items:center;min-width:560px}.tc-axis{font-size:10px;color:#9fb3c9;padding-bottom:5px;border-bottom:1px solid #38516b}.tc-axis-track{display:flex;justify-content:space-between}.tc-label{min-width:0}.tc-label strong{display:block;color:#e7f4ff;font-size:12px;overflow-wrap:anywhere}.tc-label span{display:block;color:#91a8c1;font-size:10px;margin-top:3px;overflow-wrap:anywhere}.tc-track{height:26px;position:relative;border-radius:5px;background:repeating-linear-gradient(90deg,#1b2b40 0,#1b2b40 calc(10% - 1px),#30435b calc(10% - 1px),#30435b 10%);overflow:hidden}.tc-bar{position:absolute;top:3px;height:20px;min-width:3px;border-radius:4px;display:flex;align-items:center;justify-content:center;padding:0 5px;box-sizing:border-box;color:#07111e;font-size:10px;font-weight:800;white-space:nowrap;overflow:hidden}.tc-duration{text-align:right;color:#cbd5e1;font-size:11px;font-variant-numeric:tabular-nums}.tc-empty{padding:18px;border:1px dashed #38516b;border-radius:9px;color:#9fb3c9;font-size:12px;line-height:1.6}@media(max-width:760px){.uv-checks{grid-template-columns:1fr}.uv-editor-shell{height:620px;min-height:480px}}
+html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}.uv-actions{display:flex;gap:8px;flex-wrap:wrap}.uv-btn{border:1px solid #38516b;border-radius:8px;background:#16283d;color:#dceafa;padding:9px 12px;font:inherit;font-size:12px;font-weight:700;cursor:pointer}.uv-btn.primary{background:#0e5368;border-color:#16758b;color:#e5fbff}.uv-panel{padding:16px;border:1px solid #293f56;border-radius:13px;background:#101d2e;min-width:0}.uv-panel h2{font-size:15px;margin:0 0 8px;color:#edf6ff}.uv-note{font-size:11px;color:#9fb3c9;line-height:1.6;margin:6px 0}.uv-status{font-size:12px;color:#9fb3c9;min-height:20px}.uv-status.error{color:#fca5a5}.uv-editor-shell{height:680px;min-height:520px;overflow:hidden;border:1px solid #38516b;border-radius:10px;background:#fff}.uv-editor-shell #app{height:100%;width:100%}.uv-checks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.uv-check{padding:12px;border:1px solid #2c4259;border-radius:9px;background:#0c1929}.uv-check strong{display:block;color:#e7f4ff;font-size:12px}.uv-check span{display:block;color:#9fb3c9;font-size:11px;margin-top:5px;line-height:1.5}.uv-callout{border-left:3px solid #d49a42;padding:8px 12px;background:#292315;border-radius:5px;color:#f4d9a4;font-size:11px;line-height:1.6}.tc-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.tc-summary{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}.tc-stat{padding:9px 12px;border:1px solid #2c4259;border-radius:8px;background:#0c1929;color:#dceafa;font-size:12px}.tc-stat strong{display:block;font-size:16px;color:#fff;margin-bottom:2px}.tc-chart{display:grid;gap:8px;overflow-x:auto}.tc-axis,.tc-row{display:grid;grid-template-columns:minmax(150px,220px) minmax(280px,1fr) 90px;gap:10px;align-items:center;min-width:560px}.tc-axis{font-size:10px;color:#9fb3c9;padding-bottom:5px;border-bottom:1px solid #38516b}.tc-axis-track{display:flex;justify-content:space-between}.tc-label{min-width:0}.tc-label strong{display:block;color:#e7f4ff;font-size:12px;overflow-wrap:anywhere}.tc-label span{display:block;color:#91a8c1;font-size:10px;margin-top:3px;overflow-wrap:anywhere}.tc-track{height:26px;position:relative;border-radius:5px;background:repeating-linear-gradient(90deg,#1b2b40 0,#1b2b40 calc(10% - 1px),#30435b calc(10% - 1px),#30435b 10%);overflow:hidden}.tc-bar{position:absolute;top:3px;height:20px;min-width:3px;border-radius:4px;display:flex;align-items:center;justify-content:center;padding:0 5px;box-sizing:border-box;color:#07111e;font-size:10px;font-weight:800;white-space:nowrap;overflow:hidden}.tc-duration{text-align:right;color:#cbd5e1;font-size:11px;font-variant-numeric:tabular-nums}.tc-empty{padding:18px;border:1px dashed #38516b;border-radius:9px;color:#9fb3c9;font-size:12px;line-height:1.6}.tc-mapping-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:14px}.tc-map-field{display:grid;gap:6px;min-width:0}.tc-map-field label{font-size:11px;color:#cbd5e1;font-weight:700}.tc-map-field input{width:100%;box-sizing:border-box;background:#091321;border:1px solid #38516b;border-radius:7px;padding:9px 10px;color:#e5edf7;font:12px inherit}.tc-map-field small{font-size:10px;color:#91a8c1}.tc-map-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}@media(max-width:760px){.tc-mapping-grid{grid-template-columns:1fr 1fr}}@media(max-width:760px){.uv-checks{grid-template-columns:1fr}.uv-editor-shell{height:620px;min-height:480px}}
 </style>
 </head>
 <body data-start-tab="knowledge">
@@ -55,6 +55,19 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
 <section class="uv-panel">
 <div class="uv-head"><div><h2>Spreadsheet workspace</h2><p class="uv-note">The workbook is held in this browser tab until you export its JSON snapshot.</p></div></div>
 <div class="uv-editor-shell"><div id="app"><p style="padding:24px;color:#334155;font:14px system-ui">Loading Univer spreadsheet engine…</p></div></div>
+</section>
+<section class="uv-panel" id="data-range-panel">
+<div class="uv-head"><div><h2>Data Range Configuration</h2><p class="uv-note">Specify the source cell range for each field. Each range is read from top to bottom and matched by row position.</p></div></div>
+<div class="tc-mapping-grid">
+<div class="tc-map-field"><label for="range-cluster">Cluster / Mechanism</label><input id="range-cluster" placeholder="A2:A15"><small>Required for grouping; blank values become Unassigned.</small></div>
+<div class="tc-map-field"><label for="range-operation">Operation / Description</label><input id="range-operation" placeholder="B2:B15"><small>Optional operation description.</small></div>
+<div class="tc-map-field"><label for="range-start">Start Time</label><input id="range-start" placeholder="C2:C15"><small>Required numeric start values.</small></div>
+<div class="tc-map-field"><label for="range-duration">Duration</label><input id="range-duration" placeholder="D2:D15"><small>Enter Duration or End Time, or both.</small></div>
+<div class="tc-map-field"><label for="range-end">End Time</label><input id="range-end" placeholder="E2:E15"><small>Calculated from Start + Duration if blank.</small></div>
+<div class="tc-map-field"><label for="range-remark">Remark (Optional)</label><input id="range-remark" placeholder="F2:F15"><small>Reserved for optional notes.</small></div>
+</div>
+<div class="tc-map-actions"><button class="uv-btn" id="auto-detect-ranges">Auto-detect headers</button><button class="uv-btn primary" id="apply-data-ranges">Apply ranges &amp; build chart</button></div>
+<p class="uv-status" id="range-status" role="status" aria-live="polite">Enter ranges such as A2:A15. Ranges are stored with this chart when you save the project.</p>
 </section>
 <section class="uv-panel" id="time-chart-panel">
 <div class="uv-head"><div><h2>Generated Time Chart</h2><p class="uv-note">Automatically converts the worksheet rows into a timeline. Edit the cells above, then rebuild to refresh the chart.</p></div><div class="tc-toolbar"><button class="uv-btn primary" id="build-time-chart">Build Time Chart from cells</button></div></div>
@@ -295,6 +308,7 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
     chartId=data.id; currentChartTitle=data.title||'Cycle Time Chart';
     document.getElementById('chart-title').value=currentChartTitle;
     const payload=data.chart_data||{};
+    setRangeInputs(payload.dataRangeConfig||{});
     if(payload.univerSnapshot && payload.engine==='univer') workbook=univerAPI.createWorkbook(payload.univerSnapshot);
     else makeWorkbook(legacyToMatrix(payload),currentChartTitle);
     document.getElementById('project-context').textContent='Project: '+projectName+' · '+currentChartTitle;
@@ -309,7 +323,7 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
     currentChartTitle=document.getElementById('chart-title').value.trim()||projectName+' · Time Chart';
     const snapshot=workbook.save();
     const compat=makeLegacyCompatibility(snapshot);
-    const payload={version:5,engine:'univer',engineVersion:'1.4.0',chartId,chartTitle:currentChartTitle,projectName,projectDescription:'Univer-powered project Time Chart',univerSnapshot:snapshot,...compat,univerUpdatedAt:new Date().toISOString()};
+    const payload={version:6,engine:'univer',engineVersion:'1.4.0',chartId,chartTitle:currentChartTitle,projectName,projectDescription:'Univer-powered project Time Chart',univerSnapshot:snapshot,dataRangeConfig:getRangeConfigFromInputs(),...compat,univerUpdatedAt:new Date().toISOString()};
     const record={title:currentChartTitle||projectName+' · Time Chart',chart_data:payload};
     let result;
     if(chartId) result=await supa.from('project_cycle_time_charts').update(record).eq('id',chartId).eq('project_id',projectId);
@@ -344,6 +358,7 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
     currentChartTitle=file.name.replace(/\.(xlsx|xls|csv)$/i,'')||'Imported Time Chart';
     document.getElementById('chart-title').value=currentChartTitle;
     makeWorkbook(matrix,currentChartTitle);
+    try { detectDataRanges(); } catch (_) {}
     renderTimeChart();
     setStatus('Imported worksheet "'+sheet.name+'" from '+file.name+'. Review the generated Time Chart and click Save to project.');
   }
@@ -379,33 +394,75 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
     const n = Number.parseFloat(String(value).trim().replace(',', '.').replace(/[^0-9.+-]/g,''));
     return Number.isFinite(n) ? n : null;
   }
+  const rangeFieldIds = {cluster:'range-cluster',operation:'range-operation',start:'range-start',duration:'range-duration',end:'range-end',remark:'range-remark'};
+  let dataRangeConfig = null;
+  function parseA1Range(value) {
+    const text=String(value||'').trim().replace(/\\$/g,'').toUpperCase();
+    if(!text) return null;
+    const match=text.match(/^([A-Z]+)([1-9]\\d*):([A-Z]+)([1-9]\\d*)$/);
+    if(!match || match[1]!==match[3]) throw new Error('Use a single-column range such as A2:A15.');
+    const col=match[1].split('').reduce((n,ch)=>n*26+ch.charCodeAt(0)-64,0)-1;
+    const start=Number(match[2])-1, end=Number(match[4])-1;
+    if(end<start) throw new Error('Range end row must be greater than or equal to start row.');
+    return {col,start,end,length:end-start+1,address:text};
+  }
+  function getRangeConfigFromInputs() {
+    const config={};
+    Object.entries(rangeFieldIds).forEach(([key,id])=>{config[key]=document.getElementById(id).value.trim();});
+    return config;
+  }
+  function setRangeInputs(config) {
+    Object.entries(rangeFieldIds).forEach(([key,id])=>{document.getElementById(id).value=config?.[key]||'';});
+    dataRangeConfig=config||null;
+  }
+  function detectDataRanges() {
+    if(!workbook) throw new Error('Worksheet is not ready.');
+    const matrix=snapshotToRows(workbook.save());
+    if(!matrix.length) throw new Error('The worksheet is empty.');
+    const norm=v=>String(v??'').trim().toLowerCase().replace(/[\\s_()-]+/g,'');
+    const headers=matrix[0].map(norm);
+    const find=(patterns,fallback)=>{const i=headers.findIndex(h=>patterns.some(p=>p.test(h)));return i>=0?i:fallback;};
+    const cols={
+      cluster:find([/^(mechanism|cluster|equipment|actuator|device|resource|station|cơcấu|cụm|thiếtbị)$/],0),
+      operation:find([/^(operation|activity|description|process|step|task|hoạtđộng|côngđoạn|môtả)$/],1),
+      start:find([/^(start|starttime|begin|begintime|startsec|startseconds|starts|starttimes|thờigianbắtđầu|bắtđầu)$/],2),
+      duration:find([/^(duration|time|cycletime|operationtime|durationsec|durationseconds|thờigianhoạtđộng)$/],3),
+      end:find([/^(end|endtime|finish|finishtime|endsec|endseconds|ends|endtimes|thờigiankếtthúc|kếtthúc)$/],4),
+      remark:find([/^(remark|note|comment|ghi chú|ghichu)$/],5)
+    };
+    const last=matrix.length;
+    const make=(col)=>col>=0&&col<matrix[0].length?columnName(col)+'2:'+columnName(col)+last:'';
+    const config={};Object.entries(cols).forEach(([key,col])=>config[key]=make(col));
+    setRangeInputs(config);
+    document.getElementById('range-status').textContent='Suggested ranges detected from the header row. Review them before building the chart.';
+    return config;
+  }
   function readWorksheetRecords() {
     if (!workbook) throw new Error('Worksheet is not ready.');
-    const matrix = snapshotToRows(workbook.save());
-    if (!matrix.length) return [];
-    const headers = matrix[0].map(normalizeHeader);
-    const findCol = (patterns, fallback) => {
-      const i = headers.findIndex(h => patterns.some(p => p.test(h)));
-      return i >= 0 ? i : fallback;
-    };
-    const mechanismCol = findCol([/^(mechanism|cluster|equipment|actuator|device|resource|station|cơcấu|cụm|thiếtbị)$/],0);
-    const operationCol = findCol([/^(operation|activity|description|process|step|task|operationdescription|hoạtđộng|côngđoạn|môtả)$/],1);
-    const startCol = findCol([/^(start|starttime|begin|begintime|startsec|startseconds|thờigianbắtđầu|bắtđầu)$/],2);
-    const durationCol = findCol([/^(duration|time|cycletime|operationtime|durationsec|durationseconds|thờigianhoạtđộng|thờigian)$/],3);
-    const endCol = findCol([/^(end|endtime|finish|finishtime|endsec|endseconds|thờigiankếtthúc|kếtthúc)$/],4);
-    const records = [];
-    matrix.slice(1).forEach((row,index) => {
-      const start = numericCell(row[startCol]);
-      let duration = numericCell(row[durationCol]);
-      let end = numericCell(row[endCol]);
-      if (start === null) return;
-      if (end === null && duration !== null) end = start + duration;
-      if (duration === null && end !== null) duration = end - start;
-      if (end === null || duration === null || duration < 0 || end < start) return;
-      const mechanism = String(row[mechanismCol] ?? '').trim() || 'Unassigned';
-      const operation = String(row[operationCol] ?? '').trim() || ('Operation ' + (index + 1));
-      records.push({mechanism,operation,start,end,duration,sourceRow:index+2});
-    });
+    const matrix=snapshotToRows(workbook.save());
+    const config=getRangeConfigFromInputs();
+    const parsed={};
+    Object.entries(config).forEach(([key,value])=>{if(value)parsed[key]=parseA1Range(value);});
+    if(!parsed.start) throw new Error('Please specify a Start Time range, for example C2:C15.');
+    if(!parsed.duration&&!parsed.end) throw new Error('Please specify at least a Duration or End Time range.');
+    const active=Object.values(parsed);
+    const count=Math.min(...active.map(r=>r.length));
+    const valueAt=(range,index)=>{if(!range||index>=range.length)return null;return matrix[range.start+index]?.[range.col]??null;};
+    const records=[];
+    for(let i=0;i<count;i++){
+      const start=numericCell(valueAt(parsed.start,i));
+      let duration=numericCell(valueAt(parsed.duration,i));
+      let end=numericCell(valueAt(parsed.end,i));
+      if(start===null) continue;
+      if(end===null&&duration!==null)end=start+duration;
+      if(duration===null&&end!==null)duration=end-start;
+      if(end===null||duration===null||duration<0||end<start)continue;
+      const mechanism=String(valueAt(parsed.cluster,i)??'').trim()||'Unassigned';
+      const operation=String(valueAt(parsed.operation,i)??'').trim()||('Operation '+(i+1));
+      records.push({mechanism,operation,start,end,duration,sourceRow:i+1,remark:String(valueAt(parsed.remark,i)??'').trim()});
+    }
+    if(active.some(r=>r.length!==count)) document.getElementById('range-status').textContent='Note: selected ranges have different row counts. Only the first '+count+' aligned rows will be used.';
+    else document.getElementById('range-status').textContent='Using '+count+' aligned worksheet rows from the configured ranges.';
     return records;
   }
   function colorForMechanism(name) {
@@ -483,6 +540,8 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
     await initSupabase();
     await loadProjectChart();
   }
+  document.getElementById('auto-detect-ranges').addEventListener('click',()=>{try{detectDataRanges();}catch(error){document.getElementById('range-status').textContent=error.message;setStatus('Could not detect ranges: '+error.message,true);}});
+  document.getElementById('apply-data-ranges').addEventListener('click',()=>{try{dataRangeConfig=getRangeConfigFromInputs();renderTimeChart();}catch(error){document.getElementById('range-status').textContent=error.message;setStatus('Could not build Time Chart: '+error.message,true);}});
   document.getElementById('build-time-chart').addEventListener('click', () => { try { renderTimeChart(); } catch(error) { setStatus('Could not build Time Chart: '+error.message,true); } });
   document.getElementById('save-project').addEventListener('click', async () => {
     const btn=document.getElementById('save-project');btn.disabled=true;btn.textContent='Saving…';
