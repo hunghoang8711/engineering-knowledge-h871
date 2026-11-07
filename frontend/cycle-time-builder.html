@@ -71,7 +71,7 @@ function updateFormulaBar(){
 }
 function focusCell(r,c,extend=false){
 setSelection(r,c,extend);
-const td=cellAt(r,c),input=td?.querySelector("input.ct-cell-input");
+const td=cellAt(r,c),input=td?.querySelector("textarea.ct-cell-input");
 if(input&&!input.readOnly){input.focus();const n=input.value.length;input.setSelectionRange(n,n);}
 else if(td){td.focus();}
 }
@@ -110,6 +110,7 @@ function applyTableDimensions(){
 function shiftCellMetadata(axis,at,delta){
  const remap=k=>{const [r,c]=k.split(":").map(Number);return axis==="row"&&r>=at?keyFor(r+delta,c):axis==="col"&&c>=at?keyFor(r,c+delta):k;};
  const next={};Object.entries(cellStyles).forEach(([k,v])=>next[remap(k)]=v);cellStyles=next;
+ const nextFormulas={};Object.entries(cellFormulas).forEach(([k,v])=>nextFormulas[remap(k)]=v);cellFormulas=nextFormulas;
  merges=merges.map(m=>({...m,cells:m.cells.map(remap),master:remap(m.master)}));
  if(axis==="row"){const x={};Object.entries(rowHeights).forEach(([k,v])=>{const n=+k;x[n>=at?n+delta:n]=v;});rowHeights=x;}
  else{const x={};Object.entries(columnWidths).forEach(([k,v])=>{const n=+k;x[n>=at?n+delta:n]=v;});columnWidths=x;}
@@ -157,6 +158,7 @@ if(!rows[r])rows[r]={cluster:"",activity:"",start:"",duration:"",end:"",custom:{
 delete cellFormulas[keyFor(r,c)];
 const v=String(value??"");
 if(c===2||c===3)delete cellFormulas[keyFor(r,4)];
+if(v.trim().startsWith("=")){cellFormulas[keyFor(r,c)]={formula:v.trim().slice(1),result:null};if(c===0)rows[r].cluster="";else if(c===1)rows[r].activity="";else if(c===2)rows[r].start="";else if(c===3)rows[r].duration="";else if(c>=5){rows[r].custom=rows[r].custom||{};rows[r].custom[cols()[c]]="";}syncEnd(rows[r]);return;}
 if(c===0)rows[r].cluster=v;
 else if(c===1)rows[r].activity=v;
 else if(c===2)rows[r].start=v;
@@ -168,7 +170,7 @@ table.addEventListener("input",e=>{
 const input=e.target.closest(".ct-cell-input");if(!input||input.readOnly)return;
 const td=input.closest("td[data-r][data-c]");if(!td)return;
 const r=+td.dataset.r,c=+td.dataset.c;setCellValue(r,c,input.value);
-const end=cellAt(r,4)?.querySelector("input");if(end)end.value=rows[r].end;
+const end=cellAt(r,4)?.querySelector("textarea");if(end)end.value=rows[r].end;
 renderCharts();
 });
 table.addEventListener("mousedown",e=>{
@@ -300,7 +302,7 @@ function shiftFormulaColumns(formula,delta){
  if(!delta)return formula;
  const toNumber=letters=>{let n=0;for(const ch of letters)n=n*26+ch.charCodeAt(0)-64;return n;};
  const toLetters=n=>{let out="";while(n>0){const r=(n-1)%26;out=String.fromCharCode(65+r)+out;n=Math.floor((n-1)/26);}return out;};
- return formula.replace(/(^|[^A-Z0-9_.])(\\$?)([A-Z]{1,3})(\\$?)(\\d+)/gi,(match,prefix,col,colAbs,rowAbs,row)=>{const shifted=toNumber(col.toUpperCase())+delta;if(shifted<1)return match;return prefix+colAbs+toLetters(shifted)+rowAbs+row;});
+ return formula.replace(/(^|[^A-Z0-9_.])(\$?)([A-Z]{1,3})(\$?)(\d+)/gi,(match,prefix,col,colAbs,rowAbs,row)=>{const shifted=toNumber(col.toUpperCase())+delta;if(shifted<1)return match;return prefix+colAbs+toLetters(shifted)+rowAbs+row;});
 }
 function mapImportedHeader(header,index){
  const h=normalizeHeader(header);
@@ -382,7 +384,7 @@ function applyFormulaBar(){
  if(activeCell.c===4){status("End Time is calculated by H871 and cannot be overwritten.");return;}
  if(raw.trim().startsWith("=")){
   const previous=cellFormulas[k],current=cellValue(activeCell.r,activeCell.c);
-  cellFormulas[k]={formula:raw.trim().slice(1),result:previous?.result??current};
+  cellFormulas[k]={formula:raw.trim().slice(1),result:previous?.formula===raw.trim().slice(1)?previous.result:null};
   status("Formula stored for this cell. The cached Excel result is retained; formula recalculation is part of the upcoming H871 Formula Engine.");
  }else{
   setCellValue(activeCell.r,activeCell.c,raw);status("Cell value updated.");
