@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#111827">
+<title>Univer Spreadsheet Lab | H871</title>
+<link rel="stylesheet" href="./styles.css?v=20261107-univer-lab1">
+<style>
+html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}.uv-actions{display:flex;gap:8px;flex-wrap:wrap}.uv-btn{border:1px solid #38516b;border-radius:8px;background:#16283d;color:#dceafa;padding:9px 12px;font:inherit;font-size:12px;font-weight:700;cursor:pointer}.uv-btn.primary{background:#0e5368;border-color:#16758b;color:#e5fbff}.uv-panel{padding:16px;border:1px solid #293f56;border-radius:13px;background:#101d2e;min-width:0}.uv-panel h2{font-size:15px;margin:0 0 8px;color:#edf6ff}.uv-note{font-size:11px;color:#9fb3c9;line-height:1.6;margin:6px 0}.uv-status{font-size:12px;color:#9fb3c9;min-height:20px}.uv-status.error{color:#fca5a5}.uv-editor-shell{height:680px;min-height:520px;overflow:hidden;border:1px solid #38516b;border-radius:10px;background:#fff}.uv-editor-shell #app{height:100%;width:100%}.uv-checks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.uv-check{padding:12px;border:1px solid #2c4259;border-radius:9px;background:#0c1929}.uv-check strong{display:block;color:#e7f4ff;font-size:12px}.uv-check span{display:block;color:#9fb3c9;font-size:11px;margin-top:5px;line-height:1.5}.uv-callout{border-left:3px solid #d49a42;padding:8px 12px;background:#292315;border-radius:5px;color:#f4d9a4;font-size:11px;line-height:1.6}@media(max-width:760px){.uv-checks{grid-template-columns:1fr}.uv-editor-shell{height:620px;min-height:480px}}
+</style>
+</head>
+<body data-start-tab="knowledge">
+<div class="app-shell">
+<aside class="sidebar">
+<div class="brand-mark">H871</div><div class="brand-copy"><strong>Engineering Hub</strong><span>Knowledge Workspace</span></div>
+<nav aria-label="Main navigation">
+<a class="nav-item" href="./index.html" data-tab="overview">Overview</a>
+<a class="nav-item" href="./projects.html" data-tab="projects">Projects</a>
+<a class="nav-item" href="./customers.html" data-tab="customers">Customers</a>
+<a class="nav-item active" href="./knowledge.html" data-tab="knowledge" aria-current="page">Knowledge Library</a>
+<a class="nav-item" href="./index.html#intake" data-tab="intake">Review Queue</a>
+</nav>
+<div class="sidebar-foot"><span class="status-dot"></span><span>Univer integration preview</span></div>
+</aside>
+<main class="main-content">
+<header class="topbar"><div><p class="eyebrow">ENGINEERING TOOLS / SPREADSHEET ENGINE</p><h1>Univer Spreadsheet Lab</h1><p class="subtitle">Isolated evaluation of the Univer spreadsheet engine before H871 integration.</p></div></header>
+<div class="uv-page">
+<div class="uv-head">
+<div><a class="back-button" href="./cycle-time-builder.html">← Back to current Time Chart</a><p class="uv-note">Experimental page · Does not read or modify any existing project chart.</p></div>
+<div class="uv-actions">
+<button class="uv-btn" id="new-workbook">Reset sample</button>
+<button class="uv-btn" id="save-json">Save workbook JSON</button>
+<button class="uv-btn" id="load-json">Load workbook JSON</button>
+<input id="json-file" type="file" accept=".json,application/json" hidden>
+</div>
+</div>
+<section class="uv-panel">
+<h2>Formula engine test</h2>
+<p class="uv-note">Edit the sample cells directly. Test formulas such as SUM, IF, MAX, ROUND, cell references, copy/paste, fill, undo and redo using the native Univer interface.</p>
+<div class="uv-checks">
+<div class="uv-check"><strong>Basic reference</strong><span>End Time = Start Time + Duration</span></div>
+<div class="uv-check"><strong>Range function</strong><span>SUM(D2:D5) and MAX(E2:E5)</span></div>
+<div class="uv-check"><strong>Logical function</strong><span>IF(E2&lt;=3,"OK","CHECK")</span></div>
+</div>
+</section>
+<section class="uv-panel">
+<div class="uv-head"><div><h2>Spreadsheet workspace</h2><p class="uv-note">The workbook is held in this browser tab until you export its JSON snapshot.</p></div></div>
+<div class="uv-editor-shell"><div id="app"><p style="padding:24px;color:#334155;font:14px system-ui">Loading Univer spreadsheet engine…</p></div></div>
+</section>
+<section class="uv-panel">
+<h2>Integration boundary</h2>
+<div class="uv-callout">This lab is intentionally isolated. It does not save to Supabase or update project_cycle_time_charts. XLSX conversion/import-export and project persistence will be assessed separately after formula and editing tests pass.</div>
+<p class="uv-status" id="uv-status" role="status" aria-live="polite">Loading Univer resources…</p>
+</section>
+</div>
+<footer>H871 Engineering Knowledge Hub <span>·</span> Univer Spreadsheet Lab <span>·</span> Evaluation only</footer>
+</main>
+</div>
+<script>
+(() => {
+  const statusEl = document.getElementById('uv-status');
+  const app = document.getElementById('app');
+  let univer = null;
+  let univerAPI = null;
+  let workbook = null;
+  const cdnBases = ['https://cdn.jsdelivr.net/npm/', 'https://unpkg.com/'];
+  const styles = [
+    '@univerjs/design@1.4.0/lib/index.css',
+    '@univerjs/ui@1.4.0/lib/index.css',
+    '@univerjs/docs-ui@1.4.0/lib/index.css',
+    '@univerjs/sheets-ui@1.4.0/lib/index.css',
+    '@univerjs/sheets-formula-ui@1.4.0/lib/index.css',
+    '@univerjs/sheets-numfmt-ui@1.4.0/lib/index.css'
+  ];
+  const reactScripts = [
+    'react@18.3.1/umd/react.production.min.js',
+    'react-dom@18.3.1/umd/react-dom.production.min.js'
+  ];
+  const sdkScripts = [
+    'rxjs@7.8.2/dist/bundles/rxjs.umd.min.js',
+    '@wendellhu/redi@1.1.3/dist/umd/index.js',
+    '@wendellhu/redi@1.1.3/dist/umd/react-bindings/index.js',
+    '@univerjs/themes@1.4.0/lib/umd/index.js',
+    '@univerjs/protocol@1.4.0/lib/umd/index.js',
+    '@univerjs/core@1.4.0/lib/umd/index.js',
+    '@univerjs/network@1.4.0/lib/umd/index.js',
+    '@univerjs/rpc@1.4.0/lib/umd/index.js',
+    '@univerjs/design@1.4.0/lib/umd/index.js',
+    '@univerjs/engine-render@1.4.0/lib/umd/index.js',
+    '@univerjs/engine-formula@1.4.0/lib/umd/index.js',
+    '@univerjs/drawing@1.4.0/lib/umd/index.js',
+    '@univerjs/telemetry@1.4.0/lib/umd/index.js',
+    '@univerjs/ui@1.4.0/lib/umd/index.js',
+    '@univerjs/docs@1.4.0/lib/umd/index.js',
+    '@univerjs/docs-ui@1.4.0/lib/umd/index.js',
+    '@univerjs/sheets@1.4.0/lib/umd/index.js',
+    '@univerjs/sheets-ui@1.4.0/lib/umd/index.js',
+    '@univerjs/sheets-formula@1.4.0/lib/umd/index.js',
+    '@univerjs/sheets-formula-ui@1.4.0/lib/umd/index.js',
+    '@univerjs/sheets-numfmt@1.4.0/lib/umd/index.js',
+    '@univerjs/sheets-numfmt-ui@1.4.0/lib/umd/index.js',
+    '@univerjs/core@1.4.0/lib/umd/facade.js',
+    '@univerjs/engine-formula@1.4.0/lib/umd/facade.js',
+    '@univerjs/ui@1.4.0/lib/umd/facade.js',
+    '@univerjs/docs@1.4.0/lib/umd/facade.js',
+    '@univerjs/docs-ui@1.4.0/lib/umd/facade.js',
+    '@univerjs/sheets@1.4.0/lib/umd/facade.js',
+    '@univerjs/sheets-ui@1.4.0/lib/umd/facade.js',
+    '@univerjs/sheets-formula@1.4.0/lib/umd/facade.js',
+    '@univerjs/sheets-numfmt@1.4.0/lib/umd/facade.js',
+    '@univerjs/design@1.4.0/lib/umd/locale/en-US.js',
+    '@univerjs/ui@1.4.0/lib/umd/locale/en-US.js',
+    '@univerjs/sheets@1.4.0/lib/umd/locale/en-US.js',
+    '@univerjs/sheets-ui@1.4.0/lib/umd/locale/en-US.js',
+    '@univerjs/docs-ui@1.4.0/lib/umd/locale/en-US.js',
+    '@univerjs/sheets-formula-ui@1.4.0/lib/umd/locale/en-US.js',
+    '@univerjs/sheets-numfmt-ui@1.4.0/lib/umd/locale/en-US.js'
+  ];
+  async function loadResource(path, tag = 'script') {
+    for (const base of cdnBases) {
+      const element = document.createElement(tag);
+      const url = base + path;
+      element.crossOrigin = 'anonymous';
+      if (tag === 'link') { element.rel = 'stylesheet'; element.href = url; }
+      else element.src = url;
+      try {
+        await new Promise((resolve, reject) => {
+          element.onload = resolve;
+          element.onerror = () => reject(new Error(url));
+          document.head.appendChild(element);
+        });
+        return;
+      } catch (_) { element.remove(); }
+    }
+    throw new Error('Could not load ' + path + ' from jsDelivr or unpkg.');
+  }
+  function sampleData() {
+    return [
+      ['Mechanism', 'Operation', 'Start (s)', 'Duration (s)', 'End (s)', 'Status', 'Check'],
+      ['Robot', 'Pick component', 0, 2.4, '=C2+D2', '=IF(E2<=3,"OK","CHECK")', '=ROUND(C2+D2,1)'],
+      ['Pneumatic clamp', 'Clamp workpiece', 1, 1.5, '=C3+D3', '=IF(E3<=3,"OK","CHECK")', '=ROUND(C3+D3,1)'],
+      ['Vision', 'Inspect position', 3, 2, '=C4+D4', '=IF(E4<=5,"OK","CHECK")', '=ROUND(C4+D4,1)'],
+      ['Robot', 'Place component', 5, 2.8, '=C5+D5', '=IF(E5<=8,"OK","CHECK")', '=ROUND(C5+D5,1)'],
+      [],
+      ['Summary', 'Total duration', '', '=SUM(D2:D5)', '', '', ''],
+      ['Summary', 'Latest end time', '', '=MAX(E2:E5)', '', '', '']
+    ];
+  }
+  function makeWorkbook() {
+    if (!univerAPI) throw new Error('Univer API is not ready.');
+    workbook = univerAPI.createWorkbook({
+      id: 'h871-univer-time-chart-lab',
+      name: 'H871 Time Chart Formula Test',
+      sheetOrder: ['time-chart'],
+      sheets: {
+        'time-chart': {
+          id: 'time-chart',
+          name: 'Time Chart',
+          rowCount: 100,
+          columnCount: 16,
+          cellData: {}
+        }
+      }
+    });
+    workbook.getActiveSheet().getRange('A1:G8').setValues(sampleData());
+    statusEl.textContent = 'Univer is ready. Edit formulas and values in the worksheet.';
+    statusEl.classList.remove('error');
+  }
+  function downloadJson() {
+    if (!workbook) { statusEl.textContent = 'No workbook is available.'; return; }
+    const snapshot = workbook.save();
+    const blob = new Blob([JSON.stringify(snapshot, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'h871-univer-time-chart.json'; a.click();
+    URL.revokeObjectURL(url);
+    statusEl.textContent = 'Workbook snapshot exported as JSON.';
+  }
+  function loadJsonFile(file) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const snapshot = JSON.parse(String(reader.result || ''));
+        if (!snapshot || typeof snapshot !== 'object' || !snapshot.sheets) throw new Error('Unsupported Univer workbook snapshot.');
+        workbook = univerAPI.createWorkbook(snapshot);
+        statusEl.textContent = 'Workbook JSON loaded into Univer. Check the active sheet selector if multiple workbooks are open.';
+      } catch (error) {
+        statusEl.textContent = 'Could not load workbook JSON: ' + error.message;
+        statusEl.classList.add('error');
+      }
+    };
+    reader.onerror = () => { statusEl.textContent = 'Could not read the selected JSON file.'; };
+    reader.readAsText(file);
+  }
+  async function init() {
+    for (const path of styles) await loadResource(path, 'link');
+    for (const path of reactScripts) await loadResource(path);
+    React.jsx = (type, props, key) => React.createElement(type, key === undefined ? props : { ...props, key });
+    React.jsxs = React.jsx;
+    for (const path of sdkScripts) await loadResource(path);
+    app.textContent = '';
+    const { Univer, LocaleType, mergeLocales, UniverInstanceType } = UniverCore;
+    const { FUniver } = UniverCoreFacade;
+    const { UniverRenderEnginePlugin } = UniverEngineRender;
+    const { UniverFormulaEnginePlugin } = UniverEngineFormula;
+    const { UniverUIPlugin } = UniverUi;
+    const { UniverSheetsPlugin } = UniverSheets;
+    const { UniverSheetsUIPlugin } = UniverSheetsUi;
+    const { UniverDocsPlugin } = UniverDocs;
+    const { UniverDocsUIPlugin } = UniverDocsUi;
+    const { UniverSheetsFormulaPlugin } = UniverSheetsFormula;
+    const { UniverSheetsFormulaUIPlugin } = UniverSheetsFormulaUi;
+    const { UniverSheetsNumfmtPlugin } = UniverSheetsNumfmt;
+    const { UniverSheetsNumfmtUIPlugin } = UniverSheetsNumfmtUi;
+    univer = new Univer({
+      locale: LocaleType.EN_US,
+      locales: { [LocaleType.EN_US]: mergeLocales(
+        UniverDesignEnUS, UniverUiEnUS, UniverSheetsEnUS, UniverSheetsUiEnUS,
+        UniverDocsUiEnUS, UniverSheetsFormulaUiEnUS, UniverSheetsNumfmtUiEnUS
+      )}
+    });
+    univer.registerPlugin(UniverRenderEnginePlugin);
+    univer.registerPlugin(UniverFormulaEnginePlugin);
+    univer.registerPlugin(UniverUIPlugin, { container: 'app' });
+    univer.registerPlugin(UniverDocsPlugin);
+    univer.registerPlugin(UniverDocsUIPlugin);
+    univer.registerPlugin(UniverSheetsPlugin);
+    univer.registerPlugin(UniverSheetsUIPlugin);
+    univer.registerPlugin(UniverSheetsFormulaPlugin);
+    univer.registerPlugin(UniverSheetsFormulaUIPlugin);
+    univer.registerPlugin(UniverSheetsNumfmtPlugin);
+    univer.registerPlugin(UniverSheetsNumfmtUIPlugin);
+    univer.createUnit(UniverInstanceType.UNIVER_SHEET, {});
+    univerAPI = FUniver.newAPI(univer);
+    makeWorkbook();
+  }
+  document.getElementById('new-workbook').addEventListener('click', () => {
+    try { makeWorkbook(); } catch (error) { statusEl.textContent = error.message; statusEl.classList.add('error'); }
+  });
+  document.getElementById('save-json').addEventListener('click', downloadJson);
+  document.getElementById('load-json').addEventListener('click', () => document.getElementById('json-file').click());
+  document.getElementById('json-file').addEventListener('change', event => {
+    const file = event.target.files && event.target.files[0];
+    if (file) loadJsonFile(file);
+    event.target.value = '';
+  });
+  init().catch(error => {
+    console.error(error);
+    app.textContent = 'Univer could not start. Check your internet connection and refresh this page.\n' + error.message;
+    app.style.cssText = 'padding:24px;white-space:pre-wrap;overflow-wrap:anywhere;font:14px/1.5 system-ui;color:#991b1b;background:#fff;height:100%;box-sizing:border-box';
+    statusEl.textContent = 'Univer initialization failed: ' + error.message;
+    statusEl.classList.add('error');
+  });
+})();
+</script>
+</body>
+</html>
