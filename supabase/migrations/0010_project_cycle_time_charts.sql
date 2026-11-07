@@ -35,3 +35,16 @@ drop trigger if exists project_cycle_time_charts_updated_at
 create trigger project_cycle_time_charts_updated_at
   before update on public.project_cycle_time_charts
   for each row execute function public.set_project_cycle_time_chart_updated_at();
+
+-- Multiple independent Time Charts per project (apply after the original migration 0010).
+alter table public.project_cycle_time_charts add column if not exists id uuid;
+update public.project_cycle_time_charts set id=gen_random_uuid() where id is null;
+alter table public.project_cycle_time_charts alter column id set default gen_random_uuid(), alter column id set not null;
+do $$
+begin
+ if exists (select 1 from pg_constraint where conrelid='public.project_cycle_time_charts'::regclass and contype='p' and pg_get_constraintdef(oid) like '%project_id%') then
+  alter table public.project_cycle_time_charts drop constraint project_cycle_time_charts_pkey;
+ end if;
+end $$;
+alter table public.project_cycle_time_charts add constraint project_cycle_time_charts_pkey primary key (id);
+create index if not exists project_cycle_time_charts_project_id_idx on public.project_cycle_time_charts(project_id,updated_at desc);
