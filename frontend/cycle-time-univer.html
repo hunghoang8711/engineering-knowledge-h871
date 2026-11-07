@@ -182,7 +182,7 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
       }
     });
     const sheet = workbook.getActiveSheet();
-    const rowCount = Math.max(100, dataRows.length + 20);
+    const rowCount = Math.max(120, dataRows.length + 20);
     sheet.setRowCount(rowCount);
     const colCount = Math.max(16, ...dataRows.map(row => row.length));
     sheet.setColumnCount(colCount);
