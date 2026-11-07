@@ -709,6 +709,8 @@
   // Resolve route before async auth checks to prevent the overview from flashing over detail pages.
   const initialPath=location.pathname.split("/").pop()||"index.html";
   active=({"customers.html":"customers","projects.html":"projects","customer-detail.html":"customers","project-detail.html":"projects","knowledge.html":"knowledge"})[initialPath]||"overview";
+  // Apply the route selection immediately, before the first asynchronous Supabase call.
+  document.querySelectorAll("[data-tab]").forEach(link=>link.classList.toggle("active",link.dataset.tab===active));
   if(initialPath!=="index.html"&&initialPath!=="")hideOverview(true);
   if(!config.url||!config.anonKey||!window.supabase?.createClient){say("Supabase configuration unavailable.",true);return;}
   client=window.supabase.createClient(config.url,config.anonKey);
