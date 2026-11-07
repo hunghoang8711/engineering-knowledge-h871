@@ -551,7 +551,7 @@ if(error){$("#ct-chooser-status").textContent="Could not load project list: "+er
 const select=$("#ct-project-choice");select.replaceChildren(new Option("Select a project…",""));(projects||[]).forEach(p=>select.append(new Option((p.code?p.code+" · ":"")+p.name,p.id)));
 const {data:customers,error:customerError}=await supa.from("customers").select("id,name,customer_type,end_user_name").order("name");
 if(!customerError)(customers||[]).forEach(c=>$("#ct-new-customer").append(new Option(c.name+(c.customer_type==="intermediary"&&c.end_user_name?" / "+c.end_user_name:""),c.id)));
-$("#ct-use-project").onclick=()=>{if(!select.value){$("#ct-chooser-status").textContent="Select a project first.";return;}location.href="./cycle-time-builder.html?project_id="+encodeURIComponent(select.value);};
+$("#ct-use-project").onclick=()=>{if(!select.value){$("#ct-chooser-status").textContent="Select a project first.";return;}location.href="./cycle-time-univer.html?project_id="+encodeURIComponent(select.value);};
 $("#ct-create-project").onclick=async()=>{
 const name=$("#ct-new-name").value.trim();if(!name){$("#ct-chooser-status").textContent="Project name is required.";return;}
 const customerId=$("#ct-new-customer").value,customerName=$("#ct-new-customer-name").value.trim(),endUser=$("#ct-new-end-user").value.trim();
@@ -562,7 +562,7 @@ const {data:p,error}=await supa.from("projects").insert({code:$("#ct-new-code").
 let linkedCustomer=customerId||null;
 if(customerName){const {data:c,error:ce}=await supa.from("customers").insert({name:customerName,customer_type:"end_user",created_by:authUser.id}).select("id").single();if(ce)throw ce;linkedCustomer=c.id;}
 if(linkedCustomer){const {error:le}=await supa.from("project_customers").insert({project_id:p.id,customer_id:linkedCustomer,end_user_name:endUser||null,created_by:authUser.id});if(le)throw le;}
-location.href="./cycle-time-builder.html?project_id="+encodeURIComponent(p.id);
+location.href="./cycle-time-univer.html?project_id="+encodeURIComponent(p.id);
 }catch(e){$("#ct-chooser-status").textContent="Project creation failed: "+(e.message||"Unknown error");btn.disabled=false;}
 };
 }
