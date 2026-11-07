@@ -28,7 +28,7 @@
 <div class="ct-chooser-card"><h3>Create a new project</h3><label>Project code<input id="ct-new-code" placeholder="e.g. AUTO-2026-014"></label><label>Project name *<input id="ct-new-name" required placeholder="Machine / project name"></label><label>Project summary<textarea id="ct-new-description" rows="2" placeholder="Process scope or project description"></textarea></label><label>Customer (optional)<select id="ct-new-customer"><option value="">No customer selected</option></select></label><label>Or create customer / company<input id="ct-new-customer-name" placeholder="Customer name"></label><label>End User (optional)<input id="ct-new-end-user" placeholder="End-user company"></label><button class="ct-btn primary" id="ct-create-project">Create project &amp; open chart</button></div>
 </div><p class="ct-note" id="ct-chooser-status" role="status">Project list requires an H871 sign-in with write access.</p>
 </section><section class="ct-panel"><h2>Cycle information</h2><div class="ct-meta"><label class="ct-field">Time Chart title<input id="chart-title" value="Cycle Time Chart 1" placeholder="Name this chart"></label><label class="ct-field">Project / Machine name<input id="project-name" value="Automation Cycle Time Study" placeholder="Enter project or machine name"></label><label class="ct-field">Description<input id="project-desc" value="Cycle time breakdown by cluster and activity" placeholder="Optional description"></label></div></section>
-<section class="ct-panel"><div class="ct-chart-title"><h2>Activity worksheet</h2><div class="ct-toolbar"><button class="ct-btn" id="add-row">＋ Add row</button><button class="ct-btn" id="add-col">＋ Add column</button><button class="ct-btn" id="delete-rows">Delete selected rows</button><button class="ct-btn" id="delete-cols">Delete selected columns</button><button class="ct-btn" id="merge">Merge selected cells</button><button class="ct-btn" id="unmerge">Unmerge</button><button class="ct-btn" id="bold">Bold</button><label class="ct-format-control">Font <input id="font-color" type="color" value="#e5edf7"></label><input id="cell-color" type="color" value="#24435b" title="Cell fill" aria-label="Cell fill"><button class="ct-btn" id="fill">Apply fill</button><div class="ct-align-menu"><details class="ct-align-dropdown"><summary class="ct-btn ct-icon-btn" title="Horizontal alignment" aria-label="Horizontal alignment">↔</summary><div class="ct-align-options"><button type="button" id="align-left">Align left</button><button type="button" id="align-center">Center</button><button type="button" id="align-right">Align right</button></div></details><details class="ct-align-dropdown"><summary class="ct-btn ct-icon-btn" title="Vertical alignment" aria-label="Vertical alignment">↕</summary><div class="ct-align-options"><button type="button" id="valign-top">Align top</button><button type="button" id="valign-middle">Middle</button><button type="button" id="valign-bottom">Align bottom</button></div></details></div></div></div>
+<section class="ct-panel"><div class="ct-chart-title"><h2>Activity worksheet</h2><div class="ct-toolbar"><button class="ct-btn" id="undo" title="Undo (Ctrl+Z)" disabled>↶ Undo</button><button class="ct-btn" id="redo" title="Redo (Ctrl+Y)" disabled>↷ Redo</button><button class="ct-btn" id="add-row">＋ Add row</button><button class="ct-btn" id="add-col">＋ Add column</button><button class="ct-btn" id="delete-rows">Delete selected rows</button><button class="ct-btn" id="delete-cols">Delete selected columns</button><button class="ct-btn" id="merge">Merge selected cells</button><button class="ct-btn" id="unmerge">Unmerge</button><button class="ct-btn" id="bold">Bold</button><label class="ct-format-control">Font <input id="font-color" type="color" value="#e5edf7"></label><input id="cell-color" type="color" value="#24435b" title="Cell fill" aria-label="Cell fill"><button class="ct-btn" id="fill">Apply fill</button><div class="ct-align-menu"><details class="ct-align-dropdown"><summary class="ct-btn ct-icon-btn" title="Horizontal alignment" aria-label="Horizontal alignment">↔</summary><div class="ct-align-options"><button type="button" id="align-left">Align left</button><button type="button" id="align-center">Center</button><button type="button" id="align-right">Align right</button></div></details><details class="ct-align-dropdown"><summary class="ct-btn ct-icon-btn" title="Vertical alignment" aria-label="Vertical alignment">↕</summary><div class="ct-align-options"><button type="button" id="valign-top">Align top</button><button type="button" id="valign-middle">Middle</button><button type="button" id="valign-bottom">Align bottom</button></div></details></div></div></div>
 <div class="ct-formula-bar"><span class="ct-formula-address" id="formula-address">A1</span><input id="formula-input" type="text" aria-label="Selected cell formula or value" placeholder="Cell value or formula (e.g. =SUM(C2:C5))"><button class="ct-btn" id="apply-formula">Apply</button></div><div class="ct-table-wrap"><table class="ct-table" id="input-table"><thead></thead><tbody></tbody></table></div><p class="ct-import-note" id="import-note">XLSX import: choose a worksheet and cell range before importing. Arithmetic formulas and cell references are recalculated in H871.</p>
 <p class="ct-note">Spreadsheet shortcuts: click / drag to select cells · Arrow keys to move · Shift + arrows to extend selection · Ctrl + A to select all · Ctrl + C / X / V to copy, cut and paste ranges from H871, Excel or Google Sheets. End Time is calculated automatically from Start Time + Duration unless you enter a value or formula manually.</p></section>
 <section class="ct-panel"><div class="ct-metrics" id="metrics"></div></section>
@@ -42,7 +42,15 @@
 const $=s=>document.querySelector(s), colors=["#67d5b5","#78b9f2","#f5bd68","#c49af2","#ef8f9d","#9bd16f","#e9a7d4","#83cbd0"];
 let rows=[],customCols=["Remark"],columnRoles={0:"cluster",1:"text",2:"start",3:"duration",4:"end"},selected=[],merges=[],cellStyles={},columnWidths={},rowHeights={},cellFormulas={},chartId=new URLSearchParams(location.search).get("chart_id")||null;
 
-let columnLabels={};const cols=()=>["Cluster","Activity","Start (s)","Duration (s)","End (s)",...customCols].map((n,i)=>columnLabels[i]||n);
+let columnLabels={};
+const undoStack=[],redoStack=[];let historyBusy=false;
+function historySnapshot(){return JSON.stringify({rows,customCols,columnRoles,columnLabels,selected,merges,cellStyles,columnWidths,rowHeights,cellFormulas,chartTitle:$("#chart-title").value,projectName:$("#project-name").value,projectDesc:$("#project-desc").value});}
+function updateHistoryButtons(){$("#undo").disabled=!undoStack.length;$("#redo").disabled=!redoStack.length;}
+function recordUndo(){if(historyBusy)return;undoStack.push(historySnapshot());if(undoStack.length>100)undoStack.shift();redoStack.length=0;updateHistoryButtons();}
+function restoreHistory(snap){const d=JSON.parse(snap);historyBusy=true;rows=d.rows||[];customCols=d.customCols||["Remark"];columnRoles=d.columnRoles||{0:"cluster",1:"text",2:"start",3:"duration",4:"end"};columnLabels=d.columnLabels||{};selected=d.selected||[];merges=d.merges||[];cellStyles=d.cellStyles||{};columnWidths=d.columnWidths||{};rowHeights=d.rowHeights||{};cellFormulas=d.cellFormulas||{};$("#chart-title").value=d.chartTitle||"";$("#project-name").value=d.projectName||"";$("#project-desc").value=d.projectDesc||"";recalculateFormulas();activeCell={r:0,c:0};selectionAnchor={r:0,c:0};if(!rows.length)rows=[{cluster:"",activity:"",start:"",duration:"",end:"",custom:{}}];renderTable();renderCharts();setSelection(0,0);historyBusy=false;updateHistoryButtons();status("Worksheet change restored. Save the chart to update the project.");}
+function undo(){if(!undoStack.length)return;redoStack.push(historySnapshot());restoreHistory(undoStack.pop());}
+function redo(){if(!redoStack.length)return;undoStack.push(historySnapshot());restoreHistory(redoStack.pop());}
+const cols=()=>["Cluster","Activity","Start (s)","Duration (s)","End (s)",...customCols].map((n,i)=>columnLabels[i]||n);
 const roleLabels={cluster:"Cluster",start:"Start Time",end:"End Time",duration:"Duration Time",text:"Text / Description"};
 const keyFor=(r,c)=>r+":"+c;
 function roleColumn(role){return Object.keys(columnRoles).map(Number).find(c=>columnRoles[c]===role)??-1;}
@@ -111,6 +119,13 @@ body.append(tr);
 applyTableDimensions();
 }
 const table=$("#input-table");
+$("#undo").onclick=undo;$("#redo").onclick=redo;
+document.addEventListener("beforeinput",e=>{if(e.target.matches(".ct-cell-input,#formula-input,#chart-title,#project-name,#project-desc"))recordUndo();},true);
+document.addEventListener("click",e=>{const el=e.target.closest("button");if(!el||["undo","redo","save","load","save-project","load-project","export","import-xlsx"].includes(el.id))return;if(["add-row","add-col","delete-rows","delete-cols","merge","unmerge","bold","fill","align-left","align-center","align-right","valign-top","valign-middle","valign-bottom","apply-formula"].includes(el.id)||el.closest(".ct-context-menu"))recordUndo();},true);
+document.addEventListener("change",e=>{if(e.target.matches("[data-role-col]"))recordUndo();},true);
+document.addEventListener("dblclick",e=>{if(e.target.closest("[data-title-col]"))recordUndo();},true);
+document.addEventListener("contextmenu",e=>{if(e.target.closest("td[data-r],td[data-row-index],th[data-c]"))recordUndo();},true);
+document.addEventListener("mousedown",e=>{if(e.target.closest("[data-resize-col],[data-resize-row]"))recordUndo();},true);
 function applyTableDimensions(){
  table.querySelectorAll("tr").forEach(tr=>[...tr.children].forEach((cell,i)=>{if(i===0)return;const w=Number(columnWidths[i-1]);if(w>0){cell.style.width=w+"px";cell.style.minWidth=w+"px";}}));
  table.querySelectorAll("tbody tr").forEach((tr,r)=>{if(Number(rowHeights[r])>0)tr.style.height=Number(rowHeights[r])+"px";});
@@ -196,10 +211,12 @@ table.addEventListener("keydown",e=>{
 const input=e.target.closest(".ct-cell-input"),td=e.target.closest("td[data-r][data-c]");
 if(!td)return;
 const r=+td.dataset.r,c=+td.dataset.c;
+if((e.ctrlKey||e.metaKey)&&["z","y"].includes(e.key.toLowerCase())){e.preventDefault();e.stopPropagation();if(e.key.toLowerCase()==="z"&&e.shiftKey)redo();else if(e.key.toLowerCase()==="z")undo();else redo();return;}
 if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="a"){
 e.preventDefault();selectionAnchor={r:0,c:0};setSelection(rows.length-1,cols().length-1,true);return;
 }
 if((e.key==="Delete"||e.key==="Backspace")&&selected.length>1){
+recordUndo();
 e.preventDefault();selected.forEach(k=>{const [rr,cc]=k.split(":").map(Number);if(!(columnRoles[cc]==="end"&&roleColumn("start")>=0&&roleColumn("duration")>=0))setCellValue(rr,cc,"");});
 renderTable();renderCharts();focusCell(activeCell.r,activeCell.c);return;
 }
@@ -378,6 +395,7 @@ async function importXlsx(file){
   importCols.forEach(col=>{const w=sheet.getColumn(col.source).width;if(w)importedWidths[col.target]=Math.max(65,Math.round(w*7));});
   const summary="Worksheet: "+sheet.name+"\nRows: "+importedRows.length+"\nColumns: "+dataCols.length+"\nFormulas detected: "+formulaCount+"\n\nImport this worksheet into the current Time Chart? Existing worksheet data will be replaced.";
   if(!confirm(summary))return;
+  recordUndo();
   rows=importedRows.length?importedRows:[{cluster:"",activity:"",start:"",duration:"",end:"",custom:{}}];
   customCols=colsByTarget.length?colsByTarget:["Remark"];
 cellFormulas=importedFormulas;cellStyles=importedStyles;columnWidths=importedWidths;rowHeights=importedHeights;columnLabels={};columnRoles={...Object.fromEntries(colsByTarget.map((_,i)=>[i+5,"text"])),...importedRoles};merges=[];
