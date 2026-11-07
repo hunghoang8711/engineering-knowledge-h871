@@ -161,7 +161,7 @@ location.href="./cycle-time-builder.html?project_id="+encodeURIComponent(p.id);
 };
 }
 if(!projectId){setChooserMode(true);initProjectChooser();rows=defaults.map(x=>({...x,custom:{Remark:x.remark}}));renderTable();renderCharts();}
-else{setChooserMode(false);const config=window.H871_SUPABASE_CONFIG||{};if(config.url&&config.anonKey&&window.supabase?.createClient)supa=window.supabase.createClient(config.url,config.anonKey);rows=defaults.map(x=>({...x,custom:{Remark:x.remark}}));renderTable();renderCharts();if(supa){supa.from("projects").select("name,code,description").eq("id",projectId).maybeSingle().then(({data})=>{if(data){projectName=(data.code?data.code+" · ":"")+data.name;showProjectContext(projectName);}});}$("#save-project").hidden=false;$("#load-project").hidden=false;loadProjectChart();}
+else{setChooserMode(false);const config=window.H871_SUPABASE_CONFIG||{};if(config.url&&config.anonKey&&window.supabase?.createClient)supa=window.supabase.createClient(config.url,config.anonKey);rows=defaults.map(x=>({...x,custom:{Remark:x.remark}}));renderTable();renderCharts();if(supa){supa.from("projects").select("name,code,description").eq("id",projectId).maybeSingle().then(({data})=>{if(data){projectName=(data.code?data.code+" · ":"")+data.name;showProjectContext(projectName);}});}$("#save-project").hidden=false;$("#load-project").hidden=false;if(chartId)loadProjectChart();}
 
 })();
 </script>
