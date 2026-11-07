@@ -142,20 +142,22 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
       ['Pneumatic clamp', 'Clamp workpiece', 1, 1.5, '=C3+D3', '=IF(E3<=3,"OK","CHECK")', '=ROUND(C3+D3,1)'],
       ['Vision', 'Inspect position', 3, 2, '=C4+D4', '=IF(E4<=5,"OK","CHECK")', '=ROUND(C4+D4,1)'],
       ['Robot', 'Place component', 5, 2.8, '=C5+D5', '=IF(E5<=8,"OK","CHECK")', '=ROUND(C5+D5,1)'],
-      [],
+      ['', '', '', '', '', '', ''],
       ['Summary', 'Total duration', '', '=SUM(D2:D5)', '', '', ''],
       ['Summary', 'Latest end time', '', '=MAX(E2:E5)', '', '', '']
     ];
   }
   function makeWorkbook() {
     if (!univerAPI) throw new Error('Univer API is not ready.');
+    const workbookId = 'h871-univer-time-chart-lab-' + Date.now();
+    const sheetId = 'time-chart-' + workbookId;
     workbook = univerAPI.createWorkbook({
-      id: 'h871-univer-time-chart-lab-' + Date.now(),
+      id: workbookId,
       name: 'H871 Time Chart Formula Test',
-      sheetOrder: ['time-chart-' + Date.now()],
+      sheetOrder: [sheetId],
       sheets: {
-        ['time-chart-' + Date.now()]: {
-          id: 'time-chart-' + Date.now(),
+        [sheetId]: {
+          id: sheetId,
           name: 'Time Chart',
           rowCount: 100,
           columnCount: 16,
