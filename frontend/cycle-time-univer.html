@@ -946,7 +946,8 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
     const chartRect=chart.getBoundingClientRect();
     const trackRect=track.getBoundingClientRect();
     const endX=trackRect.left-chartRect.left+chart.scrollLeft+track.clientWidth*endRatio;
-    const startTop=startRow?startRow.getBoundingClientRect().top-chartRect.top+chart.scrollTop:0;
+    const firstRow=chart.querySelector('.tc-row');
+    const startTop=startRow?startRow.getBoundingClientRect().top-chartRect.top+chart.scrollTop:(firstRow?firstRow.getBoundingClientRect().top-chartRect.top+chart.scrollTop:0);
     if(startRow){
       startRow.classList.add('cycle-start-row');
       startRow.style.setProperty('--cycle-bridge-width',Math.max(0,endX)+'px');
@@ -1177,6 +1178,7 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
   document.getElementById('time-chart-output').addEventListener('keydown',event=>{
     if(event.key==='Escape')closeCycleBoundaryMenus();
   });
+  document.addEventListener('click',event=>{if(!event.target.closest('.tc-cycle-menu-wrap'))closeCycleBoundaryMenus();});
   document.getElementById('time-chart-output').addEventListener('pointermove',event=>{
     const bar=event.target.closest('.tc-bar,.tc-idle-gap');if(bar)showActivityTooltip(bar,event.clientX,event.clientY);else hideActivityTooltip();
     updateTimeCursor(event);
