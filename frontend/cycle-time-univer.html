@@ -725,7 +725,9 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
           duration:record.duration,
           end:record.end+offset,
           remark:record.remark||'',
-          resourceRequirements:[record.mechanism],
+          resourceRequirements:[],
+          resourceGroupHint:record.mechanism,
+          dependencies:[],
           precedence:[],
           simulationMode:mode
         });
