@@ -934,3 +934,14 @@ Time Chart-specific lessons:
 - **Code hotfix commit:** 8ebe75137df76cd57d40926d04c06c6d8d5c78bb.
 - **Verification:** The inline JavaScript was parsed with `new Function(...)` after the correction and passed. This is a static syntax check only; live browser initialization, Univer CDN loading, and retrieval of the user's saved chart have not yet been tested in an actual browser.
 - **Next validation:** Confirm the GitHub Pages deployment succeeds, then hard-refresh the existing Time Chart URL and verify that Univer initializes and the saved chart data loads.
+
+
+### 2026-11-09 — Extend Cycle Highlight Across Horizontal Operation Cells
+
+- **User request:** The vertical Cycle window between Start and End was already shaded, but the horizontal cells on the same Operation rows also needed a matching subtle background fill.
+- **Fix:** Kept the existing vertical .tc-cycle-window shading. Added a restrained fill to the Operation description and numeric value cells for every visible source row from Start through End (inclusive). Added a matching translucent overlay to each corresponding timeline track, clipped horizontally at the selected End-time coordinate. The original timeline grid remains visible and Operation bars retain their Cluster colors.
+- **Geometry:** The track overlay width is calculated against each row's actual track rectangle and updated by the existing scroll-aware cycle-highlight geometry routine, so it ends at the End marker rather than filling the full row.
+- **Scope protection:** Only Time Chart CSS and updateCycleHighlightGeometry() were changed. No Process Flow / Cycle Logic Editor, simulation logic, database schema, migrations, RLS, or saved chart data changes.
+- **Code commit:** 14271ae5b9600b1e325bfced2ab61e94e472f63b.
+- **Verification:** Inline JavaScript syntax parsing passed. Static source review confirms horizontal cell/track shading is restricted to rows between selected Start and End and the track overlay width is calculated to the End marker. Browser rendering, scrolling alignment, and the user's actual workbook have not yet been visually tested.
+- **Next validation:** Hard-refresh the Time Chart, select Start and End, and confirm the description/value cells and timeline track on each Operation row are shaded consistently through the End marker while Cluster bar colors remain unchanged.
