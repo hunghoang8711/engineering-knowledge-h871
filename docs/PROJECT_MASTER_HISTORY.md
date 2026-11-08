@@ -684,3 +684,12 @@ Time Chart-specific lessons:
 - **Code commits:** `57920d54a478cbf6d7b78966a4379f8e8a8a35c8` (main UI implementation); `cde704e6ded82a8fb9f66d2cfc8263d83c12fcfc` (include zero-second origin and refine grid tick density).
 - **Verification:** Re-fetched the committed source and parsed the complete inline application JavaScript with the JavaScript parser successfully. Source checks confirmed unique HTML IDs, fixed numeric columns, tooltip data attributes and event handlers, time-grid generation, cursor behavior, continued Cluster filter and color controls, and absence of the removed per-Cluster timeline cards. GitHub Pages workflows for both code commits completed successfully: run `42444701760` for `57920d5...` and run `42444737955` for `cde704e...` (both conclusion `success`). Real-browser hover/focus behavior, responsive layout, and saved-chart reload remain to be tested.
 - **Lesson:** Timeline width is a visual encoding, not a reliable way to expose engineering values. Keep exact values in stable columns and use the chart for temporal relationships; use source-row traceability and a shared cursor for quick debugging of short and overlapping operations.
+
+
+### 2026-11-08 — Fix Select All / Clear All Cluster filter actions
+- **Issue:** The Select all / Clear all buttons in the Cluster filter were visible but unresponsive. Their delegated click handler was attached to `#cluster-filter-controls`, while both buttons are siblings of that element inside `.tc-cluster-filters`; clicks therefore never bubbled through the listener.
+- **Fix:** Moved the delegated click listener to the shared `.tc-cluster-filters` parent. The existing action logic remains unchanged: Select all selects every currently detected Cluster, Clear all empties the selection, and both rebuild the same single Time Chart. Individual Cluster checkboxes and per-Cluster Show idle gaps controls remain intact.
+- **Compatibility:** No chart data, saved preferences, database schema, migration, RLS, or external service changes.
+- **Code commit:** `5c3693bcdada97f1bc705ee36b5617d09846fda1`.
+- **Verification:** Re-fetched the latest source before editing; confirmed the exact event-delegation mismatch; parsed the complete inline application JavaScript successfully before committing. GitHub Pages workflow and live browser interaction are pending verification.
+- **Lesson:** Delegated event listeners must be attached to a common ancestor of the interactive controls. A listener on the content container cannot receive clicks from adjacent sibling controls.
