@@ -914,3 +914,13 @@ Time Chart-specific lessons:
 - **Code commit:** 33bd71397ec406237e8cb100c37c9b8bf6f61edc.
 - **Verification:** Static source check confirms the overlay targets only `.tc-bar.cycle-in-window` and does not replace the inline Cluster background color. No browser screenshot or visual check against the user's saved workbook has been performed.
 - **Next validation:** Hard-refresh the Time Chart, select Start and End, and confirm every fully-in-cycle Operation bar appears consistently lighter while retaining its Cluster hue.
+
+
+### 2026-11-09 — Highlight Cycle Window Background on Included Operation Tracks
+
+- **User clarification:** The desired emphasis is a subtle background fill in the timeline cells between the Cycle Start and Cycle End guides for every Operation row belonging to the selected Cycle. The Operation bar's Cluster color must remain unchanged; brightening the bar itself is not the requested effect.
+- **Correction:** Removed the previous white overlay from `.tc-bar.cycle-in-window`. Added a `cycle-range-track` class only to tracks whose source-row index is within the selected Start–End interval (inclusive). The existing `.tc-cycle-window` background between the two time guides is now slightly brighter on those tracks only (`rgba(203,213,225,.16)`), while other tracks retain the original subtle fill. This keeps the emphasis in the track background and preserves the underlying Cluster colors of Operation bars.
+- **Scope protection:** Changes are limited to Time Chart track rendering and CSS. No changes to Process Flow / Cycle Logic Editor, simulation logic, database schema, migrations, or RLS.
+- **Code commit:** 526e6d3c24ea6250f925af1cd2d0aac35dc6113c.
+- **Verification:** Static checks confirm the bar overlay was removed and the stronger cycle-window background is assigned only to rows from Start through End inclusive. Browser visual verification with the user's saved workbook has not yet been performed.
+- **Next validation:** Hard-refresh the Time Chart and verify that the background band between the Start and End vertical guides is subtly brighter on every Operation track in the selected source-row range, with bar Cluster colors unchanged.
