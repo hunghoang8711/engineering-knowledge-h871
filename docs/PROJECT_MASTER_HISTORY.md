@@ -904,3 +904,13 @@ Time Chart-specific lessons:
 - **Code commit:** 97769be846afd3bbe39c060117e1abb3417e392e.
 - **Verification:** All inline JavaScript blocks passed syntax parsing. Static checks confirm every visible source row in the inclusive Start-End interval receives the end-coordinate width, the vertical guide remains, and selected menu classes are no longer rendered. Browser visual verification against the user's workbook has not yet been performed.
 - **Next validation:** Select Start and End and verify each row from Start through End is shaded from the Operation description through the End marker; after setting either boundary, confirm its menu toggle returns to the plain three-dot state.
+
+
+### 2026-11-09 — Consistent Light Tint for Operation Bars Inside Cycle
+
+- **User report:** Operation bars carrying the `cycle-in-window` class still retained their full Cluster color and did not receive the same light emphasis as the Cycle background and Operation rows.
+- **Fix:** Added a uniform translucent white background-image overlay to `.tc-bar.cycle-in-window`. This brightens all fully-in-cycle Operation bars by the same amount while preserving their underlying inline Cluster colors, so Cluster identity remains visible. Bars outside the selected Cycle and partial-overlap bars are unchanged.
+- **Scope protection:** CSS-only change in `frontend/cycle-time-univer.html`. No changes to Cycle selection, row-range geometry, Process Flow / Cycle Logic Editor, simulation logic, database schema, migrations, or RLS.
+- **Code commit:** 33bd71397ec406237e8cb100c37c9b8bf6f61edc.
+- **Verification:** Static source check confirms the overlay targets only `.tc-bar.cycle-in-window` and does not replace the inline Cluster background color. No browser screenshot or visual check against the user's saved workbook has been performed.
+- **Next validation:** Hard-refresh the Time Chart, select Start and End, and confirm every fully-in-cycle Operation bar appears consistently lighter while retaining its Cluster hue.
