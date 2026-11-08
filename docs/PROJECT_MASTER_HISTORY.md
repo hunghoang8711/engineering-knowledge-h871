@@ -863,3 +863,12 @@ Time Chart-specific lessons:
 - **Code commit:** 24bfeb88ae54262b06d152c9b7ac12c8adcf40e7.
 - **Verification:** Inline JavaScript syntax parsing passed. Behavior was verified by reviewing the state transition branches; browser interaction with the user's loaded workbook has not been performed.
 - **Next validation:** Select a Start and End, click another bar to restart selection, then select a different End. Also verify Clear cycle markers resets selection.
+
+### 2026-11-08 — Critical Cycle Selection Regression Fix: Preserve Partial Start
+
+- **User report:** Cycle selection remained unusable despite the previous click-state fix; user provided the rendered `.tc-bar` markup for source row 42.
+- **Root cause:** `renderTimeChart()` validated both selected source rows unconditionally. Immediately after choosing Start, `endSourceRow` is intentionally `null`, so `records.some(r => r.sourceRow === null)` returned false and the renderer cleared both boundaries on every render. This directly prevented the second click from ever setting End.
+- **Fix:** Validate Start and End independently. An unselected (`null`) boundary is now treated as a valid intermediate state; only a selected boundary whose source row no longer exists in worksheet data causes the pair to reset. This restores the original two-click workflow while retaining protection against stale row references.
+- **Code commit:** 334efe36d8666f0d5040e9e52c22a06a023ff424.
+- **Verification:** Inline JavaScript syntax parsing passed. Static review confirms the partial-selection state is preserved when End is null. Browser interaction with the live workbook has not yet been performed.
+- **Next validation:** Click row 42 to set Start, confirm it remains selected after chart redraw, then click a later Operation to set End.
