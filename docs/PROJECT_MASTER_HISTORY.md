@@ -288,10 +288,10 @@ All commit IDs above are abbreviated; use GitHub for full SHAs and diffs.
 - Confirm Save to project, reload, XLSX export, and JSON backup/restore after import.
 - Do not claim all formula types are supported by Univer/ExcelJS; document supported subset and limitations.
 
-### Priority 2 — User interaction for selecting ranges
-- User clarified that import must preserve the original Excel coordinates for each selected rectangle, rather than append regions into a continuous table.
-- Implemented address entry for multiple ranges separated by semicolons (for example, `A1:C7; D7:E10`), with differing dimensions and overlapping ranges allowed; one **Import selected regions** action imports them at their original row/column positions.
-- Current UI uses typed A1 addresses; direct mouse-drag selection on an Excel preview is not implemented or confirmed. Browser verification with a representative workbook remains outstanding.
+### Priority 2 — XLSX import range behavior
+- Multi-range import accepts semicolon-separated rectangular A1 addresses and preserves original worksheet coordinates (rather than concatenating regions).
+- Direct mouse-drag selection on an Excel preview is not implemented or confirmed.
+- On import, existing Cluster/Operation/Start/Duration/End/Remark source mappings are now preserved instead of being overwritten by Auto Detect. Auto Detect is used only when no mapping has been configured. Browser regression testing with a representative workbook remains outstanding.
 
 ### Priority 3 — AI worker operational verification
 - Inspect live Supabase queue/job tables, deployed Edge Functions, secrets names (never reveal secret values), GitHub scheduled workflow and logs.
@@ -657,3 +657,11 @@ Time Chart-specific lessons:
 - **Workflow state:** Pages workflow run `42442305034` was observed as `waiting` at the time of check for commit `0fe4c7f...`; no successful deployment was confirmed in this update.
 - **Verification:** Re-fetched the committed source and inspected the import logic, markup and event handlers. Confirmed the obsolete Add region control/handler is absent and the new flow preserves source coordinates. A browser test using an actual workbook, formula validation, save/reload and user confirmation are still pending.
 - **Lesson:** When the user's objective is spatially faithful worksheet import, do not flatten or vertically concatenate disjoint ranges; build a sparse rectangular matrix and retain original coordinates.
+### 2026-11-08 10:33 +07:00 — Preserve Time Chart mappings; add per-cluster timelines and color settings
+- **Request:** Keep configured source ranges (Cluster, Operation, Start, Duration, End, Remark) when importing/replacing worksheet data; add a separate Time Chart for each cluster below the overall chart; allow each cluster's color to be configured once and shared across all chart views.
+- **Implementation:** Import now snapshots the existing range mapping and cluster-color map before replacing the Univer workbook, restores them after import, and runs Auto Detect only when no mapping exists. Added individual cluster timeline cards below the overall chart; all use the same global time axis for comparison. Added one color picker per detected cluster and reused that color for its bars in both overall and per-cluster charts. Cluster colors are stored in the existing `chart_data` JSONB payload and restored when loading a saved chart.
+- **Persistence / compatibility:** Updated the chart payload version to 7. No database migration, table change, RLS change, or new external service was required; older charts without `clusterColors` use deterministic default colors.
+- **Code commit:** `379aa1c264ee8edda320709657ddaa6ec865aff6`.
+- **Workflow state:** Pages workflow run `42443178184` was `in_progress` at the time of this log; successful deployment was not yet confirmed.
+- **Verification:** Re-fetched committed source and confirmed range mapping restoration, conditional Auto Detect, color save/load, individual cluster output, and delegated color-change handler. Compiled the inline application JavaScript with the JavaScript parser successfully; confirmed no duplicate HTML IDs and both new output containers exist. No real-browser test with a saved project/workbook, formula recalculation, save/reload, or user acceptance has yet been performed.
+- **Lesson:** Spreadsheet replacement and chart configuration are separate state. Recreating a workbook must not reset independent mapping/color preferences. Keep per-cluster styling in chart metadata, not in transient DOM state, so it survives chart save/reload.
