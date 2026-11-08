@@ -954,4 +954,15 @@ Time Chart-specific lessons:
 - **Rollback:** Restored `frontend/cycle-time-univer.html` to the exact content from commit 390e8c45430cf2271916f6f3aa59d00ae9c35ff1, immediately before the horizontal cell-highlighting change. This removes the duplicate layers while retaining all earlier Time Chart functionality, Cycle Start/End selection, vertical Cycle window shading, and the Univer initialization hotfix.
 - **Code rollback commit:** ea7ed488010d4f49474d32317ed83380fbf09777.
 - **Scope:** No saved chart data, project data, database schema, migrations, RLS, or Process Flow / Cycle Logic Editor changes.
-- **Verification:** Source was restored byte-for-byte from the selected prior commit. GitHub Pages deployment status is to be checked; visual browser verification has not been performed.
+- **Verification:** Source was restored byte-for-byte from the selected prior commit. GitHub Actions workflow run `42507541552` for code commit `ea7ed488010d4f49474d32317ed83380fbf09777` completed with conclusion `success`. The rollback is therefore deployed through the repository workflow. Actual browser rendering and the user's saved workbook have not yet been visually rechecked.
+
+
+### 2026-11-09 — Time Chart Current Checkpoint After Cycle Highlight Rollback
+
+- **Current deployed code:** `frontend/cycle-time-univer.html` is restored to the version at commit `390e8c45430cf2271916f6f3aa59d00ae9c35ff1`, with the rollback recorded in code commit `ea7ed488010d4f49474d32317ed83380fbf09777`.
+- **Current visual behavior:** Keep the existing Cycle Start/End markers and vertical shaded Cycle window. The attempted additional horizontal background treatment was reverted because multiple background layers overlapped and degraded the visual consistency. Do not reintroduce the previous cell backgrounds, track gradient, or `--cycle-track-highlight-width` implementation.
+- **Deployment:** GitHub Actions run `42507541552` completed successfully for the rollback commit. The documentation update is committed separately.
+- **Data safety:** No chart JSON, project data, Supabase records, database schema, migrations, RLS, or saved workbook contents were modified.
+- **Protected scope:** Process Flow / Cycle Logic Editor and its simulation logic remain unchanged.
+- **Validation status:** Source restoration and deployment workflow are verified. Browser-level visual confirmation on the user's actual Time Chart is still pending.
+- **Next development direction:** Before attempting horizontal Cycle highlighting again, inspect the existing DOM/CSS layering and design a single coordinated background layer spanning the Operation information cells and timeline track. Avoid stacking independent backgrounds on the row, label/value cells, and track. Implement only after agreeing on the visual approach; preserve the current deployed appearance until then.
