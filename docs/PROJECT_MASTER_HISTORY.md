@@ -872,3 +872,14 @@ Time Chart-specific lessons:
 - **Code commit:** 334efe36d8666f0d5040e9e52c22a06a023ff424.
 - **Verification:** Inline JavaScript syntax parsing passed. Static review confirms the partial-selection state is preserved when End is null. Browser interaction with the live workbook has not yet been performed.
 - **Next validation:** Click row 42 to set Start, confirm it remains selected after chart redraw, then click a later Operation to set End.
+
+
+### 2026-11-09 — Time Chart Cycle Boundary Operation Menus + L-Shaped Highlight
+
+- **User request:** Replace direct Operation-bar click selection with a three-dot menu on every Operation row. The menu offers “Set as Start Time” and “Set as End Time”; End must be a later Operation in worksheet order. Either boundary can be reassigned directly without clearing the previous selection first.
+- **Selection UX:** Added an accessible per-Operation menu in the left information card. Start can be assigned to any valid Operation. End is disabled until Start exists and is enabled only for a later source row whose End time is after the selected Start time. Reassigning Start preserves a still-valid End and clears an End that becomes invalid; reassigning End replaces it immediately. Direct clicks on timeline bars no longer alter boundary selection. The explicit Clear cycle markers action remains available.
+- **Cycle emphasis:** Preserved the subtle cycle window and time-axis guides. Added a restrained horizontal highlight from the left Operation information card across the Start row to the End-time coordinate, plus a continuous vertical guide from that Start row down to the bottom of the visible chart, forming the requested inverted-L cue. Cluster bar colors and operation bar brightness remain unchanged.
+- **Scope protection:** No edits to Process Flow / Cycle Logic Editor logic, database schema, migrations, or RLS.
+- **Code commits:** 9d975fda9499715da1b865285c62b94d0fff013f (menu selection and highlight) and 3fd5aaffb44d73d84574a3d76db0422f1836f323 (scroll-aware L-highlight alignment).
+- **Verification:** Inline JavaScript syntax parsing passed after both commits. Static source checks confirmed per-row menu controls, disabled invalid End options, replacement of either boundary, preserved Clear action, retained cycle window/guides, and removal of direct bar-click selection. Actual browser interaction, responsive menu placement, and pixel alignment on the user's saved workbook have not yet been tested.
+- **Next validation:** On the live Time Chart, verify selecting a Start, selecting a later End, changing Start to a later Operation (which should invalidate an earlier End), changing End directly, and using Clear cycle markers. Confirm the L-shaped highlight follows the selected End boundary while scrolling the chart.
