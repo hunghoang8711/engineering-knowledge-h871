@@ -289,9 +289,9 @@ All commit IDs above are abbreviated; use GitHub for full SHAs and diffs.
 - Do not claim all formula types are supported by Univer/ExcelJS; document supported subset and limitations.
 
 ### Priority 2 — User interaction for selecting ranges
-- User requested rectangular ranges and multiple regions selected during import, appended into a continuous table.
-- Current commit history indicates address-based region selection and previews. Verify exact UX. User may later prefer mouse-drag selection directly on an Excel preview; that is not confirmed implemented.
-- Ensure range list supports add/remove/reorder, worksheet selection, validation, preview, and a clear final confirmation step before import.
+- User clarified that import must preserve the original Excel coordinates for each selected rectangle, rather than append regions into a continuous table.
+- Implemented address entry for multiple ranges separated by semicolons (for example, `A1:C7; D7:E10`), with differing dimensions and overlapping ranges allowed; one **Import selected regions** action imports them at their original row/column positions.
+- Current UI uses typed A1 addresses; direct mouse-drag selection on an Excel preview is not implemented or confirmed. Browser verification with a representative workbook remains outstanding.
 
 ### Priority 3 — AI worker operational verification
 - Inspect live Supabase queue/job tables, deployed Edge Functions, secrets names (never reveal secret values), GitHub scheduled workflow and logs.
@@ -649,3 +649,11 @@ Time Chart-specific lessons:
 - Commit that created the file: `467c8ed6dcbfb8c665a819eae023421a6c92cd44`.
 - This addendum is intended to be committed as the next update to the same file.
 - Next task should start by checking this file and the actual default-branch HEAD again; this audit is a historical snapshot, not a substitute for checking live state at the start of future work.
+
+### 2026-11-08 10:20 +07:00 — Preserve coordinates in multi-range XLSX import
+- **Request:** User wants more flexible region selection: ranges such as `A1:C7; D7:E10` should import into their corresponding positions in the Univer spreadsheet. If it does not affect the feature, remove the intermediate **Add region** action and import with one click.
+- **Implementation:** Replaced Add region/list/append behavior with a semicolon-separated A1 range field. Ranges may have different widths/heights and overlap; imported values/formulas are written at matching row/column coordinates. Added live range validation/preview and retained worksheet selection.
+- **Code commits:** `0fe4c7f45d1b2abf1a13e3c66ac680fb0895979c` (implementation), `fcbed109d069bda1f287983c865e38b3e705c123` (clarify dialog text).
+- **Workflow state:** Pages workflow run `42442305034` was observed as `waiting` at the time of check for commit `0fe4c7f...`; no successful deployment was confirmed in this update.
+- **Verification:** Re-fetched the committed source and inspected the import logic, markup and event handlers. Confirmed the obsolete Add region control/handler is absent and the new flow preserves source coordinates. A browser test using an actual workbook, formula validation, save/reload and user confirmation are still pending.
+- **Lesson:** When the user's objective is spatially faithful worksheet import, do not flatten or vertically concatenate disjoint ranges; build a sparse rectangular matrix and retain original coordinates.
