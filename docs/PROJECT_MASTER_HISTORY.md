@@ -893,3 +893,14 @@ Time Chart-specific lessons:
 - **Code commit:** ac73e8732674a21031f93de0e93d6f4b70cf341a.
 - **Verification:** All inline JavaScript blocks passed syntax parsing. Static source review confirms Start-only highlighting and inclusive source-row highlighting through End. Real-browser appearance and saved-workbook interaction have not yet been tested.
 - **Next validation:** Select a Start Operation, then a later End Operation, and confirm all Operation information cards between them are highlighted while cards outside the selected row interval remain unchanged.
+
+
+### 2026-11-09 — Full-Row Cycle Range Highlight + Neutral Three-Dot Menu
+
+- **User correction:** Highlighting only the Operation description card did not meet the intended visual result. Each Operation from Cycle Start through Cycle End must be filled horizontally from the left description area to the vertical Cycle End time marker. The three-dot button must not remain visually enlarged/selected after setting Start or End.
+- **Range highlight fix:** Reworked the highlight geometry to add a dedicated range-highlight class to every currently visible worksheet row whose source row is between Start and End (inclusive). Each row receives the same computed width from the left edge of the row through the Cycle End time coordinate. The existing vertical End guide is retained. This creates a continuous horizontal fill per Operation row instead of tinting only the label cell. Start-only selection continues to emphasize its selected description card without drawing a completed range.
+- **Three-dot menu fix:** Removed persistent Start/End selected classes from the menu toggle. The button now returns to its plain three-dot appearance after the menu closes; the visual active treatment is shown only while `aria-expanded=true` (menu open), with a short transition.
+- **Scope protection:** Only Time Chart CSS, Operation menu markup, and `updateCycleHighlightGeometry()` were changed. Process Flow / Cycle Logic Editor, simulation logic, database schema, migrations, and RLS were not modified.
+- **Code commit:** 97769be846afd3bbe39c060117e1abb3417e392e.
+- **Verification:** All inline JavaScript blocks passed syntax parsing. Static checks confirm every visible source row in the inclusive Start-End interval receives the end-coordinate width, the vertical guide remains, and selected menu classes are no longer rendered. Browser visual verification against the user's workbook has not yet been performed.
+- **Next validation:** Select Start and End and verify each row from Start through End is shaded from the Operation description through the End marker; after setting either boundary, confirm its menu toggle returns to the plain three-dot state.
