@@ -777,8 +777,6 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
     const target=document.getElementById('time-chart-output');
     const records=readWorksheetRecords();
     lastBaselineRecords=records.map(r=>({...r}));
-    simulationResult=null;
-    renderCycleSimulation(null);
     const filterTarget=document.getElementById('cluster-filter-controls');
     if(!records.length) {
       target.innerHTML='<div class="tc-empty">No plottable rows found. The chart needs a numeric Start value and either Duration or End value. Check the header row and the imported cell values.</div>';
@@ -853,7 +851,7 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
     await loadProjectChart();
   }
   document.getElementById('auto-detect-ranges').addEventListener('click',()=>{if(!workbook){setStatus('Spreadsheet is not ready. Resolve the Univer initialization error first.',true);return;}try{detectDataRanges();}catch(error){document.getElementById('range-status').textContent=error.message;setStatus('Could not detect ranges: '+error.message,true);}});
-  document.getElementById('apply-data-ranges').addEventListener('click',()=>{if(!workbook){setStatus('Spreadsheet is not ready. Resolve the Univer initialization error first.',true);return;}try{dataRangeConfig=getRangeConfigFromInputs();renderTimeChart();}catch(error){document.getElementById('range-status').textContent=error.message;setStatus('Could not build Time Chart: '+error.message,true);}});
+  document.getElementById('apply-data-ranges').addEventListener('click',()=>{if(!workbook){setStatus('Spreadsheet is not ready. Resolve the Univer initialization error first.',true);return;}try{dataRangeConfig=getRangeConfigFromInputs();simulationResult=null;renderCycleSimulation(null);renderTimeChart();}catch(error){document.getElementById('range-status').textContent=error.message;setStatus('Could not build Time Chart: '+error.message,true);}});
   document.getElementById('time-chart-output').addEventListener('pointermove',event=>{
     const bar=event.target.closest('.tc-bar,.tc-idle-gap');if(bar)showActivityTooltip(bar,event.clientX,event.clientY);else hideActivityTooltip();
     updateTimeCursor(event);
@@ -888,7 +886,7 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
   document.getElementById('clear-cycle-simulation').addEventListener('click',()=>{
     simulationResult=null;renderCycleSimulation(null);setStatus('Simulation results cleared. Source worksheet and Time Chart are unchanged.');
   });
-  document.getElementById('build-time-chart').addEventListener('click', () => { if(!workbook){setStatus('Spreadsheet is not ready. Resolve the Univer initialization error first.',true);return;} try { renderTimeChart(); } catch(error) { setStatus('Could not build Time Chart: '+error.message,true); } });
+  document.getElementById('build-time-chart').addEventListener('click', () => { if(!workbook){setStatus('Spreadsheet is not ready. Resolve the Univer initialization error first.',true);return;} try { simulationResult=null;renderCycleSimulation(null);renderTimeChart(); } catch(error) { setStatus('Could not build Time Chart: '+error.message,true); } });
   document.getElementById('save-project').addEventListener('click', async () => {
     const btn=document.getElementById('save-project');btn.disabled=true;btn.textContent='Saving…';
     try { await saveProjectChart(); btn.textContent='Saved ✓'; } catch(error) { setStatus('Save failed: '+error.message,true); btn.textContent='Save to project'; }
