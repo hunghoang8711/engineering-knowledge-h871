@@ -46,7 +46,7 @@ Primary user context: automation machine design engineer. The system should supp
 - GitHub Pages: https://hunghoang8711.github.io/engineering-knowledge-h871/
 - Main directories: `frontend/`, `docs/`, `supabase/`, plus repository configuration and workflows.
 - Pages workflow: `.github/workflows/pages.yml` (workflow name: “Deploy Engineering Knowledge Hub H871”).
-- Latest feature code commit verified on 2026-11-08 10:52 +07:00: commit `cde704e6ded82a8fb9f66d2cfc8263d83c12fcfc` (Time Chart inspection enhancements). The following history-only commit records this work.
+- Latest feature code commit verified on 2026-11-08 11:08 +07:00: commit `4a6d6e8df9c4ea1f3f3467de07a8d00b27ee39aa` (Cluster idle-gap visualization). The following history-only commit records this work.
 - Latest deployment workflow verified: run `42401288128`, completed with conclusion `success`, head commit `167d3a37...`. This confirms the Pages workflow completed; it does not prove browser/runtime feature correctness.
 
 ### Supabase
