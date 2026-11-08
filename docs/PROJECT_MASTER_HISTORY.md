@@ -46,7 +46,7 @@ Primary user context: automation machine design engineer. The system should supp
 - GitHub Pages: https://hunghoang8711.github.io/engineering-knowledge-h871/
 - Main directories: `frontend/`, `docs/`, `supabase/`, plus repository configuration and workflows.
 - Pages workflow: `.github/workflows/pages.yml` (workflow name: “Deploy Engineering Knowledge Hub H871”).
-- Latest feature code commit verified on 2026-11-08 10:5x +07:00: commit `cde704e6ded82a8fb9f66d2cfc8263d83c12fcfc` (Time Chart inspection enhancements). The following history-only commit records this work.
+- Latest feature code commit verified on 2026-11-08 10:52 +07:00: commit `cde704e6ded82a8fb9f66d2cfc8263d83c12fcfc` (Time Chart inspection enhancements). The following history-only commit records this work.
 - Latest deployment workflow verified: run `42401288128`, completed with conclusion `success`, head commit `167d3a37...`. This confirms the Pages workflow completed; it does not prove browser/runtime feature correctness.
 
 ### Supabase
@@ -675,12 +675,12 @@ Time Chart-specific lessons:
 - **Lesson:** When multiple views contain the same timeline data, use one canonical timeline with visibility filters to reduce duplication while keeping shared time coordinates and styling state.
 
 
-### 2026-11-08 10:5x +07:00 — Upgrade Time Chart inspection and readability (Stages 1–3)
+### 2026-11-08 10:52 +07:00 — Upgrade Time Chart inspection and readability (Stages 1–3)
 - **Request:** Make every activity easier to inspect without relying on the visual width of its timeline bar. Implement fixed Start / Duration / End values, a detailed hover/focus tooltip, and time grid lines with a shared vertical cursor.
 - **Stage 1 — Fixed inspection values:** Reworked the single Time Chart row into Operation, Start, Duration, End and Timeline columns. Start, Duration and End values are always visible in tabular numeric formatting, including for very short activities; the bar label remains optional for long bars only.
 - **Stage 2 — Smart tooltip:** Added a hover and keyboard-focus tooltip containing Operation, Cluster, Start time, Duration, End time, Remark (when present), and the original Excel source row. The row number is derived from the configured Start range so the activity can be traced back to its worksheet row.
 - **Stage 3 — Time grid and cursor:** Added time-position grid lines on every activity track, emphasized integer-second markers and the 0-second origin, and added a vertical cursor across the chart with a live time readout to three decimal places. The time domain now includes 0 seconds when all activities start after zero; integer-second ticks are shown for ranges up to 80 seconds, with a readable interval for longer ranges.
 - **Compatibility:** Kept the single timeline, Cluster filter, Cluster colors, color persistence, range mapping, and existing chart_data payload. No database migration, schema, RLS, or external service changes.
 - **Code commits:** `57920d54a478cbf6d7b78966a4379f8e8a8a35c8` (main UI implementation); `cde704e6ded82a8fb9f66d2cfc8263d83c12fcfc` (include zero-second origin and refine grid tick density).
-- **Verification:** Re-fetched the committed source and parsed the complete inline application JavaScript with the JavaScript parser successfully. Source checks confirmed unique HTML IDs, fixed numeric columns, tooltip data attributes and event handlers, time-grid generation, cursor behavior, continued Cluster filter and color controls, and absence of the removed per-Cluster timeline cards. Real-browser hover/focus behavior, responsive layout, and saved-chart reload remain to be tested; Pages deployment outcome must be checked separately.
+- **Verification:** Re-fetched the committed source and parsed the complete inline application JavaScript with the JavaScript parser successfully. Source checks confirmed unique HTML IDs, fixed numeric columns, tooltip data attributes and event handlers, time-grid generation, cursor behavior, continued Cluster filter and color controls, and absence of the removed per-Cluster timeline cards. GitHub Pages workflows for both code commits completed successfully: run `42444701760` for `57920d5...` and run `42444737955` for `cde704e...` (both conclusion `success`). Real-browser hover/focus behavior, responsive layout, and saved-chart reload remain to be tested.
 - **Lesson:** Timeline width is a visual encoding, not a reliable way to expose engineering values. Keep exact values in stable columns and use the chart for temporal relationships; use source-row traceability and a shared cursor for quick debugging of short and overlapping operations.
