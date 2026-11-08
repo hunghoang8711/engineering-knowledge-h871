@@ -884,11 +884,15 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
   }
   function selectCycleBoundary(bar) {
     const row=Number(bar.dataset.sourceRow);
+    // Operation clicks never clear both boundaries. An explicit Clear action does that;
+    // clicking a completed selection starts a fresh boundary pair.
     if(cycleBoundarySelection.startSourceRow===null||cycleBoundarySelection.endSourceRow!==null){
-      cycleBoundarySelection={startSourceRow:row,endSourceRow:null};cycleLogic={entrySourceRow:row,completionSourceRow:null,dependencies:[],resources:{}};
+      cycleBoundarySelection={startSourceRow:row,endSourceRow:null};
+      cycleLogic={entrySourceRow:row,completionSourceRow:null,dependencies:[],resources:{}};
       simulationResult=null;renderCycleSimulation(null);
     }else if(row===cycleBoundarySelection.startSourceRow){
-      cycleBoundarySelection={startSourceRow:null,endSourceRow:null};cycleLogic={entrySourceRow:null,completionSourceRow:null,dependencies:[],resources:{}};
+      // Keep the existing Start selected; don't create an accidental empty state.
+      document.getElementById('cycle-boundary-status').textContent='Cycle Start remains selected. Choose a different, later Operation for Cycle End, or use Clear cycle markers to reset.';
     }else{
       cycleBoundarySelection.endSourceRow=row;cycleLogic.completionSourceRow=row;
       const start=lastBaselineRecords.find(r=>r.sourceRow===cycleBoundarySelection.startSourceRow);
