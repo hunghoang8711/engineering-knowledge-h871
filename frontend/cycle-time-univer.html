@@ -357,6 +357,8 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
     setRangeInputs(payload.dataRangeConfig||{});
     clusterColors=payload.clusterColors&&typeof payload.clusterColors==='object'?{...payload.clusterColors}:{};
     cycleLogic=normalizeCycleLogic(payload.cycleLogic);
+    const savedCycle=payload.cycleDefinition||{};
+    cycleBoundarySelection={startSourceRow:Number.isInteger(savedCycle.startSourceRow)?savedCycle.startSourceRow:null,endSourceRow:Number.isInteger(savedCycle.endSourceRow)?savedCycle.endSourceRow:null};
     if(payload.univerSnapshot && payload.engine==='univer') workbook=univerAPI.createWorkbook(payload.univerSnapshot);
     else makeWorkbook(legacyToMatrix(payload),currentChartTitle);
     document.getElementById('project-context').textContent='Project: '+projectName+' · '+currentChartTitle;
@@ -387,7 +389,7 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
     currentChartTitle=document.getElementById('chart-title').value.trim()||projectName+' · Time Chart';
     const snapshot=workbook.save();
     const compat=makeLegacyCompatibility(snapshot);
-    const payload={version:7,engine:'univer',engineVersion:'1.4.0',chartId,chartTitle:currentChartTitle,projectName,projectDescription:'Univer-powered project Time Chart',univerSnapshot:snapshot,dataRangeConfig:getRangeConfigFromInputs(),clusterColors:{...clusterColors},cycleLogic:normalizeCycleLogic(cycleLogic),...compat,univerUpdatedAt:new Date().toISOString()};
+    const payload={version:7,engine:'univer',engineVersion:'1.4.0',chartId,chartTitle:currentChartTitle,projectName,projectDescription:'Univer-powered project Time Chart',univerSnapshot:snapshot,dataRangeConfig:getRangeConfigFromInputs(),clusterColors:{...clusterColors},cycleLogic:normalizeCycleLogic(cycleLogic),cycleDefinition:{...cycleBoundarySelection},...compat,univerUpdatedAt:new Date().toISOString()};
     const record={title:currentChartTitle||projectName+' · Time Chart',chart_data:payload};
     let result;
     if(chartId) result=await supa.from('project_cycle_time_charts').update(record).eq('id',chartId).eq('project_id',projectId);
@@ -924,7 +926,8 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
     simulationResult=result;
     simulationVisibleClusters=new Set([...new Set(result.events.map(e=>e.cluster))]);
     renderCycleSimulation(result);
-    setStatus('Continuous Flow simulation complete: '+count+' cycles, '+result.events.length+' events. Dependencies and exclusive resources applied; source worksheet unchanged.');
+    const unassigned=selected.records.filter(r=>!String(cycleLogic.resources[r.sourceRow]||'').trim()).length;
+    setStatus('Continuous Flow simulation complete: '+count+' cycles, '+result.events.length+' events. Dependencies and assigned exclusive resources applied; source worksheet unchanged.'+(unassigned?' '+unassigned+' operation(s) had no Resource ID and were not resource-locked.':''),unassigned>0);
   }
   function renderTimeChart() {
     const target=document.getElementById('time-chart-output');
