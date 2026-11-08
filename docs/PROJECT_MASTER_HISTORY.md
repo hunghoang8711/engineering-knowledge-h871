@@ -749,3 +749,11 @@ Time Chart-specific lessons:
 - **GitHub Pages:** Latest code commit 3994ed365487a8f64e2661d26219e1168bdcad1b has Pages workflow run 42453569392, completed with conclusion success. This confirms workflow completion, not browser correctness.
 - **Not yet verified:** Real-browser interaction with the user's saved workbook; real project save/reload of Cycle Logic and boundary selections; mobile layout; representative machine data validation; visual treatment of Operations that continue past the Release Gate. Do not claim those paths have been user-tested.
 - **Next validation / known refinement:** Validate Entry/Release Gate semantics against a real machine sequence. Add an operation-level execution log for Planned vs Actual Start/End and Dependency Waiting vs Resource Waiting. Ensure Cluster lanes visibly retain an Operation's active tail when it continues beyond its Cycle Release Gate; this is important for interpreting cross-cycle overlap. Only after these checks should we add advanced gate conditions (OR, SS/FF), priority policies, deadlock diagnostics beyond simple dependency cycles, or bottleneck optimization.
+
+
+### 2026-11-08 — Preserve active Operation tails beyond the Cycle Release Gate
+
+- **Refinement:** Cross-cycle Continuous Flow may start the next Cycle while one or more Operations from the prior Cycle are still active. The Cluster lane renderer now extends each Cycle's visible activity/idle window through the latest actual Operation End in that Cycle, rather than clipping every lane at the Release Gate timestamp. The Cycle execution summary continues to use Entry Gate Start → Release Gate End for Gate CT and actual Pitch, so the two concepts remain distinct.
+- **Code commit:** 13ff4eb929fe61124c6e4b93cd44c8abc4498c93.
+- **Verification:** Latest source blob aaf8755074e412aa4c9567838b18f55fd8b1a6db passed complete inline JavaScript syntax parsing. Duplicate HTML IDs: none; missing referenced DOM IDs: none. The isolated Continuous Flow / Exclusive Resource scheduler regression test still passed, including cross-cycle overlap and shared-resource waiting. Pages workflow run 42453724357 was in progress at the time of this log; verify its final conclusion before claiming the latest refinement deployed.
+- **Status:** Browser validation with a real saved project/workbook remains outstanding.
