@@ -10,7 +10,9 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="./supabase-config.js"></script>
 <style>
-html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}.uv-actions{display:flex;gap:8px;flex-wrap:wrap}.uv-btn{border:1px solid #38516b;border-radius:8px;background:#16283d;color:#dceafa;padding:9px 12px;font:inherit;font-size:12px;font-weight:700;cursor:pointer}.uv-btn.primary{background:#0e5368;border-color:#16758b;color:#e5fbff}.uv-panel{padding:16px;border:1px solid #293f56;border-radius:13px;background:#101d2e;min-width:0}.uv-panel h2{font-size:15px;margin:0 0 8px;color:#edf6ff}.uv-note{font-size:11px;color:#9fb3c9;line-height:1.6;margin:6px 0}.uv-status{font-size:12px;color:#9fb3c9;min-height:20px}.uv-status.error{color:#fca5a5}.uv-editor-shell{height:680px;min-height:520px;overflow:hidden;border:1px solid #38516b;border-radius:10px;background:#fff}.uv-editor-shell #app{height:100%;width:100%}.uv-checks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.uv-check{padding:12px;border:1px solid #2c4259;border-radius:9px;background:#0c1929}.uv-check strong{display:block;color:#e7f4ff;font-size:12px}.uv-check span{display:block;color:#9fb3c9;font-size:11px;margin-top:5px;line-height:1.5}.uv-callout{border-left:3px solid #d49a42;padding:8px 12px;background:#292315;border-radius:5px;color:#f4d9a4;font-size:11px;line-height:1.6}.tc-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.tc-summary{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}.tc-stat{padding:9px 12px;border:1px solid #2c4259;border-radius:8px;background:#0c1929;color:#dceafa;font-size:12px}.tc-stat strong{display:block;font-size:16px;color:#fff;margin-bottom:2px}.tc-chart{display:grid;gap:8px;overflow-x:auto}.tc-axis,.tc-row{display:grid;grid-template-columns:minmax(150px,220px) minmax(280px,1fr) 90px;gap:10px;align-items:center;min-width:560px}.tc-axis{font-size:10px;color:#9fb3c9;padding-bottom:5px;border-bottom:1px solid #38516b}.tc-axis-track{display:flex;justify-content:space-between}.tc-label{min-width:0}.tc-label strong{display:block;color:#e7f4ff;font-size:12px;overflow-wrap:anywhere}.tc-label span{display:block;color:#91a8c1;font-size:10px;margin-top:3px;overflow-wrap:anywhere}.tc-track{height:26px;position:relative;border-radius:5px;background:repeating-linear-gradient(90deg,#1b2b40 0,#1b2b40 calc(10% - 1px),#30435b calc(10% - 1px),#30435b 10%);overflow:hidden}.tc-bar{position:absolute;top:3px;height:20px;min-width:3px;border-radius:4px;display:flex;align-items:center;justify-content:center;padding:0 5px;box-sizing:border-box;color:#07111e;font-size:10px;font-weight:800;white-space:nowrap;overflow:hidden}.tc-duration{text-align:right;color:#cbd5e1;font-size:11px;font-variant-numeric:tabular-nums}.tc-cluster-colors{border-top:1px solid #293f56;margin-top:18px;padding-top:14px;display:grid;gap:10px}.tc-cluster-colors h3,.tc-cluster-filters h3{font-size:13px;color:#edf6ff;margin:0}.tc-color-grid{display:flex;gap:9px;flex-wrap:wrap}.tc-color-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border:1px solid #2c4259;border-radius:8px;background:#0c1929;color:#dceafa;font-size:11px}.tc-color-item input[type=color]{width:30px;height:26px;padding:1px;border:1px solid #52677e;border-radius:5px;background:transparent;cursor:pointer}.tc-cluster-filters{border:1px solid #293f56;border-radius:9px;margin:12px 0;padding:12px;display:grid;gap:10px;background:#0c1929}.tc-filter-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.tc-filter-actions{display:flex;gap:6px;flex-wrap:wrap}.tc-filter-actions button{border:1px solid #38516b;border-radius:6px;background:#16283d;color:#cfe1f3;padding:5px 9px;font:inherit;font-size:10px;cursor:pointer}.tc-filter-grid{display:flex;gap:8px;flex-wrap:wrap}.tc-filter-item{display:flex;align-items:center;gap:7px;padding:7px 10px;border:1px solid #2c4259;border-radius:7px;background:#101d2e;color:#dceafa;font-size:11px;cursor:pointer}.tc-filter-item input{accent-color:#38bdf8;margin:0}.tc-empty{padding:18px;border:1px dashed #38516b;border-radius:9px;color:#9fb3c9;font-size:12px;line-height:1.6}.tc-mapping-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:14px}.tc-map-field{display:grid;gap:6px;min-width:0}.tc-map-field label{font-size:11px;color:#cbd5e1;font-weight:700}.tc-map-field input{width:100%;box-sizing:border-box;background:#091321;border:1px solid #38516b;border-radius:7px;padding:9px 10px;color:#e5edf7;font:12px inherit}.tc-map-field small{font-size:10px;color:#91a8c1}.tc-map-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}@media(max-width:760px){.tc-mapping-grid{grid-template-columns:1fr 1fr}}@media(max-width:760px){.uv-checks{grid-template-columns:1fr}.uv-editor-shell{height:620px;min-height:480px}}
+html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}.uv-actions{display:flex;gap:8px;flex-wrap:wrap}.uv-btn{border:1px solid #38516b;border-radius:8px;background:#16283d;color:#dceafa;padding:9px 12px;font:inherit;font-size:12px;font-weight:700;cursor:pointer}.uv-btn.primary{background:#0e5368;border-color:#16758b;color:#e5fbff}.uv-panel{padding:16px;border:1px solid #293f56;border-radius:13px;background:#101d2e;min-width:0}.uv-panel h2{font-size:15px;margin:0 0 8px;color:#edf6ff}.uv-note{font-size:11px;color:#9fb3c9;line-height:1.6;margin:6px 0}.uv-status{font-size:12px;color:#9fb3c9;min-height:20px}.uv-status.error{color:#fca5a5}.uv-editor-shell{height:680px;min-height:520px;overflow:hidden;border:1px solid #38516b;border-radius:10px;background:#fff}.uv-editor-shell #app{height:100%;width:100%}.uv-checks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.uv-check{padding:12px;border:1px solid #2c4259;border-radius:9px;background:#0c1929}.uv-check strong{display:block;color:#e7f4ff;font-size:12px}.uv-check span{display:block;color:#9fb3c9;font-size:11px;margin-top:5px;line-height:1.5}.uv-callout{border-left:3px solid #d49a42;padding:8px 12px;background:#292315;border-radius:5px;color:#f4d9a4;font-size:11px;line-height:1.6}.tc-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.tc-summary{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}.tc-stat{padding:9px 12px;border:1px solid #2c4259;border-radius:8px;background:#0c1929;color:#dceafa;font-size:12px}.tc-stat strong{display:block;font-size:16px;color:#fff;margin-bottom:2px}.tc-chart{display:grid;gap:8px;overflow-x:auto}.tc-axis,.tc-row{display:grid;grid-template-columns:minmax(150px,220px) minmax(280px,1fr) 90px;gap:10px;align-items:center;min-width:560px}.tc-axis{font-size:10px;color:#9fb3c9;padding-bottom:5px;border-bottom:1px solid #38516b}.tc-axis-track{display:flex;justify-content:space-between}.tc-label{min-width:0}.tc-label strong{display:block;color:#e7f4ff;font-size:12px;overflow-wrap:anywhere}.tc-label span{display:block;color:#91a8c1;font-size:10px;margin-top:3px;overflow-wrap:anywhere}.tc-track{height:26px;position:relative;border-radius:5px;background:repeating-linear-gradient(90deg,#1b2b40 0,#1b2b40 calc(10% - 1px),#30435b calc(10% - 1px),#30435b 10%);overflow:hidden}.tc-bar{position:absolute;top:3px;height:20px;min-width:3px;border-radius:4px;display:flex;align-items:center;justify-content:center;padding:0 5px;box-sizing:border-box;color:#07111e;font-size:10px;font-weight:800;white-space:nowrap;overflow:hidden}.tc-duration{text-align:right;color:#cbd5e1;font-size:11px;font-variant-numeric:tabular-nums}.tc-cluster-colors{border-top:1px solid #293f56;margin-top:18px;padding-top:14px;display:grid;gap:10px}.tc-cluster-colors h3,.tc-cluster-filters h3{font-size:13px;color:#edf6ff;margin:0}.tc-color-grid{display:flex;gap:9px;flex-wrap:wrap}.tc-color-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border:1px solid #2c4259;border-radius:8px;background:#0c1929;color:#dceafa;font-size:11px}.tc-color-item input[type=color]{width:30px;height:26px;padding:1px;border:1px solid #52677e;border-radius:5px;background:transparent;cursor:pointer}.tc-cluster-filters{border:1px solid #293f56;border-radius:9px;margin:12px 0;padding:12px;display:grid;gap:10px;background:#0c1929}.tc-filter-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.tc-filter-actions{display:flex;gap:6px;flex-wrap:wrap}.tc-filter-actions button{border:1px solid #38516b;border-radius:6px;background:#16283d;color:#cfe1f3;padding:5px 9px;font:inherit;font-size:10px;cursor:pointer}.tc-filter-grid{display:flex;gap:8px;flex-wrap:wrap}.tc-filter-item{display:flex;align-items:center;gap:7px;padding:7px 10px;border:1px solid #2c4259;border-radius:7px;background:#101d2e;color:#dceafa;font-size:11px;cursor:pointer}.tc-filter-item input{accent-color:#38bdf8;margin:0}.tc-empty{padding:18px;border:1px dashed #38516b;border-radius:9px;color:#9fb3c9;font-size:12px;line-height:1.6}.tc-mapping-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:14px}.tc-map-field{display:grid;gap:6px;min-width:0}.tc-map-field label{font-size:11px;color:#cbd5e1;font-weight:700}.tc-map-field input{width:100%;box-sizing:border-box;background:#091321;border:1px solid #38516b;border-radius:7px;padding:9px 10px;color:#e5edf7;font:12px inherit}.tc-map-field small{font-size:10px;color:#91a8c1}.tc-map-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}@media(max-width:760px){.tc-mapping-grid{grid-template-columns:1fr 1fr}}
+.tc-sim-controls{display:grid;grid-template-columns:repeat(4,minmax(130px,1fr));gap:10px;margin:12px 0}.tc-sim-field{display:grid;gap:6px}.tc-sim-field label{font-size:11px;color:#cbd5e1;font-weight:700}.tc-sim-field input,.tc-sim-field select{width:100%;box-sizing:border-box;background:#091321;border:1px solid #38516b;border-radius:7px;padding:9px 10px;color:#e5edf7;font:inherit;font-size:12px}.tc-sim-results{display:grid;gap:8px;margin-top:12px}.tc-sim-table{width:100%;border-collapse:collapse;font-size:11px;color:#dceafa}.tc-sim-table th,.tc-sim-table td{padding:8px;border-bottom:1px solid #293f56;text-align:left}.tc-sim-table th{color:#9fb3c9;font-weight:700}.tc-sim-track{height:22px;position:relative;border-radius:4px;background:repeating-linear-gradient(90deg,#1b2b40 0,#1b2b40 calc(10% - 1px),#30435b calc(10% - 1px),#30435b 10%);overflow:hidden}.tc-sim-bar{position:absolute;top:2px;height:18px;border-radius:3px;min-width:2px;opacity:.9}.tc-sim-row{display:grid;grid-template-columns:62px minmax(130px,210px) 1fr 76px;gap:9px;align-items:center;min-width:520px;font-size:10px;color:#cbd5e1}.tc-sim-scroll{overflow-x:auto;display:grid;gap:5px;margin-top:12px}.tc-sim-axis{display:flex;justify-content:space-between;color:#91a8c1;font-size:10px}.tc-sim-note{font-size:11px;color:#9fb3c9;line-height:1.6}.tc-sim-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.tc-sim-metrics .tc-stat{min-width:0}@media(max-width:760px){.tc-sim-controls{grid-template-columns:1fr 1fr}.tc-sim-metrics{grid-template-columns:1fr 1fr}}@media(max-width:480px){.tc-sim-controls{grid-template-columns:1fr}}
+@media(max-width:760px){.uv-checks{grid-template-columns:1fr}.uv-editor-shell{height:620px;min-height:480px}}
 .import-dialog-backdrop{position:fixed;inset:0;z-index:10000;background:rgba(2,8,18,.78);display:flex;align-items:center;justify-content:center;padding:20px}.import-dialog-backdrop[hidden]{display:none}.import-dialog-card{width:min(680px,100%);max-height:90vh;overflow:auto;background:#101d2c;border:1px solid #38516b;border-radius:14px;padding:20px;box-shadow:0 24px 80px rgba(0,0,0,.45);color:#e5edf7}.import-label{display:block;color:#b9c9da;font-size:12px;font-weight:700;margin:10px 0 6px}.import-control{width:100%;box-sizing:border-box;background:#091321;border:1px solid #38516b;border-radius:8px;padding:10px;color:#e5edf7;font:inherit;font-size:13px}.import-range-entry{display:grid;grid-template-columns:1fr auto;align-items:end;gap:10px;margin-top:8px}.import-range-entry .uv-btn{height:38px}.import-range-list{display:grid;gap:7px;margin:14px 0}.import-range-item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 11px;background:#0a1725;border:1px solid #29435c;border-radius:8px;font-size:12px}.import-check{display:flex;align-items:center;gap:8px;font-size:12px;color:#b9c9da;margin:12px 0}.import-dialog-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}@media(max-width:560px){.import-range-entry{grid-template-columns:1fr}.import-dialog-card{padding:14px}}
 
 /* Time Chart inspection enhancements: fixed values, precision grid, cursor and tooltip */
@@ -94,6 +96,18 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
 <div id="time-chart-output" aria-live="polite"><div class="tc-empty">Import or enter worksheet data with Mechanism, Operation, Start and Duration/End columns, then select Build Time Chart from cells.</div></div>
 <div id="tc-smart-tooltip" class="tc-smart-tooltip" role="tooltip"></div>
 <div class="tc-cluster-colors"><div><h3>Cluster colors</h3><p class="uv-note">Choose one color for each cluster. The selected color is applied consistently to every activity bar for that cluster in the Time Chart.</p></div><div id="cluster-color-controls" class="tc-color-grid"><span class="uv-note">Cluster colors will appear after the Time Chart is built.</span></div></div>
+<section class="uv-panel" id="cycle-simulation-panel">
+  <div class="uv-head"><div><h2>Cycle Simulation — Repeat N Cycles</h2><p class="uv-note">Generate repeated copies of the current worksheet cycle. The source worksheet remains unchanged; simulated events are derived in memory.</p></div><span class="badge">Sequential baseline</span></div>
+  <div class="tc-sim-controls">
+    <div class="tc-sim-field"><label for="sim-cycle-count">Number of cycles (N)</label><input id="sim-cycle-count" type="number" min="2" max="100" step="1" value="10"></div>
+    <div class="tc-sim-field"><label for="sim-interval-mode">Cycle start interval</label><select id="sim-interval-mode"><option value="auto">Automatic — one cycle duration</option><option value="manual">Manual interval</option></select></div>
+    <div class="tc-sim-field"><label for="sim-cycle-interval">Manual interval (seconds)</label><input id="sim-cycle-interval" type="number" min="0.001" step="0.001" value="0.001" disabled></div>
+    <div class="tc-sim-field"><label for="sim-display-limit">Timeline display limit</label><select id="sim-display-limit"><option value="100">100 events</option><option value="300" selected>300 events</option><option value="600">600 events</option></select></div>
+  </div>
+  <p class="tc-sim-note" id="sim-interval-hint">Automatic interval uses the baseline cycle span (earliest Start to latest End). Repeat mode is deliberately sequential in this first release; intervals shorter than the baseline span are rejected rather than silently creating overlap.</p>
+  <div class="tc-toolbar"><button class="uv-btn primary" id="run-cycle-simulation">Run N-Cycle Simulation</button><button class="uv-btn" id="clear-cycle-simulation">Clear simulation</button></div>
+  <div id="cycle-simulation-output"><div class="tc-empty">Build the Time Chart from worksheet cells, then run a simulation.</div></div>
+</section>
 </section>
 <section class="uv-panel">
 <h2>Project connection</h2>
@@ -526,6 +540,11 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
   let selectedClusters = null;
   let knownClusters = new Set();
   let idleShownClusters = new Set();
+  let lastBaselineRecords = [];
+  let simulationResult = null;
+  // Shared event contract: both sequential repeat and future resource-constrained overlap
+  // use the same cycle/event shape. Resource rules are intentionally not inferred yet.
+  const SIMULATION_MODES = Object.freeze({ REPEAT:'repeat', RESOURCE_OVERLAP:'resource_constrained_overlap' });
   function parseA1Range(value) {
     const text=String(value||'').trim().replace(/\$/g,'').toUpperCase();
     if(!text) return null;
@@ -680,9 +699,86 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
     knownClusters=new Set(groups);
     target.innerHTML=groups.map(name=>'<div class="tc-filter-item"><label class="tc-filter-main"><input type="checkbox" data-cluster-filter="1" value="'+escapeHtml(name)+'" '+(selectedClusters.has(name)?'checked':'')+'><span>'+escapeHtml(name)+'</span></label><label class="tc-idle-toggle"><input type="checkbox" data-cluster-idle="1" value="'+escapeHtml(name)+'" '+(idleShownClusters.has(name)?'checked':'')+'><span>Show idle gaps</span></label></div>').join('');
   }
+  function buildSimulationEvents(records, options) {
+    const mode=options.mode||SIMULATION_MODES.REPEAT;
+    if(mode===SIMULATION_MODES.RESOURCE_OVERLAP) throw new Error('Resource-constrained overlap simulation is reserved for the next development stage.');
+    if(mode!==SIMULATION_MODES.REPEAT) throw new Error('Unsupported simulation mode.');
+    const n=Math.max(2,Math.min(100,Math.floor(Number(options.cycleCount)||10)));
+    const baselineStart=Math.min(...records.map(r=>r.start));
+    const baselineEnd=Math.max(...records.map(r=>r.end));
+    const cycleSpan=baselineEnd-baselineStart;
+    if(!(cycleSpan>0)) throw new Error('The baseline cycle must have a positive time span.');
+    const interval=Number(options.interval);
+    if(!Number.isFinite(interval)||interval+1e-9<cycleSpan) throw new Error('Sequential Repeat mode requires a cycle interval greater than or equal to the baseline cycle span ('+cycleSpan.toFixed(3)+' s). Shorter intervals require the future resource-constrained overlap engine.');
+    const events=[];
+    for(let cycleIndex=0;cycleIndex<n;cycleIndex++){
+      const offset=cycleIndex*interval;
+      records.forEach(record=>{
+        events.push({
+          eventId:'C'+String(cycleIndex+1).padStart(3,'0')+'-R'+record.sourceRow,
+          cycleId:'C'+String(cycleIndex+1).padStart(3,'0'),
+          cycleIndex:cycleIndex+1,
+          sourceRow:record.sourceRow,
+          cluster:record.mechanism,
+          operation:record.operation,
+          start:record.start+offset,
+          duration:record.duration,
+          end:record.end+offset,
+          remark:record.remark||'',
+          resourceRequirements:[record.mechanism],
+          precedence:[],
+          simulationMode:mode
+        });
+      });
+    }
+    return {mode,cycleCount:n,cycleSpan,cycleInterval:interval,baselineStart,baselineEnd,events};
+  }
+  function renderCycleSimulation(result) {
+    const target=document.getElementById('cycle-simulation-output');
+    if(!result){target.innerHTML='<div class="tc-empty">No simulation results. Run N-Cycle Simulation after building the source Time Chart.</div>';return;}
+    const fmt=n=>Number(n.toFixed(3)).toString();
+    const totalEvents=result.events.length;
+    const firstCompletion=result.baselineEnd-result.baselineStart;
+    const lastCompletion=(result.cycleCount-1)*result.cycleInterval+result.baselineEnd-result.baselineStart;
+    const pitch=result.cycleInterval;
+    const throughput=pitch>0?3600/pitch:0;
+    const clusters=[...new Set(result.events.map(e=>e.cluster))];
+    const metrics='<div class="tc-sim-metrics"><div class="tc-stat"><strong>'+fmt(firstCompletion)+' s</strong>First cycle lead time</div><div class="tc-stat"><strong>'+fmt(pitch)+' s</strong>Cycle interval / Pitch</div><div class="tc-stat"><strong>'+fmt(throughput)+'</strong>Theoretical units / hour</div><div class="tc-stat"><strong>'+fmt(lastCompletion)+' s</strong>Last cycle completion</div></div>';
+    const rowsByCycle=new Map();
+    result.events.forEach(e=>{if(!rowsByCycle.has(e.cycleId))rowsByCycle.set(e.cycleId,[]);rowsByCycle.get(e.cycleId).push(e);});
+    const displayLimit=Number(document.getElementById('sim-display-limit').value)||300;
+    const shown=result.events.slice(0,displayLimit);
+    const totalEnd=Math.max(...result.events.map(e=>e.end));
+    const minStart=Math.min(0,...result.events.map(e=>e.start));
+    const span=Math.max(totalEnd-minStart,0.001);
+    const timeline=shown.map(e=>{
+      const left=(e.start-minStart)/span*100,width=Math.max(.35,e.duration/span*100);
+      return '<div class="tc-sim-row"><strong>'+e.cycleId+'</strong><span>'+escapeHtml(e.cluster)+' · '+escapeHtml(e.operation)+'</span><div class="tc-sim-track" title="'+escapeHtml(e.cycleId+' | '+e.operation+' | '+fmt(e.start)+'–'+fmt(e.end)+' s')+'"><i class="tc-sim-bar" style="left:'+left+'%;width:'+Math.min(width,100-left)+'%;background:'+colorForMechanism(e.cluster)+'"></i></div><span>'+fmt(e.start)+'–'+fmt(e.end)+' s</span></div>';
+    }).join('');
+    const byCycle=[...rowsByCycle.entries()].map(([cycleId,items])=>({cycleId,first:Math.min(...items.map(e=>e.start)),last:Math.max(...items.map(e=>e.end))}));
+    const table='<div class="tc-sim-results"><h3>Cycle completion summary</h3><div style="overflow-x:auto"><table class="tc-sim-table"><thead><tr><th>Cycle ID</th><th>Start</th><th>Completion</th><th>Lead time</th></tr></thead><tbody>'+byCycle.map(c=>'<tr><td>'+c.cycleId+'</td><td>'+fmt(c.first)+' s</td><td>'+fmt(c.last)+' s</td><td>'+fmt(c.last-c.first)+' s</td></tr>').join('')+'</tbody></table></div></div>';
+    target.innerHTML=metrics+'<p class="tc-sim-note">Generated '+totalEvents+' events across '+result.cycleCount+' cycles and '+clusters.length+' Clusters. Timeline shows '+shown.length+' events'+(shown.length<totalEvents?' (display limited; all events are included in the calculation).':'')+'</p><div class="tc-sim-scroll"><div class="tc-sim-axis"><span>'+fmt(minStart)+' s</span><span>'+fmt(totalEnd)+' s</span></div>'+timeline+'</div>'+table;
+  }
+  function runCycleSimulation() {
+    if(!lastBaselineRecords.length) throw new Error('Build the Time Chart from worksheet cells before running simulation.');
+    const count=Number(document.getElementById('sim-cycle-count').value);
+    if(!Number.isInteger(count)||count<2||count>100) throw new Error('Choose between 2 and 100 cycles for this initial release.');
+    const baselineStart=Math.min(...lastBaselineRecords.map(r=>r.start));
+    const baselineEnd=Math.max(...lastBaselineRecords.map(r=>r.end));
+    const cycleSpan=baselineEnd-baselineStart;
+    const mode=document.getElementById('sim-interval-mode').value;
+    const interval=mode==='auto'?cycleSpan:Number(document.getElementById('sim-cycle-interval').value);
+    const result=buildSimulationEvents(lastBaselineRecords,{mode:SIMULATION_MODES.REPEAT,cycleCount:count,interval});
+    simulationResult=result;
+    renderCycleSimulation(result);
+    setStatus('Repeat N Cycles complete: '+count+' cycles, '+result.events.length+' derived events. Source worksheet was not modified.');
+  }
   function renderTimeChart() {
     const target=document.getElementById('time-chart-output');
     const records=readWorksheetRecords();
+    lastBaselineRecords=records.map(r=>({...r}));
+    simulationResult=null;
+    renderCycleSimulation(null);
     const filterTarget=document.getElementById('cluster-filter-controls');
     if(!records.length) {
       target.innerHTML='<div class="tc-empty">No plottable rows found. The chart needs a numeric Start value and either Duration or End value. Check the header row and the imported cell values.</div>';
@@ -777,6 +873,21 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
   });
   document.querySelector('.tc-cluster-filters').addEventListener('click',event=>{const button=event.target.closest('button[data-cluster-filter-action]');if(!button)return;const groups=[...new Set(readWorksheetRecords().map(r=>r.mechanism))];if(!selectedClusters)selectedClusters=new Set();if(button.dataset.clusterFilterAction==='all')selectedClusters=new Set(groups);else selectedClusters.clear();try{renderTimeChart();}catch(error){setStatus('Could not update Cluster filter: '+error.message,true);}});
   document.getElementById('cluster-color-controls').addEventListener('change',event=>{const input=event.target.closest('input[data-cluster-color]');if(!input)return;clusterColors[input.dataset.clusterColor]=input.value;try{renderTimeChart();}catch(error){setStatus('Could not update cluster color: '+error.message,true);}});
+  document.getElementById('sim-interval-mode').addEventListener('change',event=>{
+    const manual=event.target.value==='manual';
+    document.getElementById('sim-cycle-interval').disabled=!manual;
+    if(!manual&&lastBaselineRecords.length){
+      const span=Math.max(...lastBaselineRecords.map(r=>r.end))-Math.min(...lastBaselineRecords.map(r=>r.start));
+      document.getElementById('sim-cycle-interval').value=span.toFixed(3);
+    }
+  });
+  document.getElementById('sim-display-limit').addEventListener('change',()=>{if(simulationResult)renderCycleSimulation(simulationResult);});
+  document.getElementById('run-cycle-simulation').addEventListener('click',()=>{
+    try{runCycleSimulation();}catch(error){setStatus('Simulation failed: '+error.message,true);document.getElementById('sim-interval-hint').textContent=error.message;}
+  });
+  document.getElementById('clear-cycle-simulation').addEventListener('click',()=>{
+    simulationResult=null;renderCycleSimulation(null);setStatus('Simulation results cleared. Source worksheet and Time Chart are unchanged.');
+  });
   document.getElementById('build-time-chart').addEventListener('click', () => { if(!workbook){setStatus('Spreadsheet is not ready. Resolve the Univer initialization error first.',true);return;} try { renderTimeChart(); } catch(error) { setStatus('Could not build Time Chart: '+error.message,true); } });
   document.getElementById('save-project').addEventListener('click', async () => {
     const btn=document.getElementById('save-project');btn.disabled=true;btn.textContent='Saving…';
