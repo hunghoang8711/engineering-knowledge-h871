@@ -833,3 +833,14 @@ Time Chart-specific lessons:
 - **Code commit:** b38f1acc4863b06a520a50b11ae2acfbaee2836f.
 - **Verification:** Latest source blob e7b0de57327adfe730fbe414d295aee854219de4 passed inline JavaScript syntax parsing. Duplicate HTML IDs: none. Missing getElementById references: none. Static source checks confirmed marquee selection, group move, 9px snapping, alignment guides, modifier-key toggling and clear-selection action. Actual browser drag/marquee behavior, alignment appearance and saved chart reload have not yet been exercised.
 - **Next validation:** Verify selecting a rectangle across several cards, dragging the group, and snapping a card edge/center to a nearby neighbor. If validated, follow up with smarter snapping against AND Gate diamonds and connector alignment.
+
+
+### 2026-11-08 — Time Chart Cycle Boundary Visual Highlight V1
+
+- **User request:** Make Start/End cycle selection more visually apparent with dashed guides from selected boundaries to the time bars, a brighter selected cycle region, a dimension arrow showing total Cycle CT, and brighter operation bars included in the selected cycle.
+- **Implementation:** In the existing Time Chart renderer, a valid Start/End selection now overlays a translucent bright cycle window across each timeline lane, adds dashed green Start and amber End guides, and shows a horizontal dimension line with arrowheads and the total selected duration labeled “Cycle CT” on the timeline axis.
+- **Operation emphasis:** Operation bars intersecting the selected cycle are visually brightened; fully contained operations receive a stronger highlight/glow, while partially intersecting operations use a lighter highlight. Existing operation colors and Start→End timing remain intact.
+- **Interaction:** Selecting or changing either boundary immediately refreshes the Time Chart and Process Flow editor. Selection markers, source rows, cycle extraction and simulation semantics remain unchanged.
+- **Code commit:** da0cd538f7ed285f64e95ee239d48e3fcfcca173.
+- **Verification:** Latest source blob 734a6b0af35c401d1c2f9164495b51c54ba2e909 passed full inline JavaScript syntax parsing. Duplicate HTML IDs and missing DOM references: none. Static checks confirmed dashed boundary overlays, cycle-range highlight, operation highlighting, duration dimension, and render refresh on selection. Browser screenshot/layout and actual chart interaction have not yet been tested against the user's saved workbook.
+- **Next validation:** Confirm the guides and dimension label remain legible with dense operations, filtering Clusters, and scrolling. If needed, refine label placement and use a continuous chart-level guide instead of per-lane guides.
