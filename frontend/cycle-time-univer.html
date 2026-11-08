@@ -104,7 +104,7 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
   <div class="tc-sim-controls">
     <div class="tc-sim-field"><label for="sim-cycle-count">Number of cycles (N)</label><input id="sim-cycle-count" type="number" min="2" max="100" step="1" value="10"></div>
     <div class="tc-sim-field"><label for="sim-interval-mode">Cycle start interval</label><select id="sim-interval-mode"><option value="auto">Continuous — follow Cycle Logic</option><option value="manual">Manual interval</option></select></div>
-    <div class="tc-sim-field"><label for="sim-cycle-interval">Manual interval (seconds)</label><input id="sim-cycle-interval" type="number" min="0.001" step="0.001" value="0.001" disabled></div>
+    <div class="tc-sim-field"><label>Pitch policy</label><input value="Calculated from actual Cycle Entry" readonly></div>
     <div class="tc-sim-field"><label for="sim-display-limit">Timeline display limit</label><select id="sim-display-limit"><option value="100">100 events</option><option value="300" selected>300 events</option><option value="600">600 events</option></select></div>
   </div>
   <p class="tc-sim-note" id="sim-interval-hint">Continuous Flow schedules cycles through their Entry Gate. Dependency links and shared Exclusive Resource IDs determine actual start times. Ideal cycle span is retained as a reference, not a fixed Pitch.</p>
@@ -745,13 +745,13 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
         const prev=e.cycleIndex>1?byId.get(id(e.cycleIndex-2,cycleLogic.completionSourceRow)):null;
         const gate=prev?prev.actualEnd:0,depReady=e.dependencies.reduce((m,d)=>Math.max(m,byId.get(d.eventId).actualEnd+d.delay),0);
         const planned=gate+e.plannedStart,base=Math.max(planned,depReady),resourceReady=e.resourceIds.reduce((m,r)=>Math.max(m,freeAt.get(r)||0),base);
-        return {event:e,ready:resourceReady,base};
+        return {event:e,ready:resourceReady,base,plannedBase:planned};
       }).sort((a,b)=>a.ready-b.ready||a.event.cycleIndex-b.event.cycleIndex||a.event.sourceRow-b.event.sourceRow);
       if(!candidates.length)throw new Error('Simulation deadlock: no schedulable event. Check Cycle Gates and dependencies.');
-      const pick=candidates[0],e=pick.event;e.actualStart=pick.ready;e.actualEnd=e.actualStart+e.duration;e.start=e.actualStart;e.end=e.actualEnd;e.status='completed';e.waitingTotal=Math.max(0,e.actualStart-pick.base);e.waitingResource=Math.max(0,e.actualStart-Math.max(pick.base,...e.resourceIds.map(r=>freeAt.get(r)||0)));e.waitingDependency=Math.max(0,e.waitingTotal-e.waitingResource);e.resourceRequirements=e.resourceIds;e.resourceIds.forEach(r=>freeAt.set(r,e.actualEnd));done.add(e.eventId);
+      const pick=candidates[0],e=pick.event;e.actualStart=pick.ready;e.actualEnd=e.actualStart+e.duration;e.start=e.actualStart;e.end=e.actualEnd;e.status='completed';e.waitingDependency=Math.max(0,pick.base-pick.plannedBase);e.waitingResource=Math.max(0,e.actualStart-pick.base);e.waitingTotal=e.waitingDependency+e.waitingResource;e.resourceRequirements=e.resourceIds;e.resourceIds.forEach(r=>freeAt.set(r,e.actualEnd));done.add(e.eventId);
     }
     if(done.size!==events.length)throw new Error('Simulation stopped before all operations completed.');
-    const cycles=Array.from({length:n},(_,i)=>{const es=events.filter(e=>e.cycleIndex===i+1);return {cycleId:'C'+String(i+1).padStart(3,'0'),start:Math.min(...es.map(e=>e.actualStart)),end:Math.max(...es.map(e=>e.actualEnd))};});
+    const cycles=Array.from({length:n},(_,i)=>{const entry=byId.get(id(i,cycleLogic.entrySourceRow)),completion=byId.get(id(i,cycleLogic.completionSourceRow));return {cycleId:'C'+String(i+1).padStart(3,'0'),start:entry.actualStart,end:completion.actualEnd};});
     const pitches=cycles.slice(1).map((c,i)=>c.start-cycles[i].start),pitch=pitches.length?pitches.reduce((a,b)=>a+b,0)/pitches.length:cycleSpan;
     return {mode:'continuous_exclusive',cycleCount:n,cycleSpan,cycleInterval:pitch,events,cycles,lastCompletion:Math.max(...events.map(e=>e.end))};
   }
@@ -805,6 +805,7 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
     else if(start&&!end){status.textContent='Cycle Start selected: '+start.operation+' (row '+start.sourceRow+'). Now select a later Operation bar for Cycle End.';range.textContent='Start '+start.start.toFixed(3)+' s · End not selected';}
     else if(start&&end){status.textContent='Cycle boundaries selected. Review the range before confirming Repeat N Cycles.';range.textContent='Start '+start.start.toFixed(3)+' s → End '+end.end.toFixed(3)+' s · '+(end.end-start.start).toFixed(3)+' s';}
     else{status.textContent='The selected Cycle Start operation is no longer available. Select the boundaries again.';range.textContent='Invalid cycle selection';}
+    renderCycleLogicEditor();
   }
   function selectCycleBoundary(bar) {
     const row=Number(bar.dataset.sourceRow);
@@ -913,8 +914,6 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
     const selected=getSelectedCycleRecords();
     const count=Number(document.getElementById('sim-cycle-count').value);
     if(!Number.isInteger(count)||count<2||count>100) throw new Error('Choose between 2 and 100 cycles for this initial release.');
-    const mode=document.getElementById('sim-interval-mode').value;
-    const interval=mode==='auto'?selected.cycleSpan:Number(document.getElementById('sim-cycle-interval').value);
     const result=simulateContinuousExclusive(selected.records,{cycleCount:count});
     result.cycleStartSourceRow=cycleBoundarySelection.startSourceRow;
     result.cycleEndSourceRow=cycleBoundarySelection.endSourceRow;
@@ -1045,7 +1044,7 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
   });
   document.getElementById('sim-display-limit').addEventListener('change',()=>{if(simulationResult)renderCycleSimulation(simulationResult);});
   document.getElementById('clear-cycle-boundaries').addEventListener('click',()=>{
-    cycleBoundarySelection={startSourceRow:null,endSourceRow:null};simulationResult=null;renderCycleSimulation(null);updateCycleBoundaryUI();
+    cycleBoundarySelection={startSourceRow:null,endSourceRow:null};cycleLogic={entrySourceRow:null,completionSourceRow:null,dependencies:[],resources:{}};simulationResult=null;renderCycleSimulation(null);updateCycleBoundaryUI();
   });
   document.getElementById('sim-cluster-filter').addEventListener('change',event=>{
     const input=event.target.closest('input[data-sim-cluster]');if(!input||!simulationResult)return;
