@@ -883,3 +883,13 @@ Time Chart-specific lessons:
 - **Code commits:** 9d975fda9499715da1b865285c62b94d0fff013f (menu selection and highlight) 3fd5aaffb44d73d84574a3d76db0422f1836f323 (scroll-aware L-highlight alignment), and 3a9c396fc5700c7da4922960c5b7a33fe5ad580f (dismiss menus on outside click and keep the vertical guide below the axis when the Start row is filtered out).
 - **Verification:** Inline JavaScript syntax parsing passed after both commits. Static source checks confirmed per-row menu controls, disabled invalid End options, replacement of either boundary, preserved Clear action, retained cycle window/guides, and removal of direct bar-click selection. Actual browser interaction, responsive menu placement, and pixel alignment on the user's saved workbook have not yet been tested.
 - **Next validation:** On the live Time Chart, verify selecting a Start, selecting a later End, changing Start to a later Operation (which should invalidate an earlier End), changing End directly, and using Clear cycle markers. Confirm the L-shaped highlight follows the selected End boundary while scrolling the chart.
+
+
+### 2026-11-09 — Highlight Every Operation Between Cycle Start and End
+
+- **User request:** The Operation information card selected as Cycle Start was highlighted, but subsequent Operation cards between Start and End should receive the same highlight.
+- **Fix:** Operation-card highlighting now follows worksheet/source-row order. The selected Start row is highlighted immediately, even before an End is chosen. Once End is selected, every Operation row after Start through End (inclusive) receives the same `cycle-in-window` card background. This is intentionally independent of time overlap; the timeline bars, cycle window, and time-axis guides retain their existing temporal calculations.
+- **Scope protection:** Changed only the Operation label class expression in `frontend/cycle-time-univer.html`. No changes to Process Flow / Cycle Logic Editor, simulation logic, database schema, migrations, or RLS.
+- **Code commit:** ac73e8732674a21031f93de0e93d6f4b70cf341a.
+- **Verification:** All inline JavaScript blocks passed syntax parsing. Static source review confirms Start-only highlighting and inclusive source-row highlighting through End. Real-browser appearance and saved-workbook interaction have not yet been tested.
+- **Next validation:** Select a Start Operation, then a later End Operation, and confirm all Operation information cards between them are highlighted while cards outside the selected row interval remain unchanged.
