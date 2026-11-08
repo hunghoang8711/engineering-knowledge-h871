@@ -16,6 +16,9 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
 /* Time Chart inspection enhancements: fixed values, precision grid, cursor and tooltip */
 .tc-chart{position:relative;gap:0;overflow:auto;isolation:isolate}.tc-axis,.tc-row{grid-template-columns:minmax(155px,205px) 72px 76px 72px minmax(300px,1fr);gap:8px;min-width:900px}.tc-axis{position:sticky;top:0;z-index:3;background:#101d2e;padding:8px 0}.tc-axis-track{position:relative;display:block;height:18px}.tc-axis-track .tc-tick-label{position:absolute;top:0;transform:translateX(-50%);white-space:nowrap;font-variant-numeric:tabular-nums}.tc-axis-track .tc-tick-label.zero{color:#fbbf24;font-weight:800}.tc-axis-track .tc-tick-label.major{color:#e2e8f0;font-weight:700}.tc-axis-operation{color:#9fb3c9}.tc-col-heading{font-size:10px;color:#9fb3c9;text-align:right}.tc-row{padding:3px 0;border-bottom:1px solid rgba(56,81,107,.35)}.tc-value{font-size:11px;text-align:right;color:#dceafa;font-variant-numeric:tabular-nums;white-space:nowrap}.tc-value.duration{color:#a7f3d0;font-weight:700}.tc-track{background:#14243a;overflow:visible;border:1px solid #30435b}.tc-gridline{position:absolute;z-index:0;top:-1px;bottom:-1px;width:1px;background:rgba(148,163,184,.26);pointer-events:none}.tc-gridline.major{background:rgba(203,213,225,.42);width:1px}.tc-gridline.zero{background:#fbbf24;width:2px;opacity:.9}.tc-bar{z-index:1;cursor:crosshair;outline-offset:2px}.tc-bar:focus-visible{outline:2px solid #f8fafc}.tc-cursor-line{position:absolute;z-index:4;top:0;bottom:0;width:1px;background:#f8fafc;box-shadow:0 0 0 1px rgba(15,23,42,.45);pointer-events:none;display:none}.tc-cursor-line::before{content:attr(data-time);position:sticky;top:4px;display:block;transform:translate(-50%,0);width:max-content;padding:3px 6px;border-radius:5px;background:#f8fafc;color:#0f172a;font-size:10px;font-weight:800;font-variant-numeric:tabular-nums}.tc-smart-tooltip{position:fixed;z-index:20000;display:none;min-width:190px;max-width:280px;padding:11px 13px;border:1px solid #55708e;border-radius:9px;background:#081525;color:#e5edf7;box-shadow:0 12px 32px rgba(0,0,0,.42);pointer-events:none;font-size:11px;line-height:1.5}.tc-smart-tooltip strong{display:block;font-size:13px;color:#fff;margin-bottom:7px}.tc-tooltip-grid{display:grid;grid-template-columns:1fr auto;gap:3px 12px}.tc-tooltip-grid span:nth-child(odd){color:#91a8c1}.tc-tooltip-grid span:nth-child(even){text-align:right;font-variant-numeric:tabular-nums;color:#e2e8f0}.tc-tooltip-remark{border-top:1px solid #30435b;margin-top:7px;padding-top:7px;color:#cbd5e1;white-space:pre-wrap;overflow-wrap:anywhere}.tc-tooltip-source{margin-top:5px;color:#fbbf24;font-size:10px}
 @media(max-width:760px){.tc-axis,.tc-row{grid-template-columns:145px 64px 68px 64px minmax(260px,1fr);min-width:760px}}
+
+/* Per-cluster idle-gap inspection */
+.tc-filter-item{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:5px 8px;min-width:135px}.tc-filter-main{display:flex;align-items:center;gap:7px;min-width:0}.tc-filter-main span{overflow-wrap:anywhere}.tc-idle-toggle{grid-column:2;display:flex;align-items:center;gap:5px;color:#aab9ca;font-size:10px;white-space:nowrap}.tc-idle-toggle input{accent-color:#94a3b8;margin:0}.tc-idle-gap{position:absolute;top:4px;height:16px;min-width:2px;box-sizing:border-box;border:1px solid #9ca3af;border-radius:3px;background:repeating-linear-gradient(135deg,#9ca3af 0,#9ca3af 3px,#d1d5db 3px,#d1d5db 6px);z-index:2;display:flex;align-items:center;justify-content:center;overflow:visible;cursor:help}.tc-idle-gap span{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);padding:1px 4px;border-radius:3px;background:#374151;color:#f9fafb;font-size:9px;font-weight:800;white-space:nowrap;line-height:1.3;box-shadow:0 1px 3px rgba(0,0,0,.35);pointer-events:none}.tc-idle-gap.compact span{display:none}.tc-idle-gap:hover{filter:brightness(1.18);z-index:3}
 </style>
 </head>
 <body data-start-tab="knowledge">
@@ -522,6 +525,7 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
   let clusterColors = {};
   let selectedClusters = null;
   let knownClusters = new Set();
+  let idleShownClusters = new Set();
   function parseA1Range(value) {
     const text=String(value||'').trim().replace(/\$/g,'').toUpperCase();
     if(!text) return null;
@@ -611,21 +615,43 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
     if(min<=0&&max>=0)ticks.add(0);
     return [...ticks].sort((a,b)=>a-b).filter(t=>t>=min-1e-8&&t<=max+1e-8);
   }
-  function renderTimelineRows(records,min,span,fmt,ticks) {
+  function buildClusterIdleGaps(records) {
+    const gapsBySourceRow=new Map();
+    const grouped=new Map();
+    records.forEach(r=>{if(!grouped.has(r.mechanism))grouped.set(r.mechanism,[]);grouped.get(r.mechanism).push(r);});
+    grouped.forEach(items=>{
+      items.sort((a,b)=>a.start-b.start||a.sourceRow-b.sourceRow);
+      let previous=null;
+      items.forEach(current=>{
+        if(previous){
+          const gap=current.start-previous.end;
+          if(gap>0.000001)gapsBySourceRow.set(current.sourceRow,{start:previous.end,end:current.start,duration:gap,previousOperation:previous.operation});
+        }
+        if(!previous||current.end>previous.end)previous=current;
+      });
+    });
+    return gapsBySourceRow;
+  }
+  function renderTimelineRows(records,min,span,fmt,ticks,gapsBySourceRow) {
     return [...records].sort((a,b)=>a.sourceRow-b.sourceRow).map(r=>{
       const left=Math.max(0,Math.min(100,(r.start-min)/span*100));
       const right=Math.max(left,Math.min(100,(r.end-min)/span*100));
       const width=Math.max(0.6,right-left);
       const color=colorForMechanism(r.mechanism);
       const grid=ticks.map(t=>'<i class="tc-gridline '+(Math.abs(t)<1e-9?'zero':Number.isInteger(t)?'major':'')+'" style="left:'+((t-min)/span*100)+'%"></i>').join('');
+      const gap=gapsBySourceRow.get(r.sourceRow);
+      const gapLeft=gap?Math.max(0,Math.min(100,(gap.start-min)/span*100)):0;
+      const gapWidth=gap?Math.max(0,Math.min(100,(gap.end-min)/span*100)-gapLeft):0;
+      const gapHtml=gap&&idleShownClusters.has(r.mechanism)?'<div class="tc-idle-gap '+(gapWidth<5?'compact':'')+'" tabindex="0" role="img" aria-label="Idle gap '+fmt(gap.duration)+' seconds after '+escapeHtml(gap.previousOperation)+'" data-idle-gap="1" data-cluster="'+escapeHtml(r.mechanism)+'" data-gap-start="'+gap.start+'" data-gap-end="'+gap.end+'" data-gap-duration="'+gap.duration+'" data-previous-operation="'+escapeHtml(gap.previousOperation)+'" data-next-operation="'+escapeHtml(r.operation)+'" style="left:'+gapLeft+'%;width:'+gapWidth+'%"><span>'+fmt(gap.duration)+' s</span></div>':'';
       const bar='<div class="tc-bar" tabindex="0" role="img" aria-label="'+escapeHtml(r.operation)+', Cluster '+escapeHtml(r.mechanism)+', Start '+fmt(r.start)+' seconds, Duration '+fmt(r.duration)+' seconds, End '+fmt(r.end)+' seconds" data-cluster="'+escapeHtml(r.mechanism)+'" data-operation="'+escapeHtml(r.operation)+'" data-start="'+r.start+'" data-duration="'+r.duration+'" data-end="'+r.end+'" data-remark="'+escapeHtml(r.remark||'')+'" data-source-row="'+r.sourceRow+'" style="left:'+left+'%;width:'+Math.min(width,100-left)+'%;background:'+color+'">'+(width>10?fmt(r.start)+' → '+fmt(r.end)+' s':'')+'</div>';
-      return '<div class="tc-row"><div class="tc-label"><strong>'+escapeHtml(r.mechanism)+'</strong><span>'+escapeHtml(r.operation)+'</span></div><div class="tc-value">'+fmt(r.start)+' s</div><div class="tc-value duration">'+fmt(r.duration)+' s</div><div class="tc-value">'+fmt(r.end)+' s</div><div class="tc-track">'+grid+bar+'</div></div>';
+      return '<div class="tc-row"><div class="tc-label"><strong>'+escapeHtml(r.mechanism)+'</strong><span>'+escapeHtml(r.operation)+'</span></div><div class="tc-value">'+fmt(r.start)+' s</div><div class="tc-value duration">'+fmt(r.duration)+' s</div><div class="tc-value">'+fmt(r.end)+' s</div><div class="tc-track">'+grid+gapHtml+bar+'</div></div>';
     }).join('');
   }
   function showActivityTooltip(bar,x,y) {
     const tip=document.getElementById('tc-smart-tooltip');
     if(!tip)return;
     const d=bar.dataset,fmt=n=>Number(Number(n).toFixed(3)).toString();
+    if(bar.dataset.idleGap){tip.innerHTML='<strong>Cluster idle time</strong><div class="tc-tooltip-grid"><span>Cluster</span><span>'+escapeHtml(d.cluster||'')+'</span><span>Idle duration</span><span>'+fmt(d.gapDuration)+' s</span><span>From</span><span>'+fmt(d.gapStart)+' s</span><span>To</span><span>'+fmt(d.gapEnd)+' s</span></div><div class="tc-tooltip-remark">'+escapeHtml(d.previousOperation||'Previous step')+' → '+escapeHtml(d.nextOperation||'Next step')+'</div>';tip.style.display='block';const left=Math.max(8,Math.min(window.innerWidth-tip.offsetWidth-8,x+14)),top=Math.max(8,Math.min(window.innerHeight-tip.offsetHeight-8,y+14));tip.style.left=left+'px';tip.style.top=top+'px';return;}
     tip.innerHTML='<strong>'+escapeHtml(d.operation||'Activity')+'</strong><div class="tc-tooltip-grid"><span>Cluster</span><span>'+escapeHtml(d.cluster||'Unassigned')+'</span><span>Start time</span><span>'+fmt(d.start)+' s</span><span>Duration</span><span>'+fmt(d.duration)+' s</span><span>End time</span><span>'+fmt(d.end)+' s</span></div>'+(d.remark?'<div class="tc-tooltip-remark">Remark: '+escapeHtml(d.remark)+'</div>':'')+'<div class="tc-tooltip-source">Excel source row: '+escapeHtml(d.sourceRow||'—')+'</div>';
     tip.style.display='block';
     const left=Math.max(8,Math.min(window.innerWidth-tip.offsetWidth-8,x+14));
@@ -652,7 +678,7 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
     groups.forEach(name=>{if(!knownClusters.has(name))selectedClusters.add(name);});
     [...selectedClusters].forEach(name=>{if(!groups.includes(name))selectedClusters.delete(name);});
     knownClusters=new Set(groups);
-    target.innerHTML=groups.map(name=>'<label class="tc-filter-item"><input type="checkbox" data-cluster-filter="1" value="'+escapeHtml(name)+'" '+(selectedClusters.has(name)?'checked':'')+'><span>'+escapeHtml(name)+'</span></label>').join('');
+    target.innerHTML=groups.map(name=>'<div class="tc-filter-item"><label class="tc-filter-main"><input type="checkbox" data-cluster-filter="1" value="'+escapeHtml(name)+'" '+(selectedClusters.has(name)?'checked':'')+'><span>'+escapeHtml(name)+'</span></label><label class="tc-idle-toggle"><input type="checkbox" data-cluster-idle="1" value="'+escapeHtml(name)+'" '+(idleShownClusters.has(name)?'checked':'')+'><span>Show idle gaps</span></label></div>').join('');
   }
   function renderTimeChart() {
     const target=document.getElementById('time-chart-output');
@@ -672,12 +698,15 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
     renderClusterFilterControls(groups);
     const visibleRecords=selectedClusters?records.filter(r=>selectedClusters.has(r.mechanism)):records;
     const visibleGroups=[...new Set(visibleRecords.map(r=>r.mechanism))];
+    const idleGapsBySourceRow=buildClusterIdleGaps(records);
+    const visibleIdleGaps=[...idleGapsBySourceRow.values()].filter(g=>g.duration>0);
+    const shownIdleCount=records.filter(r=>idleShownClusters.has(r.mechanism)&&idleGapsBySourceRow.has(r.sourceRow)).length;
     const fmt=n=>Number(n.toFixed(2)).toString();
     const gridTicks=buildGridTicks(min,max);
     const axis='<div class="tc-axis"><div class="tc-axis-operation">Operation (Excel order)</div><div class="tc-col-heading">Start</div><div class="tc-col-heading">Duration</div><div class="tc-col-heading">End</div><div class="tc-axis-track">'+gridTicks.map(t=>'<span class="tc-tick-label '+(Math.abs(t)<1e-9?'zero':Number.isInteger(t)?'major':'')+'" style="left:'+((t-min)/span*100)+'%">'+fmt(t)+' s</span>').join('')+'</div></div>';
     const longest=visibleRecords.length?fmt(Math.max(...visibleRecords.map(r=>r.duration)))+' s':'—';
-    const summary='<div class="tc-summary"><div class="tc-stat"><strong>'+visibleRecords.length+' / '+records.length+'</strong>Visible operations</div><div class="tc-stat"><strong>'+visibleGroups.length+' / '+groups.length+'</strong>Visible clusters</div><div class="tc-stat"><strong>'+fmt(min)+'–'+fmt(max)+' s</strong>Full time range</div><div class="tc-stat"><strong>'+longest+'</strong>Longest visible duration</div></div>';
-    const chartBody=visibleRecords.length?axis+renderTimelineRows(visibleRecords,min,span,fmt,gridTicks):'<div class="tc-empty">No clusters selected. Enable one or more clusters in the filter above to display their activities.</div>';
+    const summary='<div class="tc-summary"><div class="tc-stat"><strong>'+visibleRecords.length+' / '+records.length+'</strong>Visible operations</div><div class="tc-stat"><strong>'+visibleGroups.length+' / '+groups.length+'</strong>Visible clusters</div><div class="tc-stat"><strong>'+fmt(min)+'–'+fmt(max)+' s</strong>Full time range</div><div class="tc-stat"><strong>'+longest+'</strong>Longest visible duration</div><div class="tc-stat"><strong>'+shownIdleCount+'</strong>Visible idle gaps</div></div>';
+    const chartBody=visibleRecords.length?axis+renderTimelineRows(visibleRecords,min,span,fmt,gridTicks,idleGapsBySourceRow):'<div class="tc-empty">No clusters selected. Enable one or more clusters in the filter above to display their activities.</div>';
     target.innerHTML=summary+'<div class="tc-chart" id="tc-chart-viewport" data-time-min="'+min+'" data-time-max="'+max+'">'+chartBody+(visibleRecords.length?'<div class="tc-cursor-line" id="tc-cursor-line"></div>':'')+'</div>';
     renderClusterColorControls(groups);
     setStatus('Time Chart generated with '+visibleRecords.length+' of '+records.length+' operations visible. Cluster colors are shared across all activities; save to project to retain them.');
@@ -731,14 +760,22 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
   document.getElementById('auto-detect-ranges').addEventListener('click',()=>{if(!workbook){setStatus('Spreadsheet is not ready. Resolve the Univer initialization error first.',true);return;}try{detectDataRanges();}catch(error){document.getElementById('range-status').textContent=error.message;setStatus('Could not detect ranges: '+error.message,true);}});
   document.getElementById('apply-data-ranges').addEventListener('click',()=>{if(!workbook){setStatus('Spreadsheet is not ready. Resolve the Univer initialization error first.',true);return;}try{dataRangeConfig=getRangeConfigFromInputs();renderTimeChart();}catch(error){document.getElementById('range-status').textContent=error.message;setStatus('Could not build Time Chart: '+error.message,true);}});
   document.getElementById('time-chart-output').addEventListener('pointermove',event=>{
-    const bar=event.target.closest('.tc-bar');if(bar)showActivityTooltip(bar,event.clientX,event.clientY);else hideActivityTooltip();
+    const bar=event.target.closest('.tc-bar,.tc-idle-gap');if(bar)showActivityTooltip(bar,event.clientX,event.clientY);else hideActivityTooltip();
     updateTimeCursor(event);
   });
-  document.getElementById('time-chart-output').addEventListener('pointerover',event=>{const bar=event.target.closest('.tc-bar');if(bar)showActivityTooltip(bar,event.clientX,event.clientY);});
-  document.getElementById('time-chart-output').addEventListener('pointerout',event=>{if(event.target.closest('.tc-bar')&&!event.relatedTarget?.closest?.('.tc-bar'))hideActivityTooltip();});
-  document.getElementById('time-chart-output').addEventListener('focusin',event=>{const bar=event.target.closest('.tc-bar');if(bar){const r=bar.getBoundingClientRect();showActivityTooltip(bar,r.right,r.top);}});
-  document.getElementById('time-chart-output').addEventListener('focusout',event=>{if(event.target.closest('.tc-bar'))hideActivityTooltip();});
-  document.getElementById('cluster-filter-controls').addEventListener('change',event=>{const input=event.target.closest('input[data-cluster-filter]');if(!input)return;if(!selectedClusters)selectedClusters=new Set();if(input.checked)selectedClusters.add(input.value);else selectedClusters.delete(input.value);try{renderTimeChart();}catch(error){setStatus('Could not apply Cluster filter: '+error.message,true);}});
+  document.getElementById('time-chart-output').addEventListener('pointerover',event=>{const bar=event.target.closest('.tc-bar,.tc-idle-gap');if(bar)showActivityTooltip(bar,event.clientX,event.clientY);});
+  document.getElementById('time-chart-output').addEventListener('pointerout',event=>{if(event.target.closest('.tc-bar,.tc-idle-gap')&&!event.relatedTarget?.closest?.('.tc-bar,.tc-idle-gap'))hideActivityTooltip();});
+  document.getElementById('time-chart-output').addEventListener('focusin',event=>{const bar=event.target.closest('.tc-bar,.tc-idle-gap');if(bar){const r=bar.getBoundingClientRect();showActivityTooltip(bar,r.right,r.top);}});
+  document.getElementById('time-chart-output').addEventListener('focusout',event=>{if(event.target.closest('.tc-bar,.tc-idle-gap'))hideActivityTooltip();});
+  document.getElementById('cluster-filter-controls').addEventListener('change',event=>{
+    const idleInput=event.target.closest('input[data-cluster-idle]');
+    if(idleInput){if(idleInput.checked)idleShownClusters.add(idleInput.value);else idleShownClusters.delete(idleInput.value);try{renderTimeChart();}catch(error){setStatus('Could not update idle-gap display: '+error.message,true);}return;}
+    const input=event.target.closest('input[data-cluster-filter]');
+    if(!input)return;
+    if(!selectedClusters)selectedClusters=new Set();
+    if(input.checked)selectedClusters.add(input.value);else selectedClusters.delete(input.value);
+    try{renderTimeChart();}catch(error){setStatus('Could not apply Cluster filter: '+error.message,true);}
+  });
   document.getElementById('cluster-filter-controls').addEventListener('click',event=>{const button=event.target.closest('button[data-cluster-filter-action]');if(!button)return;const groups=[...new Set(readWorksheetRecords().map(r=>r.mechanism))];if(!selectedClusters)selectedClusters=new Set();if(button.dataset.clusterFilterAction==='all')selectedClusters=new Set(groups);else selectedClusters.clear();try{renderTimeChart();}catch(error){setStatus('Could not update Cluster filter: '+error.message,true);}});
   document.getElementById('cluster-color-controls').addEventListener('change',event=>{const input=event.target.closest('input[data-cluster-color]');if(!input)return;clusterColors[input.dataset.clusterColor]=input.value;try{renderTimeChart();}catch(error){setStatus('Could not update cluster color: '+error.message,true);}});
   document.getElementById('build-time-chart').addEventListener('click', () => { if(!workbook){setStatus('Spreadsheet is not ready. Resolve the Univer initialization error first.',true);return;} try { renderTimeChart(); } catch(error) { setStatus('Could not build Time Chart: '+error.message,true); } });
