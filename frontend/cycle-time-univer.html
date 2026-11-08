@@ -898,9 +898,10 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
     const rows=[];
     for(let i=0;i<result.cycleCount;i++){
       const cycleId='C'+String(i+1).padStart(3,'0');
-      const cycleStart=result.cycles?.[i]?.start??i*pitch,cycleEnd=result.cycles?.[i]?.end??cycleStart+result.cycleSpan;
+      const cycleEvents=result.events.filter(function(e){return e.cycleId===cycleId;});
+      const cycleStart=result.cycles?.[i]?.start??i*pitch,cycleEnd=Math.max(result.cycles?.[i]?.end??cycleStart+result.cycleSpan,...cycleEvents.map(function(e){return e.end;}));
       visible.forEach(cluster=>{
-        const events=result.events.filter(e=>e.cycleId===cycleId&&e.cluster===cluster);
+        const events=cycleEvents.filter(e=>e.cluster===cluster);
         const merged=mergeClusterIntervals(events,cycleStart,cycleEnd);
         const active=merged.reduce((sum,x)=>sum+x.end-x.start,0);
         const cycleDuration=Math.max(0,cycleEnd-cycleStart),idle=Math.max(0,cycleDuration-active);
