@@ -11,6 +11,7 @@
 <script src="./supabase-config.js"></script>
 <style>
 html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}.uv-actions{display:flex;gap:8px;flex-wrap:wrap}.uv-btn{border:1px solid #38516b;border-radius:8px;background:#16283d;color:#dceafa;padding:9px 12px;font:inherit;font-size:12px;font-weight:700;cursor:pointer}.uv-btn.primary{background:#0e5368;border-color:#16758b;color:#e5fbff}.uv-panel{padding:16px;border:1px solid #293f56;border-radius:13px;background:#101d2e;min-width:0}.uv-panel h2{font-size:15px;margin:0 0 8px;color:#edf6ff}.uv-note{font-size:11px;color:#9fb3c9;line-height:1.6;margin:6px 0}.uv-status{font-size:12px;color:#9fb3c9;min-height:20px}.uv-status.error{color:#fca5a5}.uv-editor-shell{height:680px;min-height:520px;overflow:hidden;border:1px solid #38516b;border-radius:10px;background:#fff}.uv-editor-shell #app{height:100%;width:100%}.uv-checks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.uv-check{padding:12px;border:1px solid #2c4259;border-radius:9px;background:#0c1929}.uv-check strong{display:block;color:#e7f4ff;font-size:12px}.uv-check span{display:block;color:#9fb3c9;font-size:11px;margin-top:5px;line-height:1.5}.uv-callout{border-left:3px solid #d49a42;padding:8px 12px;background:#292315;border-radius:5px;color:#f4d9a4;font-size:11px;line-height:1.6}.tc-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.tc-summary{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}.tc-stat{padding:9px 12px;border:1px solid #2c4259;border-radius:8px;background:#0c1929;color:#dceafa;font-size:12px}.tc-stat strong{display:block;font-size:16px;color:#fff;margin-bottom:2px}.tc-chart{display:grid;gap:8px;overflow-x:auto}.tc-axis,.tc-row{display:grid;grid-template-columns:minmax(150px,220px) minmax(280px,1fr) 90px;gap:10px;align-items:center;min-width:560px}.tc-axis{font-size:10px;color:#9fb3c9;padding-bottom:5px;border-bottom:1px solid #38516b}.tc-axis-track{display:flex;justify-content:space-between}.tc-label{min-width:0}.tc-label strong{display:block;color:#e7f4ff;font-size:12px;overflow-wrap:anywhere}.tc-label span{display:block;color:#91a8c1;font-size:10px;margin-top:3px;overflow-wrap:anywhere}.tc-track{height:26px;position:relative;border-radius:5px;background:repeating-linear-gradient(90deg,#1b2b40 0,#1b2b40 calc(10% - 1px),#30435b calc(10% - 1px),#30435b 10%);overflow:hidden}.tc-bar{position:absolute;top:3px;height:20px;min-width:3px;border-radius:4px;display:flex;align-items:center;justify-content:center;padding:0 5px;box-sizing:border-box;color:#07111e;font-size:10px;font-weight:800;white-space:nowrap;overflow:hidden}.tc-duration{text-align:right;color:#cbd5e1;font-size:11px;font-variant-numeric:tabular-nums}.tc-cluster-colors{border-top:1px solid #293f56;margin-top:18px;padding-top:14px;display:grid;gap:10px}.tc-cluster-colors h3,.tc-cluster-filters h3{font-size:13px;color:#edf6ff;margin:0}.tc-color-grid{display:flex;gap:9px;flex-wrap:wrap}.tc-color-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border:1px solid #2c4259;border-radius:8px;background:#0c1929;color:#dceafa;font-size:11px}.tc-color-item input[type=color]{width:30px;height:26px;padding:1px;border:1px solid #52677e;border-radius:5px;background:transparent;cursor:pointer}.tc-cluster-filters{border:1px solid #293f56;border-radius:9px;margin:12px 0;padding:12px;display:grid;gap:10px;background:#0c1929}.tc-filter-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.tc-filter-actions{display:flex;gap:6px;flex-wrap:wrap}.tc-filter-actions button{border:1px solid #38516b;border-radius:6px;background:#16283d;color:#cfe1f3;padding:5px 9px;font:inherit;font-size:10px;cursor:pointer}.tc-filter-grid{display:flex;gap:8px;flex-wrap:wrap}.tc-filter-item{display:flex;align-items:center;gap:7px;padding:7px 10px;border:1px solid #2c4259;border-radius:7px;background:#101d2e;color:#dceafa;font-size:11px;cursor:pointer}.tc-filter-item input{accent-color:#38bdf8;margin:0}.tc-empty{padding:18px;border:1px dashed #38516b;border-radius:9px;color:#9fb3c9;font-size:12px;line-height:1.6}.tc-mapping-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:14px}.tc-map-field{display:grid;gap:6px;min-width:0}.tc-map-field label{font-size:11px;color:#cbd5e1;font-weight:700}.tc-map-field input{width:100%;box-sizing:border-box;background:#091321;border:1px solid #38516b;border-radius:7px;padding:9px 10px;color:#e5edf7;font:12px inherit}.tc-map-field small{font-size:10px;color:#91a8c1}.tc-map-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}@media(max-width:760px){.tc-mapping-grid{grid-template-columns:1fr 1fr}}
+.tc-label{position:relative;padding-right:22px}.tc-cycle-menu-wrap{position:absolute;top:-3px;right:-2px;z-index:12}.tc-cycle-menu-toggle{width:20px;height:22px;display:grid;place-items:center;padding:0;border:1px solid transparent;border-radius:5px;background:transparent;color:#9fb3c9;font-size:17px;line-height:1;cursor:pointer}.tc-cycle-menu-toggle:hover,.tc-cycle-menu-toggle:focus-visible,.tc-cycle-menu-toggle.is-start,.tc-cycle-menu-toggle.is-end{background:#20344b;border-color:#52677e;color:#f1f5f9;outline:none}.tc-cycle-menu{position:absolute;top:24px;right:0;min-width:158px;padding:4px;border:1px solid #52677e;border-radius:7px;background:#101d2e;box-shadow:0 8px 22px rgba(0,0,0,.35);z-index:20}.tc-cycle-menu[hidden]{display:none}.tc-cycle-menu button{display:block;width:100%;padding:7px 9px;border:0;border-radius:4px;background:transparent;color:#dceafa;text-align:left;font:inherit;font-size:10px;white-space:nowrap;cursor:pointer}.tc-cycle-menu button:hover:not(:disabled){background:#263b52}.tc-cycle-menu button:disabled{color:#64748b;cursor:not-allowed}.tc-row{position:relative}.tc-row.cycle-start-row:before{content:'';position:absolute;left:0;top:1px;bottom:1px;width:var(--cycle-bridge-width,0px);background:rgba(203,213,225,.10);border-top:1px solid rgba(203,213,225,.22);border-bottom:1px solid rgba(203,213,225,.22);pointer-events:none;z-index:0}.tc-row.cycle-start-row>.tc-label,.tc-row.cycle-start-row>.tc-value{position:relative;z-index:1}.tc-cycle-l-vertical{position:absolute;width:1px;background:rgba(203,213,225,.72);box-shadow:0 0 0 1px rgba(203,213,225,.08);pointer-events:none;z-index:4}.tc-row.cycle-end-row .tc-label{border-right:1px solid rgba(203,213,225,.2)}
 .tc-cycle-boundary{border:1px solid #38516b;border-radius:9px;background:#0c1929;padding:12px;margin:12px 0}.tc-cycle-boundary strong{font-size:12px;color:#edf6ff}.tc-cycle-boundary .tc-toolbar{margin-top:8px;align-items:center}.tc-bar{cursor:pointer;outline:1px solid transparent;outline-offset:1px}.tc-bar.cycle-start-marker,.tc-bar.cycle-end-marker{outline:1px solid #a3a3a3;outline-offset:0;border-radius:2px;z-index:3}.tc-bar.cycle-start-marker:after{content:'S';position:absolute;right:2px;top:0;font-size:9px;color:#111827}.tc-bar.cycle-end-marker:after{content:'E';position:absolute;right:2px;top:0;font-size:9px;color:#111827}
 .tc-chart{position:relative}.tc-track{isolation:isolate}.tc-cycle-window{position:absolute;top:0;bottom:0;z-index:1;background:rgba(203,213,225,.075);border-left:1px solid #9ca3af;border-right:1px solid #9ca3af;pointer-events:none}.tc-cycle-guide{position:absolute;top:0;bottom:0;width:0;border-left:1px dashed #9ca3af;z-index:4;pointer-events:none}.tc-cycle-guide.start,.tc-cycle-guide.end{border-color:#9ca3af}.tc-bar.cycle-in-window,.tc-bar.cycle-partial{filter:none;box-shadow:none;z-index:2}.tc-cycle-dimension{position:absolute;top:2px;height:24px;z-index:5;pointer-events:none;color:#d1d5db;font-size:10px;font-weight:600;text-align:center;white-space:nowrap}.tc-cycle-dimension .dim-line{position:absolute;left:0;right:0;top:14px;border-top:1px solid #9ca3af}.tc-cycle-dimension .dim-line:before,.tc-cycle-dimension .dim-line:after{content:'';position:absolute;top:-3px;width:0;height:0;border-top:3px solid transparent;border-bottom:3px solid transparent}.tc-cycle-dimension .dim-line:before{left:0;border-right:5px solid #9ca3af}.tc-cycle-dimension .dim-line:after{right:0;border-left:5px solid #9ca3af}.tc-cycle-dimension span{display:inline-block;padding:0 5px;background:#1f2937;border:1px solid #6b7280;border-radius:3px;position:relative;z-index:1}.tc-axis-track{position:relative;overflow:visible}.tc-cycle-axis-highlight{color:#d1d5db!important;font-weight:600}.tc-label.cycle-in-window{background:rgba(203,213,225,.055);border-radius:3px;padding:2px 4px;margin:-2px -4px}.tc-label.cycle-in-window strong{color:#f1f5f9}.tc-label.cycle-in-window span{color:#cbd5e1}
 .tc-cycle-filter{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin:10px 0}.tc-cycle-filter label{display:flex;gap:5px;align-items:center;border:1px solid #38516b;border-radius:6px;padding:5px 8px;font-size:10px;color:#dceafa}.tc-cycle-table-wrap{overflow-x:auto;margin-top:12px}.tc-cycle-table{width:100%;min-width:650px;border-collapse:separate;border-spacing:0 5px;font-size:11px;color:#dceafa}.tc-cycle-table th{padding:6px 8px;text-align:left;color:#9fb3c9;font-size:10px}.tc-cycle-table td{padding:7px 8px;background:#0c1929;vertical-align:middle}.tc-cycle-table td:first-child{border-radius:6px 0 0 6px;font-weight:800}.tc-cycle-table td:last-child{border-radius:0 6px 6px 0}.tc-cycle-lane{height:24px;min-width:340px;position:relative;border-radius:4px;background:repeating-linear-gradient(90deg,#15263a 0,#15263a calc(5% - 1px),#2c4058 calc(5% - 1px),#2c4058 5%);overflow:hidden}.tc-cycle-active{position:absolute;top:2px;height:20px;border-radius:3px;min-width:2px;opacity:.95}.tc-cycle-idle{position:absolute;top:2px;height:20px;background:repeating-linear-gradient(135deg,#66708555 0,#66708555 3px,#253448 3px,#253448 6px);border-left:1px dashed #94a3b8;border-right:1px dashed #94a3b8}.tc-cycle-table .tc-cycle-metric{white-space:nowrap;font-variant-numeric:tabular-nums;color:#cbd5e1}.tc-cycle-axis{display:flex;justify-content:space-between;color:#91a8c1;font-size:10px;margin:0 0 3px 150px}@media(max-width:760px){.tc-cycle-boundary{padding:9px}}
@@ -101,8 +102,8 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
 <div id="tc-smart-tooltip" class="tc-smart-tooltip" role="tooltip"></div>
 <div class="tc-cluster-colors"><div><h3>Cluster colors</h3><p class="uv-note">Choose one color for each cluster. The selected color is applied consistently to every activity bar for that cluster in the Time Chart.</p></div><div id="cluster-color-controls" class="tc-color-grid"><span class="uv-note">Cluster colors will appear after the Time Chart is built.</span></div></div>
 <section class="uv-panel" id="cycle-simulation-panel">
-  <div class="uv-head"><div><h2>Cycle Definition &amp; Logic Simulation</h2><p class="uv-note">Select two Operation bars above to define the cycle window, configure coordination rules, then simulate N continuous cycles. The source worksheet remains unchanged.</p></div><span class="badge">Continuous Flow + Exclusive Resource</span></div>
-  <div class="tc-cycle-boundary"><div><strong>Cycle boundary selection</strong><p class="tc-sim-note" id="cycle-boundary-status">Click the first Operation bar to set Cycle Start, then click a later Operation bar to set Cycle End. Start uses the first operation's Start time; End uses the second operation's End time.</p><div class="tc-toolbar"><button class="uv-btn" id="clear-cycle-boundaries" type="button">Clear cycle markers</button><span class="tc-sim-note" id="cycle-boundary-range">No cycle has been defined.</span></div></div></div>
+  <div class="uv-head"><div><h2>Cycle Definition &amp; Logic Simulation</h2><p class="uv-note">Use each Operation's ⋮ menu to set the Cycle Start and Cycle End boundaries, configure coordination rules, then simulate N continuous cycles. The source worksheet remains unchanged.</p></div><span class="badge">Continuous Flow + Exclusive Resource</span></div>
+  <div class="tc-cycle-boundary"><div><strong>Cycle boundary selection</strong><p class="tc-sim-note" id="cycle-boundary-status">Use the ⋮ menu on any Operation to set Cycle Start or Cycle End. Cycle End must be an Operation after Cycle Start.</p><div class="tc-toolbar"><button class="uv-btn" id="clear-cycle-boundaries" type="button">Clear cycle markers</button><span class="tc-sim-note" id="cycle-boundary-range">No cycle has been defined.</span></div></div></div>
   <div class="tc-sim-controls">
     <div class="tc-sim-field"><label for="sim-cycle-count">Number of cycles (N)</label><input id="sim-cycle-count" type="number" min="2" max="100" step="1" value="10"></div>
     <div class="tc-sim-field"><label>Scheduling model</label><input value="Continuous Flow + Exclusive Resource" readonly></div>
@@ -672,19 +673,32 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
     return gapsBySourceRow;
   }
   function renderTimelineRows(records,min,span,fmt,ticks,gapsBySourceRow) {
+    const startRecord=lastBaselineRecords.find(x=>x.sourceRow===cycleBoundarySelection.startSourceRow);
+    const endRecord=lastBaselineRecords.find(x=>x.sourceRow===cycleBoundarySelection.endSourceRow);
+    const hasCycle=!!(startRecord&&endRecord&&endRecord.sourceRow>startRecord.sourceRow&&endRecord.end>startRecord.start);
     return [...records].sort((a,b)=>a.sourceRow-b.sourceRow).map(r=>{
       const left=Math.max(0,Math.min(100,(r.start-min)/span*100));
       const right=Math.max(left,Math.min(100,(r.end-min)/span*100));
       const width=Math.max(0.6,right-left);
       const color=colorForMechanism(r.mechanism);
       const grid=ticks.map(t=>'<i class="tc-gridline '+(Math.abs(t)<1e-9?'zero':Number.isInteger(t)?'major':'')+'" style="left:'+((t-min)/span*100)+'%"></i>').join('');
-      const cycleStartRecord=lastBaselineRecords.find(x=>x.sourceRow===cycleBoundarySelection.startSourceRow),cycleEndRecord=lastBaselineRecords.find(x=>x.sourceRow===cycleBoundarySelection.endSourceRow),cycleStartTime=cycleStartRecord?cycleStartRecord.start:null,cycleEndTime=cycleEndRecord?cycleEndRecord.end:null,hasCycle=cycleStartTime!==null&&cycleEndTime!==null&&cycleEndTime>cycleStartTime,cycleLeft=hasCycle?Math.max(0,Math.min(100,(cycleStartTime-min)/span*100)):0,cycleRight=hasCycle?Math.max(cycleLeft,Math.min(100,(cycleEndTime-min)/span*100)):0,cycleWindow=hasCycle?'<div class="tc-cycle-window" style="left:'+cycleLeft+'%;width:'+(cycleRight-cycleLeft)+'%"></div><div class="tc-cycle-guide start" style="left:'+cycleLeft+'%"></div><div class="tc-cycle-guide end" style="left:'+cycleRight+'%"></div>':'',inCycle=hasCycle&&r.end>cycleStartTime+1e-9&&r.start<cycleEndTime-1e-9,fullInCycle=hasCycle&&r.start>=cycleStartTime-1e-9&&r.end<=cycleEndTime+1e-9;
+      const cycleLeft=hasCycle?Math.max(0,Math.min(100,(startRecord.start-min)/span*100)):0;
+      const cycleRight=hasCycle?Math.max(cycleLeft,Math.min(100,(endRecord.end-min)/span*100)):0;
+      const cycleWindow=hasCycle?'<div class="tc-cycle-window" style="left:'+cycleLeft+'%;width:'+(cycleRight-cycleLeft)+'%"></div><div class="tc-cycle-guide start" style="left:'+cycleLeft+'%"></div><div class="tc-cycle-guide end" style="left:'+cycleRight+'%"></div>':'';
+      const inCycle=hasCycle&&r.end>startRecord.start+1e-9&&r.start<endRecord.end-1e-9;
+      const fullInCycle=hasCycle&&r.start>=startRecord.start-1e-9&&r.end<=endRecord.end+1e-9;
+      const isStart=cycleBoundarySelection.startSourceRow===r.sourceRow;
+      const isEnd=cycleBoundarySelection.endSourceRow===r.sourceRow;
       const gap=gapsBySourceRow.get(r.sourceRow);
       const gapLeft=gap?Math.max(0,Math.min(100,(gap.start-min)/span*100)):0;
       const gapWidth=gap?Math.max(0,Math.min(100,(gap.end-min)/span*100)-gapLeft):0;
       const gapHtml=gap&&idleShownClusters.has(r.mechanism)?'<div class="tc-idle-gap '+(gapWidth<5?'compact':'')+'" tabindex="0" role="img" aria-label="Idle gap '+fmt(gap.duration)+' seconds after '+escapeHtml(gap.previousOperation)+'" data-idle-gap="1" data-cluster="'+escapeHtml(r.mechanism)+'" data-gap-start="'+gap.start+'" data-gap-end="'+gap.end+'" data-gap-duration="'+gap.duration+'" data-previous-operation="'+escapeHtml(gap.previousOperation)+'" data-next-operation="'+escapeHtml(r.operation)+'" style="left:'+gapLeft+'%;width:'+gapWidth+'%"><span>'+fmt(gap.duration)+' s</span></div>':'';
-      const markerClass=(cycleBoundarySelection.startSourceRow===r.sourceRow?' cycle-start-marker':'')+(cycleBoundarySelection.endSourceRow===r.sourceRow?' cycle-end-marker':'')+(inCycle?(fullInCycle?' cycle-in-window':' cycle-partial'):'');const bar='<div class="tc-bar'+markerClass+'" tabindex="0" role="button" aria-label="Select cycle boundary: '+escapeHtml(r.operation)+', Cluster '+escapeHtml(r.mechanism)+', Start '+fmt(r.start)+' seconds, End '+fmt(r.end)+' seconds" data-cluster="'+escapeHtml(r.mechanism)+'" data-operation="'+escapeHtml(r.operation)+'" data-start="'+r.start+'" data-duration="'+r.duration+'" data-end="'+r.end+'" data-remark="'+escapeHtml(r.remark||'')+'" data-source-row="'+r.sourceRow+'" style="left:'+left+'%;width:'+Math.min(width,100-left)+'%;background:'+color+'">'+(width>10?fmt(r.start)+' → '+fmt(r.end)+' s':'')+'</div>';
-      return '<div class="tc-row"><div class="tc-label'+(inCycle?' cycle-in-window':'')+'"><strong>'+escapeHtml(r.mechanism)+'</strong><span>'+escapeHtml(r.operation)+'</span></div><div class="tc-value">'+fmt(r.start)+' s</div><div class="tc-value duration">'+fmt(r.duration)+' s</div><div class="tc-value">'+fmt(r.end)+' s</div><div class="tc-track">'+grid+cycleWindow+gapHtml+bar+'</div></div>';
+      const markerClass=(isStart?' cycle-start-marker':'')+(isEnd?' cycle-end-marker':'')+(inCycle?(fullInCycle?' cycle-in-window':' cycle-partial'):'');
+      const bar='<div class="tc-bar'+markerClass+'" tabindex="0" role="img" aria-label="'+escapeHtml(r.operation)+', Cluster '+escapeHtml(r.mechanism)+', Start '+fmt(r.start)+' seconds, End '+fmt(r.end)+' seconds" data-cluster="'+escapeHtml(r.mechanism)+'" data-operation="'+escapeHtml(r.operation)+'" data-start="'+r.start+'" data-duration="'+r.duration+'" data-end="'+r.end+'" data-remark="'+escapeHtml(r.remark||'')+'" data-source-row="'+r.sourceRow+'" style="left:'+left+'%;width:'+Math.min(width,100-left)+'%;background:'+color+'">'+(width>10?fmt(r.start)+' → '+fmt(r.end)+' s':'')+'</div>';
+      const endEligible=!!(startRecord&&r.sourceRow>startRecord.sourceRow&&r.end>startRecord.start);
+      const menu='<div class="tc-cycle-menu-wrap"><button type="button" class="tc-cycle-menu-toggle'+(isStart?' is-start':'')+(isEnd?' is-end':'')+'" data-cycle-menu-toggle aria-label="Cycle boundary options for '+escapeHtml(r.operation)+'" aria-haspopup="menu" aria-expanded="false">⋮</button><div class="tc-cycle-menu" role="menu" hidden><button type="button" role="menuitem" data-cycle-action="start" data-source-row="'+r.sourceRow+'">'+(isStart?'✓ ':'')+'Set as Start Time</button><button type="button" role="menuitem" data-cycle-action="end" data-source-row="'+r.sourceRow+'" '+(endEligible?'':'disabled')+'>'+(isEnd?'✓ ':'')+'Set as End Time</button></div></div>';
+      const rowClass=(isStart?' cycle-start-row':'')+(isEnd?' cycle-end-row':'');
+      return '<div class="tc-row'+rowClass+'" data-source-row="'+r.sourceRow+'"><div class="tc-label'+(inCycle?' cycle-in-window':'')+'"><strong>'+escapeHtml(r.mechanism)+'</strong><span>'+escapeHtml(r.operation)+'</span>'+menu+'</div><div class="tc-value">'+fmt(r.start)+' s</div><div class="tc-value duration">'+fmt(r.duration)+' s</div><div class="tc-value">'+fmt(r.end)+' s</div><div class="tc-track">'+grid+cycleWindow+gapHtml+bar+'</div></div>';
     }).join('');
   }
   function showActivityTooltip(bar,x,y) {
@@ -876,33 +890,70 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
     });
     const status=document.getElementById('cycle-boundary-status');
     const range=document.getElementById('cycle-boundary-range');
-    if(!start&&!end){status.textContent='Click the first Operation bar to set Cycle Start, then click a later Operation bar to set Cycle End. Start uses the first operation Start time; End uses the second operation End time.';range.textContent='No cycle has been defined.';}
+    if(!start&&!end){status.textContent='Use the ⋮ menu on any Operation to set Cycle Start or Cycle End. Cycle End must be an Operation after Cycle Start.';range.textContent='No cycle has been defined.';}
     else if(start&&!end){status.textContent='Cycle Start selected: '+start.operation+' (row '+start.sourceRow+'). Now select a later Operation bar for Cycle End.';range.textContent='Start '+start.start.toFixed(3)+' s · End not selected';}
     else if(start&&end){status.textContent='Cycle boundaries selected. Review the boundaries, then configure Cycle Logic.';range.textContent='Start '+start.start.toFixed(3)+' s → End '+end.end.toFixed(3)+' s · '+(end.end-start.start).toFixed(3)+' s';}
     else{status.textContent='The selected Cycle Start operation is no longer available. Select the boundaries again.';range.textContent='Invalid cycle selection';}
     renderCycleLogicEditor();
   }
-  function selectCycleBoundary(bar) {
-    const row=Number(bar.dataset.sourceRow);
-    // Operation clicks never clear both boundaries. An explicit Clear action does that;
-    // clicking a completed selection starts a fresh boundary pair.
-    if(cycleBoundarySelection.startSourceRow===null||cycleBoundarySelection.endSourceRow!==null){
-      cycleBoundarySelection={startSourceRow:row,endSourceRow:null};
-      cycleLogic={entrySourceRow:row,completionSourceRow:null,dependencies:[],resources:{}};
-      simulationResult=null;renderCycleSimulation(null);
-    }else if(row===cycleBoundarySelection.startSourceRow){
-      // Keep the existing Start selected; don't create an accidental empty state.
-      document.getElementById('cycle-boundary-status').textContent='Cycle Start remains selected. Choose a different, later Operation for Cycle End, or use Clear cycle markers to reset.';
-    }else{
-      cycleBoundarySelection.endSourceRow=row;cycleLogic.completionSourceRow=row;
+  function closeCycleBoundaryMenus() {
+    document.querySelectorAll('.tc-cycle-menu:not([hidden])').forEach(menu=>{menu.hidden=true;});
+    document.querySelectorAll('.tc-cycle-menu-toggle[aria-expanded="true"]').forEach(button=>button.setAttribute('aria-expanded','false'));
+  }
+  function setCycleBoundary(sourceRow,role) {
+    const row=Number(sourceRow);
+    const selected=lastBaselineRecords.find(r=>r.sourceRow===row);
+    if(!selected)return;
+    if(role==='start'){
+      cycleBoundarySelection.startSourceRow=row;
+      const currentEnd=lastBaselineRecords.find(r=>r.sourceRow===cycleBoundarySelection.endSourceRow);
+      if(currentEnd&&(currentEnd.sourceRow<=row||currentEnd.end<=selected.start))cycleBoundarySelection.endSourceRow=null;
+      cycleLogic.entrySourceRow=row;
+      if(cycleBoundarySelection.endSourceRow===null)cycleLogic.completionSourceRow=null;
+    }else if(role==='end'){
       const start=lastBaselineRecords.find(r=>r.sourceRow===cycleBoundarySelection.startSourceRow);
-      const end=lastBaselineRecords.find(r=>r.sourceRow===row);
-      if(!start||!end||end.end<=start.start){
-        cycleBoundarySelection.endSourceRow=null;
-        document.getElementById('cycle-boundary-status').textContent='Invalid boundary order: Cycle End must finish after Cycle Start. Select a later Operation.';
+      if(!start||row<=start.sourceRow||selected.end<=start.start){
+        const status=document.getElementById('cycle-boundary-status');
+        status.textContent='This Operation cannot be Cycle End. Choose an Operation after the selected Cycle Start.';
+        return;
       }
+      cycleBoundarySelection.endSourceRow=row;
+      cycleLogic.completionSourceRow=row;
+    }else return;
+    simulationResult=null;
+    simulationVisibleClusters=new Set();
+    renderCycleSimulation(null);
+    closeCycleBoundaryMenus();
+    updateCycleBoundaryUI();
+    renderTimeChart();
+  }
+  function updateCycleHighlightGeometry() {
+    const chart=document.getElementById('tc-chart-viewport');
+    if(!chart)return;
+    chart.querySelector('.tc-cycle-l-vertical')?.remove();
+    chart.querySelectorAll('.tc-row.cycle-start-row').forEach(row=>row.classList.remove('cycle-start-row'));
+    const start=lastBaselineRecords.find(r=>r.sourceRow===cycleBoundarySelection.startSourceRow);
+    const end=lastBaselineRecords.find(r=>r.sourceRow===cycleBoundarySelection.endSourceRow);
+    if(!start||!end||end.sourceRow<=start.sourceRow||end.end<=start.start)return;
+    const startRow=chart.querySelector('.tc-row[data-source-row="'+start.sourceRow+'"]');
+    const endRow=chart.querySelector('.tc-row[data-source-row="'+end.sourceRow+'"]');
+    const referenceTrack=(startRow||chart.querySelector('.tc-row .tc-track'));
+    if(!referenceTrack)return;
+    const track=referenceTrack.classList.contains('tc-track')?referenceTrack:referenceTrack.querySelector('.tc-track');
+    if(!track)return;
+    const min=Number(chart.dataset.timeMin),max=Number(chart.dataset.timeMax),span=Math.max(max-min,0.001);
+    const endRatio=Math.max(0,Math.min(1,(end.end-min)/span));
+    const endX=track.offsetLeft+track.clientWidth*endRatio;
+    if(startRow){
+      startRow.classList.add('cycle-start-row');
+      startRow.style.setProperty('--cycle-bridge-width',Math.max(0,endX)+'px');
     }
-    updateCycleBoundaryUI();renderTimeChart();renderCycleLogicEditor();
+    const vertical=document.createElement('div');
+    vertical.className='tc-cycle-l-vertical';
+    vertical.style.left=endX+'px';
+    vertical.style.top=(startRow?startRow.offsetTop:0)+'px';
+    vertical.style.height=Math.max(0,chart.scrollHeight-(startRow?startRow.offsetTop:0))+'px';
+    chart.appendChild(vertical);
   }
   function getSelectedCycleRecords() {
     const start=lastBaselineRecords.find(r=>r.sourceRow===cycleBoundarySelection.startSourceRow);
@@ -1049,6 +1100,7 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
     const summary='<div class="tc-summary"><div class="tc-stat"><strong>'+visibleRecords.length+' / '+records.length+'</strong>Visible operations</div><div class="tc-stat"><strong>'+visibleGroups.length+' / '+groups.length+'</strong>Visible clusters</div><div class="tc-stat"><strong>'+fmt(min)+'–'+fmt(max)+' s</strong>Full time range</div><div class="tc-stat"><strong>'+longest+'</strong>Longest visible duration</div><div class="tc-stat"><strong>'+shownIdleCount+'</strong>Visible idle gaps</div></div>';
     const chartBody=visibleRecords.length?axis+renderTimelineRows(visibleRecords,min,span,fmt,gridTicks,idleGapsBySourceRow):'<div class="tc-empty">No clusters selected. Enable one or more clusters in the filter above to display their activities.</div>';
     target.innerHTML=summary+'<div class="tc-chart" id="tc-chart-viewport" data-time-min="'+min+'" data-time-max="'+max+'">'+chartBody+(visibleRecords.length?'<div class="tc-cursor-line" id="tc-cursor-line"></div>':'')+'</div>';
+    updateCycleHighlightGeometry();
     renderClusterColorControls(groups);
     setStatus('Time Chart generated with '+visibleRecords.length+' of '+records.length+' operations visible. Cluster colors are shared across all activities; save to project to retain them.');
   }
@@ -1101,12 +1153,26 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
   document.getElementById('auto-detect-ranges').addEventListener('click',()=>{if(!workbook){setStatus('Spreadsheet is not ready. Resolve the Univer initialization error first.',true);return;}try{detectDataRanges();}catch(error){document.getElementById('range-status').textContent=error.message;setStatus('Could not detect ranges: '+error.message,true);}});
   document.getElementById('apply-data-ranges').addEventListener('click',()=>{if(!workbook){setStatus('Spreadsheet is not ready. Resolve the Univer initialization error first.',true);return;}try{dataRangeConfig=getRangeConfigFromInputs();simulationResult=null;renderCycleSimulation(null);renderTimeChart();}catch(error){document.getElementById('range-status').textContent=error.message;setStatus('Could not build Time Chart: '+error.message,true);}});
   document.getElementById('time-chart-output').addEventListener('click',event=>{
-    const bar=event.target.closest('.tc-bar');if(!bar)return;
-    event.preventDefault();selectCycleBoundary(bar);
+    const action=event.target.closest('[data-cycle-action]');
+    if(action){
+      event.preventDefault();event.stopPropagation();
+      if(action.disabled)return;
+      setCycleBoundary(action.dataset.sourceRow,action.dataset.cycleAction);
+      return;
+    }
+    const toggle=event.target.closest('[data-cycle-menu-toggle]');
+    if(toggle){
+      event.preventDefault();event.stopPropagation();
+      const menu=toggle.parentElement.querySelector('.tc-cycle-menu');
+      const opening=!!menu.hidden;
+      closeCycleBoundaryMenus();
+      if(opening){menu.hidden=false;toggle.setAttribute('aria-expanded','true');}
+      return;
+    }
+    if(!event.target.closest('.tc-cycle-menu'))closeCycleBoundaryMenus();
   });
   document.getElementById('time-chart-output').addEventListener('keydown',event=>{
-    const bar=event.target.closest('.tc-bar');if(!bar||!['Enter',' '].includes(event.key))return;
-    event.preventDefault();selectCycleBoundary(bar);
+    if(event.key==='Escape')closeCycleBoundaryMenus();
   });
   document.getElementById('time-chart-output').addEventListener('pointermove',event=>{
     const bar=event.target.closest('.tc-bar,.tc-idle-gap');if(bar)showActivityTooltip(bar,event.clientX,event.clientY);else hideActivityTooltip();
