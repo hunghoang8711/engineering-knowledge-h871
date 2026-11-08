@@ -945,3 +945,13 @@ Time Chart-specific lessons:
 - **Code commit:** 14271ae5b9600b1e325bfced2ab61e94e472f63b.
 - **Verification:** Inline JavaScript syntax parsing passed. Static source review confirms horizontal cell/track shading is restricted to rows between selected Start and End and the track overlay width is calculated to the End marker. Browser rendering, scrolling alignment, and the user's actual workbook have not yet been visually tested.
 - **Next validation:** Hard-refresh the Time Chart, select Start and End, and confirm the description/value cells and timeline track on each Operation row are shaded consistently through the End marker while Cluster bar colors remain unchanged.
+
+
+### 2026-11-09 — Revert Duplicate Horizontal Cycle Background Layers
+
+- **User feedback:** The latest horizontal Cycle background change made the Time Chart background visually worse because multiple overlapping background layers were being rendered.
+- **Review:** Commit 14271ae added an additional background on the Operation label/value cells, a gradient on each timeline track, and per-track width styling. These layers overlapped the existing row highlight and Cycle window, creating duplicated shading.
+- **Rollback:** Restored `frontend/cycle-time-univer.html` to the exact content from commit 390e8c45430cf2271916f6f3aa59d00ae9c35ff1, immediately before the horizontal cell-highlighting change. This removes the duplicate layers while retaining all earlier Time Chart functionality, Cycle Start/End selection, vertical Cycle window shading, and the Univer initialization hotfix.
+- **Code rollback commit:** ea7ed488010d4f49474d32317ed83380fbf09777.
+- **Scope:** No saved chart data, project data, database schema, migrations, RLS, or Process Flow / Cycle Logic Editor changes.
+- **Verification:** Source was restored byte-for-byte from the selected prior commit. GitHub Pages deployment status is to be checked; visual browser verification has not been performed.
