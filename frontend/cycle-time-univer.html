@@ -943,7 +943,10 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
     if(!track)return;
     const min=Number(chart.dataset.timeMin),max=Number(chart.dataset.timeMax),span=Math.max(max-min,0.001);
     const endRatio=Math.max(0,Math.min(1,(end.end-min)/span));
-    const endX=track.offsetLeft+track.clientWidth*endRatio;
+    const chartRect=chart.getBoundingClientRect();
+    const trackRect=track.getBoundingClientRect();
+    const endX=trackRect.left-chartRect.left+chart.scrollLeft+track.clientWidth*endRatio;
+    const startTop=startRow?startRow.getBoundingClientRect().top-chartRect.top+chart.scrollTop:0;
     if(startRow){
       startRow.classList.add('cycle-start-row');
       startRow.style.setProperty('--cycle-bridge-width',Math.max(0,endX)+'px');
@@ -951,8 +954,8 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
     const vertical=document.createElement('div');
     vertical.className='tc-cycle-l-vertical';
     vertical.style.left=endX+'px';
-    vertical.style.top=(startRow?startRow.offsetTop:0)+'px';
-    vertical.style.height=Math.max(0,chart.scrollHeight-(startRow?startRow.offsetTop:0))+'px';
+    vertical.style.top=startTop+'px';
+    vertical.style.height=Math.max(0,chart.scrollHeight-startTop)+'px';
     chart.appendChild(vertical);
   }
   function getSelectedCycleRecords() {
