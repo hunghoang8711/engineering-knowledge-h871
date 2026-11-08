@@ -103,7 +103,7 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
   <div class="tc-cycle-boundary"><div><strong>Cycle boundary selection</strong><p class="tc-sim-note" id="cycle-boundary-status">Click the first Operation bar to set Cycle Start, then click a later Operation bar to set Cycle End. Start uses the first operation's Start time; End uses the second operation's End time.</p><div class="tc-toolbar"><button class="uv-btn" id="clear-cycle-boundaries" type="button">Clear cycle markers</button><span class="tc-sim-note" id="cycle-boundary-range">No cycle has been defined.</span></div></div></div>
   <div class="tc-sim-controls">
     <div class="tc-sim-field"><label for="sim-cycle-count">Number of cycles (N)</label><input id="sim-cycle-count" type="number" min="2" max="100" step="1" value="10"></div>
-    <div class="tc-sim-field"><label for="sim-interval-mode">Cycle start interval</label><select id="sim-interval-mode"><option value="auto">Continuous — follow Cycle Logic</option><option value="manual">Manual interval</option></select></div>
+    <div class="tc-sim-field"><label>Scheduling model</label><input value="Continuous Flow + Exclusive Resource" readonly></div>
     <div class="tc-sim-field"><label>Pitch policy</label><input value="Calculated from actual Cycle Entry" readonly></div>
     <div class="tc-sim-field"><label for="sim-display-limit">Timeline display limit</label><select id="sim-display-limit"><option value="100">100 events</option><option value="300" selected>300 events</option><option value="600">600 events</option></select></div>
   </div>
@@ -900,7 +900,7 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
         const events=result.events.filter(e=>e.cycleId===cycleId&&e.cluster===cluster);
         const merged=mergeClusterIntervals(events,cycleStart,cycleEnd);
         const active=merged.reduce((sum,x)=>sum+x.end-x.start,0);
-        const idle=Math.max(0,result.cycleSpan-active);
+        const cycleDuration=Math.max(0,cycleEnd-cycleStart),idle=Math.max(0,cycleDuration-active);
         const idleParts=[];let cursor=cycleStart;
         merged.forEach(x=>{if(x.start>cursor+1e-9)idleParts.push({start:cursor,end:x.start});cursor=Math.max(cursor,x.end);});
         if(cursor<cycleEnd-1e-9)idleParts.push({start:cursor,end:cycleEnd});
@@ -1037,14 +1037,6 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
   });
   document.querySelector('.tc-cluster-filters').addEventListener('click',event=>{const button=event.target.closest('button[data-cluster-filter-action]');if(!button)return;const groups=[...new Set(readWorksheetRecords().map(r=>r.mechanism))];if(!selectedClusters)selectedClusters=new Set();if(button.dataset.clusterFilterAction==='all')selectedClusters=new Set(groups);else selectedClusters.clear();try{renderTimeChart();}catch(error){setStatus('Could not update Cluster filter: '+error.message,true);}});
   document.getElementById('cluster-color-controls').addEventListener('change',event=>{const input=event.target.closest('input[data-cluster-color]');if(!input)return;clusterColors[input.dataset.clusterColor]=input.value;try{renderTimeChart();}catch(error){setStatus('Could not update cluster color: '+error.message,true);}});
-  document.getElementById('sim-interval-mode').addEventListener('change',event=>{
-    const manual=event.target.value==='manual';
-    document.getElementById('sim-cycle-interval').disabled=!manual;
-    if(!manual&&lastBaselineRecords.length){
-      const span=Math.max(...lastBaselineRecords.map(r=>r.end))-Math.min(...lastBaselineRecords.map(r=>r.start));
-      document.getElementById('sim-cycle-interval').value=span.toFixed(3);
-    }
-  });
   document.getElementById('sim-display-limit').addEventListener('change',()=>{if(simulationResult)renderCycleSimulation(simulationResult);});
   document.getElementById('clear-cycle-boundaries').addEventListener('click',()=>{
     cycleBoundarySelection={startSourceRow:null,endSourceRow:null};cycleLogic={entrySourceRow:null,completionSourceRow:null,dependencies:[],resources:{}};simulationResult=null;renderCycleSimulation(null);updateCycleBoundaryUI();
