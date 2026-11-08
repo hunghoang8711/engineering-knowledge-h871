@@ -604,7 +604,7 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
   function buildGridTicks(min,max) {
     const span=Math.max(max-min,0.001);
     let step=1;
-    if(span>36){const raw=span/18,power=Math.pow(10,Math.floor(Math.log10(raw))),scaled=raw/power;step=(scaled<=1?1:scaled<=2?2:scaled<=5?5:10)*power;}
+    if(span>80){const raw=span/20,power=Math.pow(10,Math.floor(Math.log10(raw))),scaled=raw/power;step=(scaled<=1?1:scaled<=2?2:scaled<=5?5:10)*power;}
     const ticks=new Set([min,max]);
     const first=Math.ceil(min/step)*step;
     for(let t=first;t<max&&ticks.size<80;t+=step)ticks.add(Number(t.toFixed(6)));
@@ -665,14 +665,13 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
       setStatus('No valid timeline rows found. Check Start, Duration and End columns.',true);
       return;
     }
-    const min=Math.min(...records.map(r=>r.start));
-    const max=Math.max(...records.map(r=>r.end));
+    const min=Math.min(0,...records.map(r=>r.start));
+    const max=Math.max(0,...records.map(r=>r.end));
     const span=Math.max(max-min,0.001);
     const groups=[...new Set(records.map(r=>r.mechanism))];
     renderClusterFilterControls(groups);
     const visibleRecords=selectedClusters?records.filter(r=>selectedClusters.has(r.mechanism)):records;
     const visibleGroups=[...new Set(visibleRecords.map(r=>r.mechanism))];
-    const ticks=Array.from({length:6},(_,i)=>min+span*i/5);
     const fmt=n=>Number(n.toFixed(2)).toString();
     const gridTicks=buildGridTicks(min,max);
     const axis='<div class="tc-axis"><div class="tc-axis-operation">Operation (Excel order)</div><div class="tc-col-heading">Start</div><div class="tc-col-heading">Duration</div><div class="tc-col-heading">End</div><div class="tc-axis-track">'+gridTicks.map(t=>'<span class="tc-tick-label '+(Math.abs(t)<1e-9?'zero':Number.isInteger(t)?'major':'')+'" style="left:'+((t-min)/span*100)+'%">'+fmt(t)+' s</span>').join('')+'</div></div>';
