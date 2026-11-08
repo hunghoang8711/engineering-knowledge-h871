@@ -924,3 +924,13 @@ Time Chart-specific lessons:
 - **Code commit:** 526e6d3c24ea6250f925af1cd2d0aac35dc6113c.
 - **Verification:** Static checks confirm the bar overlay was removed and the stronger cycle-window background is assigned only to rows from Start through End inclusive. Browser visual verification with the user's saved workbook has not yet been performed.
 - **Next validation:** Hard-refresh the Time Chart and verify that the background band between the Start and End vertical guides is subtly brighter on every Operation track in the selected source-row range, with bar Cluster colors unchanged.
+
+
+### 2026-11-09 — Hotfix: Restore Time Chart Univer Initialization
+
+- **User-reported regression:** The Time Chart stopped after displaying “Loading Univer spreadsheet engine…” and did not load project/chart data following the Cycle track-background highlighting update.
+- **Root cause:** A literal backslash-n sequence (\\n) was accidentally inserted between the new `inCycleRow` declaration and the following `return` statement in the inline JavaScript. This caused a JavaScript `SyntaxError`, preventing the page initialization script from running at all; Univer loading and subsequent data loading therefore never started.
+- **Fix:** Replaced the literal characters with an actual source-code line break. No data, project records, chart JSON, database schema, migrations, RLS, or Process Flow / Cycle Logic Editor code was changed. The intended `cycle-range-track` background highlighting remains intact.
+- **Code hotfix commit:** 8ebe75137df76cd57d40926d04c06c6d8d5c78bb.
+- **Verification:** The inline JavaScript was parsed with `new Function(...)` after the correction and passed. This is a static syntax check only; live browser initialization, Univer CDN loading, and retrieval of the user's saved chart have not yet been tested in an actual browser.
+- **Next validation:** Confirm the GitHub Pages deployment succeeds, then hard-refresh the existing Time Chart URL and verify that Univer initializes and the saved chart data loads.
