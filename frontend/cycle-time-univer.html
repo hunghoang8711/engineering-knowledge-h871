@@ -968,6 +968,7 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
     target.innerHTML=playback+metrics+'<p class="tc-sim-note">Generated '+totalEvents+' activity events across '+result.cycleCount+' cycles using Continuous Flow + Exclusive Resource. Showing '+visible.length+' of '+clusters.length+' Clusters and '+visibleEvents+' events. Colored blocks are merged active intervals; hatched blocks are Cluster inactive time. Cross-cycle overlap is allowed after Entry Gate; assigned resources remain exclusive.</p>'+cycleSummary+table;
   }
   function runCycleSimulation() {
+    stopSimulationPlayback();simulationPlaybackTime=0;
     const selected=getSelectedCycleRecords();
     const count=Number(document.getElementById('sim-cycle-count').value);
     if(!Number.isInteger(count)||count<2||count>100) throw new Error('Choose between 2 and 100 cycles for this initial release.');
@@ -1122,6 +1123,42 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
 
   document.getElementById('logic-add-dependency').addEventListener('click',()=>{const from=Number(document.getElementById('logic-dependency-source').value),to=Number(document.getElementById('logic-dependency-target').value),delay=Math.max(0,Number(document.getElementById('logic-dependency-delay').value)||0);if(!from||!to||from===to){document.getElementById('logic-validation-status').textContent='Choose two different operations.';return;}if(cycleLogic.dependencies.some(d=>d.from===from&&d.to===to)){document.getElementById('logic-validation-status').textContent='This dependency already exists.';return;}cycleLogic.dependencies.push({from,to,delay});renderCycleLogicEditor();});
   document.getElementById('logic-dependency-list').addEventListener('click',e=>{const b=e.target.closest('[data-logic-remove]');if(b){cycleLogic.dependencies.splice(Number(b.dataset.logicRemove),1);renderCycleLogicEditor();}});
+  const simOutput=document.getElementById('cycle-simulation-output');
+  function refreshSimulationPlaybackUI(){
+    if(!simulationResult)return;
+    const maxTime=simulationResult.lastCompletion||0;
+    simulationPlaybackTime=Math.max(0,Math.min(maxTime,simulationPlaybackTime));
+    const range=document.getElementById('sim-playback-range'),timeLabel=document.getElementById('sim-playback-time'),stateLabel=document.getElementById('sim-playback-state');
+    if(range)range.value=String(simulationPlaybackTime);
+    if(timeLabel)timeLabel.textContent=simulationPlaybackTime.toFixed(2)+' / '+maxTime.toFixed(2)+' s';
+    if(stateLabel){
+      const rows=[...new Set(simulationResult.events.map(e=>e.sourceRow))],counts={running:0,'waiting-dependency':0,'waiting-resource':0,ready:0,completed:0,waiting:0};
+      rows.forEach(row=>{const state=simulationNodeState(row,simulationPlaybackTime);if(state)counts[state.state]=(counts[state.state]||0)+1;});
+      stateLabel.textContent=rows.length+' Operations · '+counts.running+' Running · '+counts['waiting-dependency']+' Dependency wait · '+counts['waiting-resource']+' Resource wait · '+counts.completed+' Completed';
+    }
+    renderProcessFlowCanvas(selectedLogicRecords());
+  }
+  simOutput.addEventListener('click',event=>{
+    const button=event.target.closest('[data-sim-playback]');if(!button||!simulationResult)return;
+    if(button.dataset.simPlayback==='reset'){stopSimulationPlayback();simulationPlaybackTime=0;refreshSimulationPlaybackUI();return;}
+    if(button.dataset.simPlayback==='toggle'){
+      if(simulationPlaybackTimer!==null){stopSimulationPlayback();return;}
+      if(simulationPlaybackTime>=simulationResult.lastCompletion)simulationPlaybackTime=0;
+      button.textContent='Ⅱ Pause';
+      simulationPlaybackTimer=setInterval(()=>{
+        simulationPlaybackTime+=0.1*simulationPlaybackSpeed;
+        if(simulationPlaybackTime>=simulationResult.lastCompletion){simulationPlaybackTime=simulationResult.lastCompletion;stopSimulationPlayback();}
+        refreshSimulationPlaybackUI();
+      },100);
+    }
+  });
+  simOutput.addEventListener('input',event=>{
+    if(event.target.id==='sim-playback-range'&&simulationResult){stopSimulationPlayback();simulationPlaybackTime=Number(event.target.value)||0;refreshSimulationPlaybackUI();}
+    if(event.target.id==='sim-playback-speed'){simulationPlaybackSpeed=Math.max(0.25,Number(event.target.value)||1);}
+  });
+  simOutput.addEventListener('change',event=>{
+    if(event.target.id==='sim-playback-speed'){simulationPlaybackSpeed=Math.max(0.25,Number(event.target.value)||1);}
+  });
   document.getElementById('run-cycle-simulation').addEventListener('click',()=>{
     try{runCycleSimulation();}catch(error){setStatus('Simulation failed: '+error.message,true);document.getElementById('sim-interval-hint').textContent=error.message;}
   });
