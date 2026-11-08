@@ -742,8 +742,11 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
     const freeAt=new Map(),done=new Set();let guard=0;
     while(done.size<events.length&&guard++<events.length*3){
       const candidates=events.filter(e=>!done.has(e.eventId)&&e.dependencies.every(d=>done.has(d.eventId))).map(e=>{
-        const prev=e.cycleIndex>1?byId.get(id(e.cycleIndex-2,cycleLogic.completionSourceRow)):null;
-        const gate=prev?prev.actualEnd:0,depReady=e.dependencies.reduce((m,d)=>Math.max(m,byId.get(d.eventId).actualEnd+d.delay),0);
+        const isEntry=e.sourceRow===cycleLogic.entrySourceRow;
+        const previousCompletion=e.cycleIndex>1?byId.get(id(e.cycleIndex-2,cycleLogic.completionSourceRow)):null;
+        const entryEvent=e.cycleIndex>1?byId.get(id(e.cycleIndex-1,cycleLogic.entrySourceRow)):null;
+        const gate=isEntry?(previousCompletion?previousCompletion.actualEnd:0):(e.cycleIndex===1?0:(entryEvent?.actualStart??Infinity));
+        const depReady=e.dependencies.reduce((m,d)=>Math.max(m,byId.get(d.eventId).actualEnd+d.delay),0);
         const planned=gate+e.plannedStart,base=Math.max(planned,depReady),resourceReady=e.resourceIds.reduce((m,r)=>Math.max(m,freeAt.get(r)||0),base);
         return {event:e,ready:resourceReady,base,plannedBase:planned};
       }).sort((a,b)=>a.ready-b.ready||a.event.cycleIndex-b.event.cycleIndex||a.event.sourceRow-b.event.sourceRow);
