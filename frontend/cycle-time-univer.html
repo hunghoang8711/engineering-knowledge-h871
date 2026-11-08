@@ -780,7 +780,7 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
     const cycleStart=start.start,cycleEnd=end.end;
     if(!(cycleEnd>cycleStart))throw new Error('Cycle End must be later than Cycle Start.');
     const records=lastBaselineRecords.filter(r=>r.end>cycleStart+1e-9&&r.start<cycleEnd-1e-9).map(r=>{
-      const clippedStart=Math.max(r.start,cycleStart),clippedEnd=Math.min(r.end,cycleEnd);
+      const clippedStart=Math.max(r.start,cycleStart)-cycleStart,clippedEnd=Math.min(r.end,cycleEnd)-cycleStart;
       return {...r,start:clippedStart,end:clippedEnd,duration:clippedEnd-clippedStart};
     }).filter(r=>r.duration>1e-9);
     if(!records.length)throw new Error('No activities intersect the selected cycle window.');
@@ -830,7 +830,6 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
     const clusters=[...new Set(result.events.map(e=>e.cluster))].sort((a,b)=>a.localeCompare(b));
     if(!simulationVisibleClusters)simulationVisibleClusters=new Set(clusters);
     simulationVisibleClusters=new Set([...simulationVisibleClusters].filter(c=>clusters.includes(c)));
-    if(!simulationVisibleClusters.size)simulationVisibleClusters=new Set(clusters);
     filter.innerHTML='<strong class="tc-sim-note">Cluster filter:</strong><button type="button" class="uv-btn" data-sim-cluster-action="all">All</button><button type="button" class="uv-btn" data-sim-cluster-action="none">None</button>'+clusters.map(c=>'<label><input type="checkbox" data-sim-cluster="'+escapeHtml(c)+'" '+(simulationVisibleClusters.has(c)?'checked':'')+'><span>'+escapeHtml(c)+'</span></label>').join('');
     const totalEvents=result.events.length;
     const totalEnd=(result.cycleCount-1)*result.cycleInterval+result.cycleSpan;
