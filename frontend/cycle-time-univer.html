@@ -1013,7 +1013,13 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
     const target=document.getElementById('time-chart-output');
     const records=readWorksheetRecords();
     lastBaselineRecords=records.map(r=>({...r}));
-    if(!records.some(r=>r.sourceRow===cycleBoundarySelection.startSourceRow)||!records.some(r=>r.sourceRow===cycleBoundarySelection.endSourceRow)){
+    // Validate only boundaries that are actually selected. A null End is a valid
+    // intermediate state while the user is choosing the first boundary.
+    const hasStart=cycleBoundarySelection.startSourceRow!==null;
+    const hasEnd=cycleBoundarySelection.endSourceRow!==null;
+    const startStillExists=!hasStart||records.some(r=>r.sourceRow===cycleBoundarySelection.startSourceRow);
+    const endStillExists=!hasEnd||records.some(r=>r.sourceRow===cycleBoundarySelection.endSourceRow);
+    if(!startStillExists||!endStillExists){
       cycleBoundarySelection={startSourceRow:null,endSourceRow:null};simulationResult=null;renderCycleSimulation(null);
     }
     updateCycleBoundaryUI();
