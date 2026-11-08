@@ -854,3 +854,12 @@ Time Chart-specific lessons:
 - **Code commit:** f0d79477915177389c31f43b8a874bca7808acb8.
 - **Verification:** Latest source blob e7da8ef5f6d4350117d615b27a13b542a7c05c12 passed inline JavaScript syntax parsing. Duplicate HTML IDs and missing DOM references: none. Static checks confirm thin neutral guides, low-opacity range fill, no operation-bar brightness/glow, smaller marker radius, left-label highlighting, and full chart rerender on clear. Actual browser interaction and pixel alignment against the saved workbook have not yet been exercised.
 - **Next validation:** Check that guides coincide with the selected bars' visible outer edges and that Clear Cycle Markers immediately allows selecting a fresh Start and End pair.
+
+### 2026-11-08 — Cycle Boundary Click State Recovery
+
+- **User-reported defect:** Clicking a Time Chart Operation to cancel the selected Start/End pair cleared both markers; subsequent clicks could no longer begin a new selection reliably.
+- **Root cause:** `selectCycleBoundary()` had a branch that reset both boundaries when the clicked row equaled the currently selected Start while End was still empty. This allowed an accidental empty state from ordinary bar interaction and made click behavior ambiguous.
+- **Fix:** Operation-bar clicks no longer clear both boundaries. If no Start exists, the clicked Operation becomes Start. If a complete pair exists, the next click starts a fresh pair at the clicked Operation. Clicking the current Start while awaiting End retains the Start and gives guidance; the dedicated Clear cycle markers button remains the explicit reset. End validation still requires its end time to be later than Start.
+- **Code commit:** 24bfeb88ae54262b06d152c9b7ac12c8adcf40e7.
+- **Verification:** Inline JavaScript syntax parsing passed. Behavior was verified by reviewing the state transition branches; browser interaction with the user's loaded workbook has not been performed.
+- **Next validation:** Select a Start and End, click another bar to restart selection, then select a different End. Also verify Clear cycle markers resets selection.
