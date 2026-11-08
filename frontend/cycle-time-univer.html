@@ -44,12 +44,12 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
 <input id="xlsx-file" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden>
 <div class="import-dialog-backdrop" id="import-dialog" hidden>
   <section class="import-dialog-card" role="dialog" aria-modal="true" aria-labelledby="import-dialog-title">
-    <div class="uv-head"><div><h2 id="import-dialog-title">Select Excel data regions</h2><p class="uv-note">Choose multiple rectangular ranges with the same column structure. They will be appended vertically in the order listed.</p></div><button class="uv-btn" id="cancel-import">Close</button></div>
+    <div class="uv-head"><div><h2 id="import-dialog-title">Select Excel data regions</h2><p class="uv-note">Select one or more Excel cell ranges. Imported cells retain their original row and column positions.</p></div><button class="uv-btn" id="cancel-import">Close</button></div>
     <label class="import-label" for="import-sheet">Worksheet</label><select id="import-sheet" class="import-control"></select>
     <label class="import-label" for="import-range-input">Excel cell ranges</label>
     <input id="import-range-input" class="import-control" placeholder="A1:C7; D7:E10" aria-describedby="import-range-help">
     <p class="uv-note" id="import-range-help">Enter rectangular ranges separated by semicolons. Imported cells keep their original row and column positions; ranges may have different sizes or overlap.</p>
-    <p id="import-preview" class="uv-status">Add one or more rectangular ranges to preview the selected data.</p>
+    <p id="import-preview" class="uv-status">Enter ranges such as A1:C7; D7:E10, then import.</p>
     <div class="import-dialog-actions"><button class="uv-btn" id="cancel-import-bottom">Cancel</button><button class="uv-btn primary" id="confirm-import-ranges" disabled>Import selected regions</button></div>
   </section>
 </div>
