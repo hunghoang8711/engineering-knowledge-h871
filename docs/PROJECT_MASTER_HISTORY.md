@@ -992,3 +992,12 @@ Time Chart-specific lessons:
 - **Code commit:** `32454b8ed2e9fbc14af52e6ab26a085546e47993`.
 - **Validation:** Inline JavaScript syntax parsing passed; source checks confirm wrapping rules and no ellipsis truncation. GitHub Actions run `42554800092` was queued at the time of this entry. Actual browser rendering and long-text overlap/connector alignment have not yet been visually tested.
 - **Next check:** After deployment, refresh Time Chart, inspect a Process Flow node with long Operation/mechanism text, and verify that all lines remain readable without overlapping neighboring nodes or obscuring connectors.
+### 2026-11-09 — Ctrl + Mouse Wheel Zoom for Process Flow
+
+- **User requirement:** Zoom the Process Flow diagram in and out using Ctrl + mouse wheel.
+- **Implementation:** Added a zoom indicator to the Process Flow toolbar and a wheel handler scoped only to the Process Flow canvas viewport. Ctrl + wheel up zooms in; Ctrl + wheel down zooms out. Zoom is clamped between 40% and 250%, updates in 10% steps, and keeps the diagram area under the pointer as the zoom anchor where possible. The browser's page zoom is prevented only when Ctrl + wheel is used inside the Process Flow viewport.
+- **Interaction compatibility:** Pointer-based node dragging and marquee selection convert screen-space movement back into diagram coordinates using the current zoom factor. The zoom level is a view-only state and is not saved into project/chart data. Existing Process Flow dependencies, node positions, Cycle Logic rules, and database structures are unchanged.
+- **Scope/data safety:** Only frontend/cycle-time-univer.html and this history document were changed. No database schema, migration, RLS, Supabase records, or other pages were modified.
+- **Code commit:** 9c67f901d38cec15078e6d00b2c81cae83ee12b8.
+- **Validation:** Inline JavaScript syntax parsing passed after the change. Browser interaction testing for zoom anchoring, node dragging, marquee selection, and connector creation at non-100% zoom has not yet been performed.
+- **Next check:** After deployment, open the Cycle Logic Editor and test Ctrl + wheel at different points in the canvas; confirm that node drag, multi-select, and port-to-port linking remain accurate at 40%, 100%, and 250%.
