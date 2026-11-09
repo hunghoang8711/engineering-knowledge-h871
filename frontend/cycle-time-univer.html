@@ -1171,7 +1171,7 @@ body.h871-export{margin:0!important;padding:24px!important;background:#fff!impor
   }
 
   function safeExportFilename(value,fallback){
-    const clean=String(value||fallback).normalize('NFKD').replace(/[\\u0300-\\u036f]/g,'').replace(/[^a-zA-Z0-9._-]+/g,'-').replace(/^-+|-+$/g,'').slice(0,100);
+    const clean=String(value||fallback).normalize('NFKD').replace(/[^a-zA-Z0-9._-]+/g,'-').replace(/^-+|-+$/g,'').slice(0,100);
     return clean||fallback;
   }
   async function exportStandaloneHtml(filename,title,sourceNode,subtitle){
