@@ -966,3 +966,17 @@ Time Chart-specific lessons:
 - **Protected scope:** Process Flow / Cycle Logic Editor and its simulation logic remain unchanged.
 - **Validation status:** Source restoration and deployment workflow are verified. Browser-level visual confirmation on the user's actual Time Chart is still pending.
 - **Next development direction:** Before attempting horizontal Cycle highlighting again, inspect the existing DOM/CSS layering and design a single coordinated background layer spanning the Operation information cells and timeline track. Avoid stacking independent backgrounds on the row, label/value cells, and track. Implement only after agreeing on the visual approach; preserve the current deployed appearance until then.
+
+
+
+### 2026-11-09 — Standalone White-Background HTML Export for Time Chart and Process Flow
+
+- **User requirement:** Export the Time Chart and Process Flow so the files reopen with the same visual arrangement as the website, with white backgrounds suitable for PowerPoint/report presentation.
+- **Implementation:** Added two controls to the Time Chart page: `Export Time Chart HTML` and `Export Process Flow HTML`. Each creates a separate static standalone HTML snapshot of the currently rendered view. The export embeds the page's local styles and the shared `frontend/styles.css` content, so the saved file does not depend on the H871 website or Supabase to render the captured chart/flow.
+- **Time Chart export:** Captures the currently rendered chart and visible filter state, including its time axis, operations, cluster bar colors, and current Cycle markers/highlights. Removes transient controls and cursor/tooltip elements. Applies a white report background with restrained neutral grid/labels while preserving operation colors.
+- **Process Flow export:** Captures the currently rendered Process Flow canvas, including operation nodes, links, arrow direction, AND joins, Entry/Release markers, and current layout. Applies white node cards and a white canvas while preserving the diagram structure.
+- **Output and usage:** Two independent `.html` files are downloaded. Open them in Chrome/Edge for viewing, zooming, or use browser Print → Save as PDF. These are presentation snapshots, not editable H871 project documents; the live chart remains editable in the website.
+- **Scope/data safety:** Only `frontend/cycle-time-univer.html` and this history document were changed. No database schema, migrations, RLS, project/chart records, or Process Flow / Cycle Logic Editor behavior was changed.
+- **Code commits:** `3ac4cff463ade4f742f9dd75ad757515683b6aaa` (feature), followed by export helper fixes `9ad644fb404912e80d10aeae54e4ddf326d7d8e5`, `53395e177eae09cecc76262d69a20261b941d122`, `47c5f083bf5c9675c1b73b26b1224a3c02ec200b`, and `5612a5fc314fbbdce06707f0da0003b0197d3893`.
+- **Verification:** Inline JavaScript syntax parsing passed after the final code update. GitHub Actions run `42552745096` for final code commit `5612a5fc314fbbdce06707f0da0003b0197d3893` was queued when this entry was written. Actual browser download, standalone HTML reopening, print/PDF layout, and PowerPoint insertion have not been manually tested.
+- **Next validation:** Once the deployment workflow completes, hard-refresh the Time Chart page and export both files from a chart with Cycle boundaries and a configured Process Flow. Open each HTML locally and verify the white-background rendering and print layout.
