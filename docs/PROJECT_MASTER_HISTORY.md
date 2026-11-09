@@ -980,3 +980,15 @@ Time Chart-specific lessons:
 - **Code commits:** `3ac4cff463ade4f742f9dd75ad757515683b6aaa` (feature), followed by export helper fixes `9ad644fb404912e80d10aeae54e4ddf326d7d8e5`, `53395e177eae09cecc76262d69a20261b941d122`, `47c5f083bf5c9675c1b73b26b1224a3c02ec200b`, and `5612a5fc314fbbdce06707f0da0003b0197d3893`.
 - **Verification:** Inline JavaScript syntax parsing passed after the final code update. GitHub Actions run `42552745096` for final code commit `5612a5fc314fbbdce06707f0da0003b0197d3893` was queued when this entry was written. Actual browser download, standalone HTML reopening, print/PDF layout, and PowerPoint insertion have not been manually tested.
 - **Next validation:** Once the deployment workflow completes, hard-refresh the Time Chart page and export both files from a chart with Cycle boundaries and a configured Process Flow. Open each HTML locally and verify the white-background rendering and print layout.
+
+
+
+### 2026-11-09 — Process Flow Operation Text Wrapping (Prevent Description Truncation)
+
+- **User issue:** Long Operation names and mechanism/description text were truncated inside Process Flow nodes.
+- **Cause:** The node title and description used `white-space:nowrap`, `overflow:hidden`, and `text-overflow:ellipsis`, intentionally collapsing long content to a single line.
+- **Change:** Removed the truncation behavior. Operation title and mechanism/description now wrap to multiple lines, with visible overflow, readable line-height, and `overflow-wrap:anywhere` to keep long unbroken text from disappearing beyond the node width. Node cards retain their existing minimum height and layout width; content can extend the card vertically as needed.
+- **Scope protection:** Only Process Flow node text presentation CSS in `frontend/cycle-time-univer.html` changed. Dependency connections, Cycle Logic Editor logic, layout direction, data model, database schema, migrations, RLS, and saved project/chart data remain unchanged. The white-background standalone HTML export includes these same style changes.
+- **Code commit:** `32454b8ed2e9fbc14af52e6ab26a085546e47993`.
+- **Validation:** Inline JavaScript syntax parsing passed; source checks confirm wrapping rules and no ellipsis truncation. GitHub Actions run `42554800092` was queued at the time of this entry. Actual browser rendering and long-text overlap/connector alignment have not yet been visually tested.
+- **Next check:** After deployment, refresh Time Chart, inspect a Process Flow node with long Operation/mechanism text, and verify that all lines remain readable without overlapping neighboring nodes or obscuring connectors.
