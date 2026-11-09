@@ -1199,6 +1199,118 @@ body.h871-export{margin:0!important;padding:24px!important;background:#fff!impor
     await exportStandaloneHtml(safeExportFilename(title,'H871-Process-Flow')+'.html',title,source,'H871 Engineering Knowledge Hub · Process Flow · White presentation background');
     setStatus('Standalone Process Flow HTML exported. It can be opened in Chrome/Edge and printed to PDF.');
   }
+
+  async function exportProcessFlowPptx(){
+    const canvas=document.getElementById('cycle-flow-canvas');
+    const nodeEls=[...(canvas?.querySelectorAll('.tc-flow-node')||[])];
+    if(!canvas||!nodeEls.length)throw new Error('Define Cycle Start and Cycle End, then render the Process Flow before exporting.');
+    const records=selectedLogicRecords();
+    if(!records.length)throw new Error('No Process Flow operations are available to export.');
+    setStatus('Preparing editable PowerPoint shapes…');
+    if(typeof window.pptxgen!=='function')await loadResource('pptxgenjs@3.12.0/dist/pptxgen.bundle.js');
+    if(typeof window.pptxgen!=='function')throw new Error('PowerPoint export library could not be initialized. Please retry after refreshing the page.');
+    const pptx=new window.pptxgen();
+    pptx.layout='LAYOUT_WIDE';
+    pptx.author='H871 Engineering Knowledge Hub';
+    pptx.subject='Editable Process Flow';
+    pptx.title=(document.getElementById('chart-title').value.trim()||projectName)+' · Process Flow';
+    pptx.company='H871';
+    pptx.lang='en-US';
+    const slide=pptx.addSlide();
+    slide.background={color:'FFFFFF'};
+    const SW=13.333,SH=7.5,marginX=.42,top=.98,bottom=.34;
+    const diagramW=Math.max(760,Number.parseFloat(canvas.style.width)||canvas.scrollWidth||760);
+    const diagramH=Math.max(340,Number.parseFloat(canvas.style.height)||canvas.scrollHeight||340);
+    const fitScale=Math.min((SW-marginX*2)/(diagramW/96),(SH-top-bottom)/(diagramH/96));
+    const drawW=diagramW/96*fitScale,drawH=diagramH/96*fitScale;
+    const originX=(SW-drawW)/2,originY=top+(SH-top-bottom-drawH)/2;
+    const px=v=>v/96*fitScale;
+    const title=(document.getElementById('chart-title').value.trim()||projectName||'H871')+' · Process Flow';
+    slide.addText(title,{x:.48,y:.25,w:12.35,h:.34,fontFace:'Arial',fontSize:19,bold:true,color:'17212B',margin:0,breakLine:false});
+    slide.addShape(pptx.ShapeType.line,{x:.48,y:.76,w:12.35,h:0,line:{color:'CBD5DF',width:1}});
+    slide.addText('H871 Engineering Knowledge Hub  |  Editable Process Flow',{x:.5,y:.81,w:12.2,h:.15,fontFace:'Arial',fontSize:7.5,color:'64748B',margin:0});
+    const pos=new Map();
+    nodeEls.forEach((el,index)=>{
+      const row=Number(el.dataset.flowNode),p=flowNodePosition(row,index);
+      pos.set(row,{x:Number.parseFloat(el.style.left)||p.x,y:Number.parseFloat(el.style.top)||p.y,w:el.offsetWidth||194,h:el.offsetHeight||114,el});
+    });
+    const incoming=new Map(records.map(r=>[r.sourceRow,cycleLogic.dependencies.filter(d=>d.to===r.sourceRow&&pos.has(d.from))]));
+    const joins=[...incoming.entries()].filter(([,edges])=>edges.length>1).map(([row])=>row);
+    const resolveGateSide=row=>{
+      const edges=incoming.get(row)||[],explicit=edges.map(d=>d.toPort).filter(side=>FLOW_PORTS.includes(side));
+      if(explicit.length&&explicit.every(side=>side===explicit[0]))return explicit[0];
+      const target=pos.get(row),centers=edges.map(d=>{const p=pos.get(d.from);return{x:p.x+97,y:p.y+49};});
+      if(!centers.length)return cycleLogic.layoutDirection==='TB'?'top':'left';
+      const cx=centers.reduce((sum,p)=>sum+p.x,0)/centers.length,cy=centers.reduce((sum,p)=>sum+p.y,0)/centers.length,dx=cx-(target.x+97),dy=cy-(target.y+49);
+      return Math.abs(dy)>=Math.abs(dx)?(dy<0?'top':'bottom'):(dx<0?'left':'right');
+    };
+    const gateSide=new Map(joins.map(row=>[row,resolveGateSide(row)]));
+    const gatePos=new Map(joins.map(row=>{
+      const p=pos.get(row),side=gateSide.get(row);let g;
+      if(side==='left')g={x:Math.max(20,p.x-58),y:p.y+33};
+      else if(side==='right')g={x:p.x+210,y:p.y+33};
+      else if(side==='top')g={x:p.x+80,y:Math.max(20,p.y-58)};
+      else g={x:p.x+80,y:p.y+125};
+      return[row,g];
+    }));
+    const port=(p,side)=>flowPortPoint(p,side);
+    const addConnector=(a,b)=>{
+      const dx=b.x-a.x,dy=b.y-a.y;
+      slide.addShape(pptx.ShapeType.line,{
+        x:originX+px(Math.min(a.x,b.x)),y:originY+px(Math.min(a.y,b.y)),
+        w:Math.max(.001,px(Math.abs(dx))),h:Math.max(.001,px(Math.abs(dy))),
+        flipH:dx<0,flipV:dy<0,
+        line:{color:'477DA8',width:1.35,endArrowType:'triangle'}
+      });
+    };
+    // Dependency connectors are separate native PowerPoint line objects.
+    cycleLogic.dependencies.filter(d=>pos.has(d.from)&&pos.has(d.to)).forEach(d=>{
+      const from=port(pos.get(d.from),d.fromPort||'right'),gate=gatePos.get(d.to);
+      const to=gate?{x:gate.x+16,y:gate.y+16}:port(pos.get(d.to),d.toPort||'left');
+      addConnector(from,to);
+      if(d.delay){
+        const mx=(from.x+to.x)/2,my=(from.y+to.y)/2;
+        slide.addText(String(d.delay)+' s',{x:originX+px(mx)-.18,y:originY+px(my)-.17,w:.42,h:.18,fontFace:'Arial',fontSize:Math.max(6,8*fitScale),bold:true,color:'315D7D',align:'center',valign:'mid',margin:0,fill:{color:'FFFFFF',transparency:5}});
+      }
+    });
+    // AND gates are independent editable diamond shapes.
+    joins.forEach(row=>{
+      const g=gatePos.get(row),target=pos.get(row),side=gateSide.get(row),end=port(target,side);
+      addConnector({x:g.x+16,y:g.y+16},end);
+      slide.addShape(pptx.ShapeType.diamond,{x:originX+px(g.x),y:originY+px(g.y),w:px(32),h:px(32),fill:{color:'FFF7DF'},line:{color:'B7791F',width:1.35}});
+      slide.addText('AND',{x:originX+px(g.x)+.015,y:originY+px(g.y)+px(10),w:px(32)-.03,h:px(12),fontFace:'Arial',fontSize:Math.max(5.5,7.5*fitScale),bold:true,color:'6B4B12',align:'center',valign:'mid',margin:0});
+    });
+    // Every Operation is a native PowerPoint rounded rectangle with separately editable text.
+    records.forEach((r,index)=>{
+      const p=pos.get(r.sourceRow);if(!p)return;
+      const x=originX+px(p.x),y=originY+px(p.y),w=px(p.w),h=px(p.h);
+      const el=p.el,head=el.querySelector('.tc-flow-node-head'),select=el.querySelector('.tc-flow-node-select');
+      const operation=select?.querySelector('strong'),mechanism=select?.querySelector('small'),meta=select?.querySelector('em');
+      const entry=!!head?.querySelector('.entry'),release=!!head?.querySelector('.release');
+      slide.addShape(pptx.ShapeType.roundRect,{x,y,w,h,rectRadius:.08,fill:{color:'FFFFFF'},line:{color:'7C9BB4',width:1.15}});
+      slide.addShape(pptx.ShapeType.rect,{x:x+.006,y:y+.006,w:Math.max(.02,w-.012),h:px(24),fill:{color:'EAF1F6'},line:{color:'EAF1F6',transparency:100,width:0}});
+      const headerLabel='OPERATION · ROW '+r.sourceRow;
+      slide.addText(headerLabel,{x:x+px(9),y:y+px(5),w:Math.max(.25,w-px(65)),h:px(14),fontFace:'Arial',fontSize:Math.max(5.5,7.5*fitScale),bold:true,color:'526170',margin:0,fit:'shrink',valign:'mid'});
+      if(entry||release){
+        const tag=entry?'ENTRY':'RELEASE';
+        slide.addText(tag,{x:x+w-px(58),y:y+px(4),w:px(50),h:px(15),fontFace:'Arial',fontSize:Math.max(5,6.5*fitScale),bold:true,color:entry?'27633A':'7C5210',align:'center',valign:'mid',margin:0,fill:{color:entry?'E4F5E9':'FFF0D1'}});
+      }
+      const textOpts=(elChild,fontSize,color,bold=false)=>{
+        if(!elChild)return null;
+        const cr=elChild.getBoundingClientRect(),nr=el.getBoundingClientRect();
+        const cx=originX+px(cr.left-nr.left),cy=originY+px(cr.top-nr.top),cw=px(cr.width),ch=px(cr.height);
+        return {x:cx,y:cy,w:Math.max(.06,cw),h:Math.max(.06,ch),fontFace:'Arial',fontSize:Math.max(5.2,fontSize*fitScale),bold,color,margin:0,breakLine:false,fit:'shrink',valign:'mid',paraSpaceAfterPt:0};
+      };
+      const opOpt=textOpts(operation,12,'17212B',true);if(opOpt)slide.addText(operation.textContent.trim(),opOpt);
+      const mechOpt=textOpts(mechanism,10,'526170');if(mechOpt)slide.addText(mechanism.textContent.trim(),mechOpt);
+      const metaOpt=textOpts(meta,9,'315D7D',true);
+      if(metaOpt){metaOpt.fill={color:'E6F2FB'};metaOpt.margin=.025;slide.addText(meta.textContent.trim(),metaOpt);}
+    });
+    const filename=safeExportFilename(title,'H871-Process-Flow')+'.pptx';
+    await pptx.writeFile({fileName:filename});
+    setStatus('Editable PowerPoint exported. Operations, text, AND gates, and dependency connectors are individual editable PowerPoint objects.');
+  }
+
   async function init() {
     for (const path of styles) await loadResource(path, 'link');
     for (const path of reactScripts) await loadResource(path);
@@ -1405,6 +1517,12 @@ body.h871-export{margin:0!important;padding:24px!important;background:#fff!impor
   });
   document.getElementById('export-process-flow-html').addEventListener('click',async()=>{
     try{await exportProcessFlowHtml();}catch(error){setStatus('Process Flow HTML export failed: '+error.message,true);}
+  });
+  document.getElementById('export-process-flow-pptx').addEventListener('click',async()=>{
+    const button=document.getElementById('export-process-flow-pptx');
+    button.disabled=true;const original=button.textContent;button.textContent='Exporting PPTX…';
+    try{await exportProcessFlowPptx();}catch(error){console.error(error);setStatus('Process Flow PowerPoint export failed: '+(error?.message||String(error)),true);}
+    finally{button.disabled=false;button.textContent=original;}
   });
   document.getElementById('save-json').addEventListener('click', downloadJson);
   document.getElementById('load-json').addEventListener('click', () => document.getElementById('json-file').click());
