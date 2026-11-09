@@ -1199,7 +1199,7 @@ body.h871-export{margin:0!important;padding:24px!important;background:#fff!impor
     await exportStandaloneHtml(safeExportFilename(title,'H871-Process-Flow')+'.html',title,source,'H871 Engineering Knowledge Hub · Process Flow · White presentation background');
     setStatus('Standalone Process Flow HTML exported. It can be opened in Chrome/Edge and printed to PDF.');
   }
-\n  async function init() {
+  async function init() {
     for (const path of styles) await loadResource(path, 'link');
     for (const path of reactScripts) await loadResource(path);
     React.jsx = (type, props, key) => React.createElement(type, key === undefined ? props : { ...props, key });
