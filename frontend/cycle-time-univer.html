@@ -1181,7 +1181,7 @@ body.h871-export{margin:0!important;padding:24px!important;background:#fff!impor
     const localStyle=document.querySelector('style')?.textContent||'';
     let sharedStyle='';
     try{const response=await fetch('./styles.css');if(response.ok)sharedStyle=await response.text();}catch(_){}
-    const documentHtml='<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+escapeHtml(title)+'</title><style>'+sharedStyle+'\\n'+localStyle+'\\n'+exportCss+'</style></head><body class="h871-export"><main class="export-document"><h1 class="export-heading">'+escapeHtml(title)+'</h1>'+(subtitle?'<p class="export-subtitle">'+escapeHtml(subtitle)+'</p>':'')+'<div id="export-content">'+clone.outerHTML+'</div></main></body></html>';
+    const documentHtml='<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+escapeHtml(title)+'</title><style>'+sharedStyle+'\n'+localStyle+'</style></head><body class="h871-export"><main class="export-document"><h1 class="export-heading">'+escapeHtml(title)+'</h1>'+(subtitle?'<p class="export-subtitle">'+escapeHtml(subtitle)+'</p>':'')+'<div id="export-content">'+clone.outerHTML+'</div></main></body></html>';
     const blob=new Blob([documentHtml],{type:'text/html;charset=utf-8'}),url=URL.createObjectURL(blob),link=document.createElement('a');
     link.href=url;link.download=filename;document.body.appendChild(link);link.click();link.remove();URL.revokeObjectURL(url);
   }
