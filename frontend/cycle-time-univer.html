@@ -165,7 +165,7 @@ body.h871-export{margin:0!important;padding:24px!important;background:#fff!impor
   </div>
   <p class="tc-sim-note" id="sim-interval-hint">Continuous Flow schedules cycles through their Entry Gate. Dependency links and shared Exclusive Resource IDs determine actual start times. Ideal cycle span is retained as a reference, not a fixed Pitch.</p>
 <div class="tc-logic-editor" id="cycle-logic-editor">
-<div class="tc-flow-heading"><div><strong>Visual Process Flow Editor</strong><p class="tc-logic-help">Drag any of the four ports between Operations to create a prerequisite link. Multiple incoming links form an AND gate.</p></div><div class="tc-flow-tools"><span class="tc-flow-pill">Continuous Flow · Exclusive Resource</span><button type="button" class="uv-btn" id="tc-flow-layout-direction">Layout: Top → Bottom</button><button type="button" class="uv-btn" id="tc-flow-auto-layout">Auto layout</button><button type="button" class="uv-btn" id="tc-flow-clear-selection">Clear selection</button><span class="tc-flow-pill" id="tc-flow-selection-count">0 selected</span></div></div>
+<div class="tc-flow-heading"><div><strong>Visual Process Flow Editor</strong><p class="tc-logic-help">Drag any of the four ports between Operations to create a prerequisite link. Multiple incoming links form an AND gate.</p></div><div class="tc-flow-tools"><span class="tc-flow-pill">Continuous Flow · Exclusive Resource</span><button type="button" class="uv-btn" id="tc-flow-undo" title="Undo (Ctrl+Z)" disabled>↶ Undo</button><button type="button" class="uv-btn" id="tc-flow-redo" title="Redo (Ctrl+Y)" disabled>↷ Redo</button><button type="button" class="uv-btn" id="tc-flow-layout-direction">Layout: Top → Bottom</button><button type="button" class="uv-btn" id="tc-flow-auto-layout">Auto layout</button><button type="button" class="uv-btn" id="tc-flow-clear-selection">Clear selection</button><span class="tc-flow-pill" id="tc-flow-selection-count">0 selected</span></div></div>
 <div class="tc-flow-gates"><div class="tc-logic-field"><label for="logic-entry-gate">Cycle Entry Gate</label><select id="logic-entry-gate" disabled></select></div><div class="tc-logic-field"><label for="logic-completion-gate">Previous Cycle Release Gate</label><select id="logic-completion-gate" disabled></select></div></div>
 <div class="tc-flow-workspace"><div class="tc-flow-canvas-scroll"><div class="tc-flow-canvas" id="cycle-flow-canvas"><div class="tc-logic-help">Select Cycle Start and Cycle End first.</div></div></div><aside class="tc-flow-inspector"><strong>Operation Properties</strong><p class="tc-logic-help">Select a node to edit its shared exclusive Resource ID(s).</p><div class="tc-logic-oplist" id="logic-resource-list"><p class="tc-logic-help">Select cycle first.</p></div><small class="tc-logic-help">Link Delay is configured below.</small></aside></div>
 <div class="tc-flow-linkbar"><span id="tc-flow-connect-status">Drag from any Operation port to another Operation. A→B automatically means B waits for A. Multiple incoming links are AND conditions.</span><button type="button" class="uv-btn" id="tc-flow-cancel-link">Cancel connection</button></div>
@@ -418,6 +418,7 @@ body.h871-export{margin:0!important;padding:24px!important;background:#fff!impor
     cycleLogic=normalizeCycleLogic(payload.cycleLogic);
     const savedCycle=payload.cycleDefinition||{};
     cycleBoundarySelection={startSourceRow:Number.isInteger(savedCycle.startSourceRow)?savedCycle.startSourceRow:null,endSourceRow:Number.isInteger(savedCycle.endSourceRow)?savedCycle.endSourceRow:null};
+    resetFlowHistory();
     if(payload.univerSnapshot && payload.engine==='univer') workbook=univerAPI.createWorkbook(payload.univerSnapshot);
     else makeWorkbook(legacyToMatrix(payload),currentChartTitle);
     document.getElementById('project-context').textContent='Project: '+projectName+' · '+currentChartTitle;
@@ -791,6 +792,27 @@ body.h871-export{margin:0!important;padding:24px!important;background:#fff!impor
 
   function normalizeCycleLogic(value){const v=value&&typeof value==='object'?value:{};return {entrySourceRow:Number.isInteger(v.entrySourceRow)?v.entrySourceRow:null,completionSourceRow:Number.isInteger(v.completionSourceRow)?v.completionSourceRow:null,layoutDirection:v.layoutDirection==='LR'?'LR':'TB',dependencies:Array.isArray(v.dependencies)?v.dependencies.filter(d=>d&&Number.isInteger(d.from)&&Number.isInteger(d.to)&&d.from!==d.to).map(d=>({from:d.from,to:d.to,delay:Math.max(0,Number(d.delay)||0),fromPort:['left','right','top','bottom'].includes(d.fromPort)?d.fromPort:'right',toPort:['left','right','top','bottom'].includes(d.toPort)?d.toPort:'left'})):[],resources:v.resources&&typeof v.resources==='object'?Object.fromEntries(Object.entries(v.resources).map(([k,x])=>[k,String(x||'').trim()])):{},nodePositions:v.nodePositions&&typeof v.nodePositions==='object'?Object.fromEntries(Object.entries(v.nodePositions).map(([k,p])=>[k,{x:Math.max(20,Number(p?.x)||20),y:Math.max(20,Number(p?.y)||20)}])):{}};}
   function selectedLogicRecords(){try{return getSelectedCycleRecords().records;}catch(_){return [];}}
+
+  const FLOW_HISTORY_LIMIT=100;
+  let flowUndoStack=[],flowRedoStack=[],flowEditorShortcutScope=false;
+  function flowHistorySnapshot(){return JSON.stringify({logic:normalizeCycleLogic(cycleLogic),boundaries:{startSourceRow:cycleBoundarySelection.startSourceRow,endSourceRow:cycleBoundarySelection.endSourceRow}});}
+  function updateFlowHistoryButtons(){
+    const undo=document.getElementById('tc-flow-undo'),redo=document.getElementById('tc-flow-redo');
+    if(undo)undo.disabled=flowUndoStack.length===0;if(redo)redo.disabled=flowRedoStack.length===0;
+    const count=document.getElementById('tc-flow-selection-count');if(count)count.title='Undo: '+flowUndoStack.length+' · Redo: '+flowRedoStack.length;
+  }
+  function resetFlowHistory(){flowUndoStack=[];flowRedoStack=[];updateFlowHistoryButtons();}
+  function commitFlowHistory(before){if(!before)return;const after=flowHistorySnapshot();if(before===after)return;flowUndoStack.push(before);if(flowUndoStack.length>FLOW_HISTORY_LIMIT)flowUndoStack.shift();flowRedoStack=[];updateFlowHistoryButtons();}
+  function applyFlowHistorySnapshot(snapshot){
+    const state=JSON.parse(snapshot);cycleLogic=normalizeCycleLogic(state.logic);
+    cycleBoundarySelection={startSourceRow:state.boundaries?.startSourceRow??null,endSourceRow:state.boundaries?.endSourceRow??null};
+    flowConnectFrom=null;flowConnectFromPort='right';flowDrag=null;flowMarquee=null;
+    simulationResult=null;renderCycleSimulation(null);updateCycleBoundaryUI();updateFlowHistoryButtons();
+    const status=document.getElementById('tc-flow-connect-status');if(status)status.textContent='Process Flow change restored. Save to project to keep this version.';
+  }
+  function undoProcessFlow(){if(!flowUndoStack.length)return;flowRedoStack.push(flowHistorySnapshot());applyFlowHistorySnapshot(flowUndoStack.pop());}
+  function redoProcessFlow(){if(!flowRedoStack.length)return;flowUndoStack.push(flowHistorySnapshot());applyFlowHistorySnapshot(flowRedoStack.pop());}
+
   let flowSelectedRow=null,flowConnectFrom=null,flowConnectFromPort='right',flowDrag=null;const flowSelectedRows=new Set();let flowMarquee=null;const FLOW_SNAP_THRESHOLD=9;
   let simulationPlaybackTime=0,simulationPlaybackTimer=null,simulationPlaybackSpeed=1;
   function stopSimulationPlayback(){if(simulationPlaybackTimer!==null){clearInterval(simulationPlaybackTimer);simulationPlaybackTimer=null;}const b=document.querySelector('[data-sim-playback="toggle"]');if(b)b.textContent='▶ Play';}
@@ -838,22 +860,22 @@ body.h871-export{margin:0!important;padding:24px!important;background:#fff!impor
     const direction=cycleLogic.layoutDirection==='TB'?'Top → Bottom':'Left → Right';document.getElementById('tc-flow-layout-direction').textContent='Layout: '+direction;const count=document.getElementById('tc-flow-selection-count');if(count)count.textContent=flowSelectedRows.size+' selected';
     document.getElementById('tc-flow-connect-status').textContent=flowConnectFrom?'Connecting from row '+flowConnectFrom+': release on any target port.':'Drag between any two Operation ports. The arrow triangle marks flow direction mid-line.';
   }
-  function autoLayoutProcessFlow(records){
-    if(!records.length)return;const rows=records.map(r=>r.sourceRow),incoming=new Map(rows.map(r=>[r,0])),outgoing=new Map(rows.map(r=>[r,[]]));
+  function autoLayoutProcessFlow(records,historyBefore=null){
+    if(!records.length)return;const before=historyBefore||flowHistorySnapshot();const rows=records.map(r=>r.sourceRow),incoming=new Map(rows.map(r=>[r,0])),outgoing=new Map(rows.map(r=>[r,[]]));
     cycleLogic.dependencies.forEach(d=>{if(outgoing.has(d.from)&&incoming.has(d.to)){outgoing.get(d.from).push(d.to);incoming.set(d.to,incoming.get(d.to)+1);}});
     const queue=rows.filter(r=>incoming.get(r)===0).sort((a,b)=>a-b),depth=new Map(rows.map(r=>[r,0])),order=[];
     while(queue.length){const row=queue.shift();order.push(row);outgoing.get(row).forEach(next=>{depth.set(next,Math.max(depth.get(next),depth.get(row)+1));incoming.set(next,incoming.get(next)-1);if(incoming.get(next)===0){queue.push(next);queue.sort((a,b)=>a-b);}});}
     if(order.length!==rows.length){document.getElementById('tc-flow-connect-status').textContent='Auto layout stopped: dependency loop detected.';return;}
     const layers=new Map();order.forEach(row=>{const d=depth.get(row);if(!layers.has(d))layers.set(d,[]);layers.get(d).push(row);});cycleLogic.nodePositions={};
     layers.forEach((items,d)=>items.forEach((row,i)=>{cycleLogic.nodePositions[row]=cycleLogic.layoutDirection==='TB'?{x:40+i*245,y:40+d*165}:{x:40+d*285,y:40+i*145};}));
-    renderProcessFlowCanvas(records);document.getElementById('tc-flow-connect-status').textContent='Auto layout complete. Drag Node headers to fine-tune positions.';
+    renderProcessFlowCanvas(records);document.getElementById('tc-flow-connect-status').textContent='Auto layout complete. Drag Node headers to fine-tune positions.';commitFlowHistory(before);
   }
   function connectFlowNodes(from,to,fromPort='right',toPort='left'){
     if(from===to||cycleLogic.dependencies.some(d=>d.from===from&&d.to===to)){document.getElementById('tc-flow-connect-status').textContent='Invalid or duplicate connection.';return;}
     const records=selectedLogicRecords(),edges=new Map(records.map(r=>[r.sourceRow,[]]));cycleLogic.dependencies.forEach(d=>edges.get(d.from)?.push(d.to));
     const reaches=(a,b,seen=new Set())=>{if(a===b)return true;if(seen.has(a))return false;seen.add(a);return(edges.get(a)||[]).some(x=>reaches(x,b,seen));};
     if(reaches(to,from)){document.getElementById('tc-flow-connect-status').textContent='Rejected: dependency loop detected.';return;}
-    cycleLogic.dependencies.push({from,to,fromPort:FLOW_PORTS.includes(fromPort)?fromPort:'right',toPort:FLOW_PORTS.includes(toPort)?toPort:'left',delay:Math.max(0,Number(document.getElementById('logic-dependency-delay').value)||0)});flowSelectedRow=to;flowConnectFrom=null;flowConnectFromPort='right';renderCycleLogicEditor();
+    const before=flowHistorySnapshot();cycleLogic.dependencies.push({from,to,fromPort:FLOW_PORTS.includes(fromPort)?fromPort:'right',toPort:FLOW_PORTS.includes(toPort)?toPort:'left',delay:Math.max(0,Number(document.getElementById('logic-dependency-delay').value)||0)});commitFlowHistory(before);flowSelectedRow=to;flowConnectFrom=null;flowConnectFromPort='right';renderCycleLogicEditor();
   }
   function renderCycleLogicEditor(){
     const records=selectedLogicRecords(),ready=records.length>0,entry=document.getElementById('logic-entry-gate'),completion=document.getElementById('logic-completion-gate'),source=document.getElementById('logic-dependency-source'),target=document.getElementById('logic-dependency-target'),list=document.getElementById('logic-resource-list'),deps=document.getElementById('logic-dependency-list'),status=document.getElementById('logic-validation-status');
@@ -955,7 +977,7 @@ body.h871-export{margin:0!important;padding:24px!important;background:#fff!impor
     document.querySelectorAll('.tc-cycle-menu-toggle[aria-expanded="true"]').forEach(button=>button.setAttribute('aria-expanded','false'));
   }
   function setCycleBoundary(sourceRow,role) {
-    const row=Number(sourceRow);
+    const before=flowHistorySnapshot();const row=Number(sourceRow);
     const selected=lastBaselineRecords.find(r=>r.sourceRow===row);
     if(!selected)return;
     if(role==='start'){
@@ -979,7 +1001,7 @@ body.h871-export{margin:0!important;padding:24px!important;background:#fff!impor
     renderCycleSimulation(null);
     closeCycleBoundaryMenus();
     updateCycleBoundaryUI();
-    renderTimeChart();
+    renderTimeChart();commitFlowHistory(before);
   }
   function updateCycleHighlightGeometry() {
     const chart=document.getElementById('tc-chart-viewport');
@@ -1401,7 +1423,7 @@ body.h871-export{margin:0!important;padding:24px!important;background:#fff!impor
   document.getElementById('cluster-color-controls').addEventListener('change',event=>{const input=event.target.closest('input[data-cluster-color]');if(!input)return;clusterColors[input.dataset.clusterColor]=input.value;try{renderTimeChart();}catch(error){setStatus('Could not update cluster color: '+error.message,true);}});
   document.getElementById('sim-display-limit').addEventListener('change',()=>{if(simulationResult)renderCycleSimulation(simulationResult);});
   document.getElementById('clear-cycle-boundaries').addEventListener('click',()=>{
-    cycleBoundarySelection={startSourceRow:null,endSourceRow:null};cycleLogic={entrySourceRow:null,completionSourceRow:null,dependencies:[],resources:{}};simulationResult=null;simulationVisibleClusters=new Set();renderCycleSimulation(null);renderTimeChart();
+    const before=flowHistorySnapshot();cycleBoundarySelection={startSourceRow:null,endSourceRow:null};cycleLogic={entrySourceRow:null,completionSourceRow:null,layoutDirection:'TB',dependencies:[],resources:{},nodePositions:{}};commitFlowHistory(before);simulationResult=null;simulationVisibleClusters=new Set();renderCycleSimulation(null);renderTimeChart();
   });
   document.getElementById('sim-cluster-filter').addEventListener('change',event=>{
     const input=event.target.closest('input[data-sim-cluster]');if(!input||!simulationResult)return;
@@ -1415,17 +1437,23 @@ body.h871-export{margin:0!important;padding:24px!important;background:#fff!impor
     renderCycleSimulation(simulationResult);
   });
 
-  document.getElementById('logic-entry-gate').addEventListener('change',e=>{cycleLogic.entrySourceRow=Number(e.target.value);});
-  document.getElementById('logic-completion-gate').addEventListener('change',e=>{cycleLogic.completionSourceRow=Number(e.target.value);});
+  document.getElementById('logic-entry-gate').addEventListener('change',e=>{const before=flowHistorySnapshot();cycleLogic.entrySourceRow=Number(e.target.value);commitFlowHistory(before);});
+  document.getElementById('logic-completion-gate').addEventListener('change',e=>{const before=flowHistorySnapshot();cycleLogic.completionSourceRow=Number(e.target.value);commitFlowHistory(before);});
+  document.getElementById('logic-resource-list').addEventListener('focusin',e=>{const x=e.target.closest('[data-logic-resource]');if(x)x.dataset.flowHistoryBefore=flowHistorySnapshot();});
   document.getElementById('logic-resource-list').addEventListener('input',e=>{const x=e.target.closest('[data-logic-resource]');if(x)cycleLogic.resources[x.dataset.logicResource]=x.value;});
+  document.getElementById('logic-resource-list').addEventListener('change',e=>{const x=e.target.closest('[data-logic-resource]');if(x){commitFlowHistory(x.dataset.flowHistoryBefore);delete x.dataset.flowHistoryBefore;}});
   const flowCanvas=document.getElementById('cycle-flow-canvas');
+  document.getElementById('tc-flow-undo').addEventListener('click',undoProcessFlow);
+  document.getElementById('tc-flow-redo').addEventListener('click',redoProcessFlow);
+  document.addEventListener('pointerdown',e=>{flowEditorShortcutScope=!!e.target.closest('#cycle-logic-editor');});
+  document.addEventListener('keydown',e=>{if(!(e.ctrlKey||e.metaKey)||e.altKey)return;const key=e.key.toLowerCase();if(key!=='z'&&key!=='y')return;const target=e.target,typing=target?.matches?.('input,textarea,select,[contenteditable="true"]');if(typing||(!flowEditorShortcutScope&&!target?.closest?.('#cycle-logic-editor')))return;e.preventDefault();if(key==='y'||(key==='z'&&e.shiftKey))redoProcessFlow();else undoProcessFlow();});
   document.getElementById('tc-flow-auto-layout').addEventListener('click',()=>autoLayoutProcessFlow(selectedLogicRecords()));
-  document.getElementById('tc-flow-layout-direction').addEventListener('click',()=>{cycleLogic.layoutDirection=cycleLogic.layoutDirection==='TB'?'LR':'TB';autoLayoutProcessFlow(selectedLogicRecords());});
-  flowCanvas.addEventListener('click',e=>{const edge=e.target.closest('[data-flow-remove]');if(edge){cycleLogic.dependencies.splice(Number(edge.dataset.flowRemove),1);renderCycleLogicEditor();return;}const port=e.target.closest('[data-flow-port]'),n=e.target.closest('[data-flow-select]');if(port){const row=Number(port.dataset.flowRow),side=port.dataset.flowPort;if(flowConnectFrom===null){flowConnectFrom=row;flowConnectFromPort=side;renderProcessFlowCanvas(selectedLogicRecords());}else if(flowConnectFrom!==row){connectFlowNodes(flowConnectFrom,row,flowConnectFromPort,side);}return;}if(n){flowSelectedRow=Number(n.dataset.flowSelect);renderCycleLogicEditor();}});
+  document.getElementById('tc-flow-layout-direction').addEventListener('click',()=>{const before=flowHistorySnapshot();cycleLogic.layoutDirection=cycleLogic.layoutDirection==='TB'?'LR':'TB';autoLayoutProcessFlow(selectedLogicRecords(),before);});
+  flowCanvas.addEventListener('click',e=>{const edge=e.target.closest('[data-flow-remove]');if(edge){const before=flowHistorySnapshot();cycleLogic.dependencies.splice(Number(edge.dataset.flowRemove),1);commitFlowHistory(before);renderCycleLogicEditor();return;}const port=e.target.closest('[data-flow-port]'),n=e.target.closest('[data-flow-select]');if(port){const row=Number(port.dataset.flowRow),side=port.dataset.flowPort;if(flowConnectFrom===null){flowConnectFrom=row;flowConnectFromPort=side;renderProcessFlowCanvas(selectedLogicRecords());}else if(flowConnectFrom!==row){connectFlowNodes(flowConnectFrom,row,flowConnectFromPort,side);}return;}if(n){flowSelectedRow=Number(n.dataset.flowSelect);renderCycleLogicEditor();}});
   flowCanvas.addEventListener('pointerdown',e=>{
     const port=e.target.closest('[data-flow-port]');if(port){flowConnectFrom=Number(port.dataset.flowRow);flowConnectFromPort=port.dataset.flowPort||'right';document.getElementById('tc-flow-connect-status').textContent='Connecting from row '+flowConnectFrom+' ('+flowConnectFromPort+') — release on another Operation port.';return;}
     const header=e.target.closest('[data-flow-drag]');
-    if(header){const row=Number(header.dataset.flowDrag);if(e.shiftKey||e.ctrlKey||e.metaKey){if(flowSelectedRows.has(row))flowSelectedRows.delete(row);else flowSelectedRows.add(row);}else if(!flowSelectedRows.has(row)){flowSelectedRows.clear();flowSelectedRows.add(row);}flowSelectedRow=row;const moving=[...flowSelectedRows].map(id=>{const p=flowNodePosition(id,selectedLogicRecords().findIndex(r=>r.sourceRow===id));return{row:id,x:p.x,y:p.y,node:flowCanvas.querySelector('[data-flow-node="'+id+'"]'),w:194,h:flowCanvas.querySelector('[data-flow-node="'+id+'"]')?.offsetHeight||114};});flowDrag={kind:'move',sx:e.clientX,sy:e.clientY,moving};flowCanvas.querySelectorAll('[data-flow-node]').forEach(el=>el.classList.toggle('multi-selected',flowSelectedRows.has(Number(el.dataset.flowNode))));const count=document.getElementById('tc-flow-selection-count');if(count)count.textContent=flowSelectedRows.size+' selected';return;}
+    if(header){const before=flowHistorySnapshot();const row=Number(header.dataset.flowDrag);if(e.shiftKey||e.ctrlKey||e.metaKey){if(flowSelectedRows.has(row))flowSelectedRows.delete(row);else flowSelectedRows.add(row);}else if(!flowSelectedRows.has(row)){flowSelectedRows.clear();flowSelectedRows.add(row);}flowSelectedRow=row;const moving=[...flowSelectedRows].map(id=>{const p=flowNodePosition(id,selectedLogicRecords().findIndex(r=>r.sourceRow===id));return{row:id,x:p.x,y:p.y,node:flowCanvas.querySelector('[data-flow-node="'+id+'"]'),w:194,h:flowCanvas.querySelector('[data-flow-node="'+id+'"]')?.offsetHeight||114};});flowDrag={kind:'move',sx:e.clientX,sy:e.clientY,moving,historyBefore:before};flowCanvas.querySelectorAll('[data-flow-node]').forEach(el=>el.classList.toggle('multi-selected',flowSelectedRows.has(Number(el.dataset.flowNode))));const count=document.getElementById('tc-flow-selection-count');if(count)count.textContent=flowSelectedRows.size+' selected';return;}
     if(e.target===flowCanvas||e.target.closest('.tc-flow-svg')&&!e.target.closest('[data-flow-remove]')){const rect=flowCanvas.getBoundingClientRect(),x=e.clientX-rect.left,y=e.clientY-rect.top;flowSelectedRows.clear();flowSelectedRow=null;flowMarquee={x,y,w:0,h:0};const box=document.createElement('div');box.className='tc-flow-marquee';box.dataset.flowMarqueeVisual='1';flowCanvas.appendChild(box);flowDrag={kind:'marquee',sx:e.clientX,sy:e.clientY,cx:x,cy:y,box};const count=document.getElementById('tc-flow-selection-count');if(count)count.textContent='0 selected';}
   });
   flowCanvas.addEventListener('pointermove',e=>{
@@ -1437,13 +1465,13 @@ body.h871-export{margin:0!important;padding:24px!important;background:#fff!impor
     flowCanvas.querySelectorAll('.tc-flow-align-guide').forEach(el=>el.remove());guides.forEach(g=>{const el=document.createElement('div');el.className='tc-flow-align-guide '+g.axis;el.style[g.axis==='vertical'?'left':'top']=g.v+'px';flowCanvas.appendChild(el);});
     m.moving.forEach(n=>{const nx=Math.max(20,n.x+dx+snapX),ny=Math.max(20,n.y+dy+snapY);n.node.style.left=nx+'px';n.node.style.top=ny+'px';cycleLogic.nodePositions=cycleLogic.nodePositions||{};cycleLogic.nodePositions[n.row]={x:nx,y:ny};});
   });
-  flowCanvas.addEventListener('pointerup',e=>{if(flowDrag){if(flowDrag.kind==='marquee'){flowDrag.box.remove();flowMarquee=null;}flowDrag=null;renderProcessFlowCanvas(selectedLogicRecords());}const port=e.target.closest?.('[data-flow-port]');if(port&&flowConnectFrom!==null&&Number(port.dataset.flowRow)!==flowConnectFrom)connectFlowNodes(flowConnectFrom,Number(port.dataset.flowRow),flowConnectFromPort,port.dataset.flowPort||'left');});
-  document.addEventListener('pointerup',e=>{if(flowDrag){if(flowDrag.kind==='marquee'){flowDrag.box.remove();flowMarquee=null;}flowDrag=null;renderProcessFlowCanvas(selectedLogicRecords());}if(flowConnectFrom===null)return;const target=document.elementFromPoint(e.clientX,e.clientY)?.closest?.('[data-flow-port]');if(target&&Number(target.dataset.flowRow)!==flowConnectFrom)connectFlowNodes(flowConnectFrom,Number(target.dataset.flowRow),flowConnectFromPort,target.dataset.flowPort||'left');});
+  flowCanvas.addEventListener('pointerup',e=>{if(flowDrag){if(flowDrag.kind==='move')commitFlowHistory(flowDrag.historyBefore);if(flowDrag.kind==='marquee'){flowDrag.box.remove();flowMarquee=null;}flowDrag=null;renderProcessFlowCanvas(selectedLogicRecords());}const port=e.target.closest?.('[data-flow-port]');if(port&&flowConnectFrom!==null&&Number(port.dataset.flowRow)!==flowConnectFrom)connectFlowNodes(flowConnectFrom,Number(port.dataset.flowRow),flowConnectFromPort,port.dataset.flowPort||'left');});
+  document.addEventListener('pointerup',e=>{if(flowDrag){if(flowDrag.kind==='move')commitFlowHistory(flowDrag.historyBefore);if(flowDrag.kind==='marquee'){flowDrag.box.remove();flowMarquee=null;}flowDrag=null;renderProcessFlowCanvas(selectedLogicRecords());}if(flowConnectFrom===null)return;const target=document.elementFromPoint(e.clientX,e.clientY)?.closest?.('[data-flow-port]');if(target&&Number(target.dataset.flowRow)!==flowConnectFrom)connectFlowNodes(flowConnectFrom,Number(target.dataset.flowRow),flowConnectFromPort,target.dataset.flowPort||'left');});
   document.getElementById('tc-flow-cancel-link').addEventListener('click',()=>{flowConnectFrom=null;flowConnectFromPort='right';renderProcessFlowCanvas(selectedLogicRecords());});
   document.getElementById('tc-flow-clear-selection').addEventListener('click',()=>{flowSelectedRows.clear();flowSelectedRow=null;flowMarquee=null;renderProcessFlowCanvas(selectedLogicRecords());});
 
-  document.getElementById('logic-add-dependency').addEventListener('click',()=>{const from=Number(document.getElementById('logic-dependency-source').value),to=Number(document.getElementById('logic-dependency-target').value),delay=Math.max(0,Number(document.getElementById('logic-dependency-delay').value)||0);if(!from||!to||from===to){document.getElementById('logic-validation-status').textContent='Choose two different operations.';return;}if(cycleLogic.dependencies.some(d=>d.from===from&&d.to===to)){document.getElementById('logic-validation-status').textContent='This dependency already exists.';return;}cycleLogic.dependencies.push({from,to,delay});renderCycleLogicEditor();});
-  document.getElementById('logic-dependency-list').addEventListener('click',e=>{const b=e.target.closest('[data-logic-remove]');if(b){cycleLogic.dependencies.splice(Number(b.dataset.logicRemove),1);renderCycleLogicEditor();}});
+  document.getElementById('logic-add-dependency').addEventListener('click',()=>{const from=Number(document.getElementById('logic-dependency-source').value),to=Number(document.getElementById('logic-dependency-target').value),delay=Math.max(0,Number(document.getElementById('logic-dependency-delay').value)||0);if(!from||!to||from===to){document.getElementById('logic-validation-status').textContent='Choose two different operations.';return;}if(cycleLogic.dependencies.some(d=>d.from===from&&d.to===to)){document.getElementById('logic-validation-status').textContent='This dependency already exists.';return;}const before=flowHistorySnapshot();cycleLogic.dependencies.push({from,to,delay});commitFlowHistory(before);renderCycleLogicEditor();});
+  document.getElementById('logic-dependency-list').addEventListener('click',e=>{const b=e.target.closest('[data-logic-remove]');if(b){const before=flowHistorySnapshot();cycleLogic.dependencies.splice(Number(b.dataset.logicRemove),1);commitFlowHistory(before);renderCycleLogicEditor();}});
   const simOutput=document.getElementById('cycle-simulation-output');
   function refreshSimulationPlaybackUI(){
     if(!simulationResult)return;
