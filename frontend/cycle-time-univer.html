@@ -1177,7 +1177,7 @@ body.h871-export{margin:0!important;padding:24px!important;background:#fff!impor
   async function exportStandaloneHtml(filename,title,sourceNode,subtitle){
     if(!sourceNode)throw new Error('The requested view is not currently rendered.');
     const clone=sourceNode.cloneNode(true);
-    clone.querySelectorAll('.tc-cycle-menu-toggle,.tc-cycle-menu,.tc-cursor-line,.tc-smart-tooltip,.tc-flow-marquee,.tc-flow-align-guide').forEach(node=>node.remove());
+    clone.querySelectorAll('.tc-cycle-menu-wrap,.tc-cycle-menu-toggle,.tc-cycle-menu,.tc-cursor-line,.tc-smart-tooltip,.tc-flow-marquee,.tc-flow-align-guide').forEach(node=>node.remove());
     const localStyle=document.querySelector('style')?.textContent||'';
     let sharedStyle='';
     try{const response=await fetch('./styles.css');if(response.ok)sharedStyle=await response.text();}catch(_){}
