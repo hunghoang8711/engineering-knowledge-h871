@@ -256,7 +256,7 @@ body.h871-export{margin:0!important;padding:24px!important;background:#fff!impor
   async function loadResource(path, tag = 'script') {
     for (const base of cdnBases) {
       const element = document.createElement(tag);
-      const url = base + path;
+      const url = /^https?:\/\//i.test(path) ? path : base + path;
       element.crossOrigin = 'anonymous';
       if (tag === 'link') { element.rel = 'stylesheet'; element.href = url; }
       else element.src = url;
@@ -1230,9 +1230,10 @@ body.h871-export{margin:0!important;padding:24px!important;background:#fff!impor
     const records=selectedLogicRecords();
     if(!records.length)throw new Error('No Process Flow operations are available to export.');
     setStatus('Preparing editable PowerPoint shapes…');
-    if(typeof window.pptxgen!=='function')await loadResource('pptxgenjs@3.12.0/dist/pptxgen.bundle.js');
-    if(typeof window.pptxgen!=='function')throw new Error('PowerPoint export library could not be initialized. Please retry after refreshing the page.');
-    const pptx=new window.pptxgen();
+    if(typeof (window.PptxGenJS||window.pptxgen)!=='function')await loadResource('https://cdn.jsdelivr.net/gh/gitbrent/pptxgenjs@3.12.0/dist/pptxgen.bundle.js');
+    const PptxGenJS=window.PptxGenJS||window.pptxgen;
+    if(typeof PptxGenJS!=='function')throw new Error('PowerPoint export library could not be initialized. Please retry after refreshing the page.');
+    const pptx=new PptxGenJS();
     pptx.layout='LAYOUT_WIDE';
     pptx.author='H871 Engineering Knowledge Hub';
     pptx.subject='Editable Process Flow';
