@@ -1019,3 +1019,12 @@ Time Chart-specific lessons:
 - **Code commit:** 543a822c5199d0b0b20e62eca0f33e4e34f3afed.
 - **Validation:** Source check confirms the settings block is immediately before the simulation toolbar; all inline JavaScript blocks passed syntax parsing. Browser layout and responsive appearance have not yet been manually tested.
 - **Next check:** Refresh the Time Chart and confirm the four settings appear directly above the Run/Clear buttons, with Number of cycles easy to edit before starting a simulation.
+
+### 2026-11-10 — Delete Time Chart from Project Detail
+
+- **User requirement:** Add a way to delete an existing Time Chart directly from its Project detail page.
+- **Implementation:** Added a Delete action beside Open chart for each saved Time Chart. The action is shown only to users with Editor/Admin write access, asks for confirmation, disables itself while deleting, and deletes only the selected `project_cycle_time_charts` row using both the selected chart ID and current project ID. On success, the row is removed immediately and the empty-state message is shown when the project has no remaining charts. Errors leave the row visible and restore the button.
+- **Scope/data safety:** Only `frontend/navigation.js`, `frontend/styles.css`, and this history document were changed. No database schema, migration, RLS, project records, document records, or other charts are modified by the client action.
+- **Code commits:** d8d277978d351b9ae7c0ad56efdc0ff29155ae92 (delete behavior); f262b5ffadc72ee9b3e95f24d8d31c9cde59cfad (button styling).
+- **Validation:** Navigation JavaScript syntax parsing passed. Source inspection confirms Editor/Admin visibility guard, explicit confirmation, and deletion constrained by both chart ID and project ID. Browser interaction and Supabase permission behavior have not yet been manually tested.
+- **Next check:** Open a Project detail page, verify Delete is visible for an Editor/Admin, cancel once to confirm no change, then delete a test Time Chart and confirm only that chart disappears while other charts remain.
