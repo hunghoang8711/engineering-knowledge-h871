@@ -157,12 +157,6 @@ body.h871-export{margin:0!important;padding:24px!important;background:#fff!impor
 <section class="uv-panel" id="cycle-simulation-panel">
   <div class="uv-head"><div><h2>Cycle Definition &amp; Logic Simulation</h2><p class="uv-note">Use each Operation's ⋮ menu to set the Cycle Start and Cycle End boundaries, configure coordination rules, then simulate N continuous cycles. The source worksheet remains unchanged.</p></div><span class="badge">Continuous Flow + Exclusive Resource</span></div>
   <div class="tc-cycle-boundary"><div><strong>Cycle boundary selection</strong><p class="tc-sim-note" id="cycle-boundary-status">Use the ⋮ menu on any Operation to set Cycle Start or Cycle End. Cycle End must be an Operation after Cycle Start.</p><div class="tc-toolbar"><button class="uv-btn" id="clear-cycle-boundaries" type="button">Clear cycle markers</button><span class="tc-sim-note" id="cycle-boundary-range">No cycle has been defined.</span></div></div></div>
-  <div class="tc-sim-controls">
-    <div class="tc-sim-field"><label for="sim-cycle-count">Number of cycles (N)</label><input id="sim-cycle-count" type="number" min="2" max="100" step="1" value="10"></div>
-    <div class="tc-sim-field"><label>Scheduling model</label><input value="Continuous Flow + Exclusive Resource" readonly></div>
-    <div class="tc-sim-field"><label>Pitch policy</label><input value="Calculated from actual Cycle Entry" readonly></div>
-    <div class="tc-sim-field"><label for="sim-display-limit">Timeline display limit</label><select id="sim-display-limit"><option value="100">100 events</option><option value="300" selected>300 events</option><option value="600">600 events</option></select></div>
-  </div>
   <p class="tc-sim-note" id="sim-interval-hint">Continuous Flow schedules cycles through their Entry Gate. Dependency links and shared Exclusive Resource IDs determine actual start times. Ideal cycle span is retained as a reference, not a fixed Pitch.</p>
 <div class="tc-logic-editor" id="cycle-logic-editor">
 <div class="tc-flow-heading"><div><strong>Visual Process Flow Editor</strong><p class="tc-logic-help">Drag any of the four ports between Operations to create a prerequisite link. Multiple incoming links form an AND gate.</p></div><div class="tc-flow-tools"><span class="tc-flow-pill">Continuous Flow · Exclusive Resource</span><button type="button" class="uv-btn" id="tc-flow-undo" title="Undo (Ctrl+Z)" disabled>↶ Undo</button><button type="button" class="uv-btn" id="tc-flow-redo" title="Redo (Ctrl+Y)" disabled>↷ Redo</button><button type="button" class="uv-btn" id="tc-flow-layout-direction">Layout: Top → Bottom</button><button type="button" class="uv-btn" id="tc-flow-auto-layout">Auto layout</button><button type="button" class="uv-btn" id="tc-flow-clear-selection">Clear selection</button><span class="tc-flow-pill" id="tc-flow-selection-count">0 selected</span><span class="tc-flow-pill" id="tc-flow-zoom-level" title="Hold Ctrl and scroll to zoom Process Flow">100%</span></div></div>
@@ -172,7 +166,13 @@ body.h871-export{margin:0!important;padding:24px!important;background:#fff!impor
 <div class="tc-flow-link-settings"><label for="logic-dependency-delay">New link delay (s)</label><input id="logic-dependency-delay" type="number" min="0" step="0.001" value="0"><small>Delay after predecessor completion.</small></div>
 <details class="tc-dependency-details"><summary>Dependency Links</summary><div id="logic-dependency-list"></div></details>
 <div class="tc-flow-hidden-controls" aria-hidden="true"><select id="logic-dependency-source"></select><select id="logic-dependency-target"></select><button type="button" id="logic-add-dependency">Add</button></div>
-<p class="tc-logic-help" id="logic-validation-status">Logic is stored in the existing chart_data JSON when you click Save to project. Resource IDs are shared and exclusive across all cycles.</p></div>  <div class="tc-toolbar"><button class="uv-btn primary" id="run-cycle-simulation">Run Continuous Flow Simulation</button><button class="uv-btn" id="clear-cycle-simulation">Clear simulation</button></div>
+<p class="tc-logic-help" id="logic-validation-status">Logic is stored in the existing chart_data JSON when you click Save to project. Resource IDs are shared and exclusive across all cycles.</p></div>  <div class="tc-sim-controls">
+    <div class="tc-sim-field"><label for="sim-cycle-count">Number of cycles (N)</label><input id="sim-cycle-count" type="number" min="2" max="100" step="1" value="10"></div>
+    <div class="tc-sim-field"><label>Scheduling model</label><input value="Continuous Flow + Exclusive Resource" readonly></div>
+    <div class="tc-sim-field"><label>Pitch policy</label><input value="Calculated from actual Cycle Entry" readonly></div>
+    <div class="tc-sim-field"><label for="sim-display-limit">Timeline display limit</label><select id="sim-display-limit"><option value="100">100 events</option><option value="300" selected>300 events</option><option value="600">600 events</option></select></div>
+  </div>
+  <div class="tc-toolbar"><button class="uv-btn primary" id="run-cycle-simulation">Run Continuous Flow Simulation</button><button class="uv-btn" id="clear-cycle-simulation">Clear simulation</button></div>
   <div class="tc-cycle-filter" id="sim-cluster-filter"></div>
   <div id="cycle-simulation-output"><div class="tc-empty">Build the Time Chart from worksheet cells, then run a simulation.</div></div>
 </section>
