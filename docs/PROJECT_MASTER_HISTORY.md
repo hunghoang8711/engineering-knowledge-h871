@@ -1001,3 +1001,12 @@ Time Chart-specific lessons:
 - **Code commit:** e36df48f422c07565718bf7a40c1665f80aa4655.
 - **Validation:** Inline JavaScript syntax parsing passed after the change. Browser interaction testing for zoom anchoring, node dragging, marquee selection, and connector creation at non-100% zoom has not yet been performed.
 - **Next check:** After deployment, open the Cycle Logic Editor and test Ctrl + wheel at different points in the canvas; confirm that node drag, multi-select, and port-to-port linking remain accurate at 40%, 100%, and 250%.
+
+### 2026-11-10 — Collapsible Dependency Links Panel
+
+- **User requirement:** The Dependency Links section should be collapsible and expanded only when the user needs to inspect the full list.
+- **Implementation:** Wrapped the existing dependency list in a native accessible disclosure panel. It is collapsed by default; selecting the Dependency Links heading expands it. The existing `logic-dependency-list` element ID and its event delegation remain unchanged, so add/remove behavior and dependency data handling are preserved.
+- **Scope/data safety:** Only the Time Chart frontend and this history document were changed. No database schema, migration, RLS, Supabase records, Cycle Logic rules, or Process Flow behavior were modified.
+- **Code commit:** f637386f47f13aa0a4f129cde4ab5bc2dc55bc08.
+- **Validation:** Source-level structure and change scope checked. Browser interaction and visual testing have not yet been performed.
+- **Next check:** Refresh the Time Chart and confirm Dependency Links starts collapsed, expands on click, and still allows existing dependency entries to be removed.
