@@ -1010,3 +1010,12 @@ Time Chart-specific lessons:
 - **Code commit:** f637386f47f13aa0a4f129cde4ab5bc2dc55bc08.
 - **Validation:** Source-level structure and change scope checked. Browser interaction and visual testing have not yet been performed.
 - **Next check:** Refresh the Time Chart and confirm Dependency Links starts collapsed, expands on click, and still allows existing dependency entries to be removed.
+
+### 2026-11-10 — Move Simulation Settings Beside Run Controls
+
+- **User requirement:** Move the Number of cycles (N) field and the adjacent simulation settings closer to the Run Continuous Flow Simulation / Clear simulation controls for easier cycle-count entry immediately before running.
+- **Implementation:** Moved the complete existing `tc-sim-controls` group (Number of cycles, Scheduling model, Pitch policy, and Timeline display limit) from above the Cycle Logic Editor to directly above the simulation action toolbar. The fields, IDs, default values, validation limits, and simulation event handlers are unchanged.
+- **Scope/data safety:** Markup relocation only in `frontend/cycle-time-univer.html`. The Dependency Links disclosure remains collapsed by default and unchanged. No Cycle Logic or Simulation Engine behavior, database schema, migrations, RLS, Supabase records, or saved chart data were modified.
+- **Code commit:** 543a822c5199d0b0b20e62eca0f33e4e34f3afed.
+- **Validation:** Source check confirms the settings block is immediately before the simulation toolbar; all inline JavaScript blocks passed syntax parsing. Browser layout and responsive appearance have not yet been manually tested.
+- **Next check:** Refresh the Time Chart and confirm the four settings appear directly above the Run/Clear buttons, with Number of cycles easy to edit before starting a simulation.
