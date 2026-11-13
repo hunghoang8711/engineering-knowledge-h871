@@ -737,7 +737,7 @@ body.h871-export{margin:0!important;padding:24px!important;background:#fff!impor
   }
   function allFlowDependencies(records){
     const valid=new Set(records.map(r=>r.sourceRow)),map=new Map();
-    cycleLogic.dependencies.forEach((d,index)=>{if(valid.has(d.from)&&valid.has(d.to))map.set(d.from+'>'+d.to',{...d,type:'manual',manualIndex:index});});
+    cycleLogic.dependencies.forEach((d,index)=>{if(valid.has(d.from)&&valid.has(d.to))map.set(d.from+'>'+d.to,{...d,type:'manual',manualIndex:index});});
     formulaDependencies.forEach(d=>{if(valid.has(d.from)&&valid.has(d.to)){const key=d.from+'>'+d.to,existing=map.get(key);map.set(key,existing?{...existing,type:'formula+manual'}:d);}});
     return [...map.values()];
   }
