@@ -1109,3 +1109,12 @@ Time Chart-specific lessons:
 - **Source-level validation:** Re-fetched the latest frontend from `main` and confirmed the Event Log markup/styles, per-event planned/actual/wait metadata, blocker attribution, Cluster filtering, display-limit listener, Process Flow playback/node selection, and Time Chart row highlighting are present. No live browser interaction or real project/Supabase simulation test has been performed in this implementation turn.
 - **Not yet verified:** Check that the event table remains usable at narrow widths; validate a dependency wait with two predecessors, a shared Resource wait across overlapping cycles, an event released by the previous-cycle gate, Cluster filtering, 100/300/600 display limits, and both cross-view navigation actions. Confirm that clearing or rerunning the simulation clears/replaces the run-local log.
 - **Next development stage:** After the Event Log is browser-verified, implement Conditional Branch & OR Gate as a separate workflow capability. Preserve the current AND behavior for multiple incoming links; OR semantics must be explicit and must not reinterpret existing AND joins.
+
+
+
+### 2026-11-13 — Rollback of Simulation Event Log after Univer loading regression
+
+- **User-reported regression:** After the Simulation Event Log commits, the Time Chart page remained at “Loading Univer spreadsheet engine…” and did not finish initializing.
+- **Recovery action:** Replaced `frontend/cycle-time-univer.html` on `main` with the known pre-Event-Log version from commit `e987ba7f7679e053fcd5e0fce6b6fdd859400aeb`. Rollback commit: `bb40504efce550569a80323675b677c289d28e35`. This preserves the preceding Phase 3 formula-driven Process Flow and stable-ID workflow work while removing the unverified Event Log changes.
+- **Important status:** The rollback has been committed, but a live GitHub Pages/browser verification has not been performed in this turn. User should hard-refresh the Time Chart page after Pages finishes deploying. If the loading message persists, collect the first red Console error and the failed Network request; do not reintroduce the Event Log until the Univer initialization regression is isolated and browser-tested.
+- **Next step:** Reproduce and diagnose the loader issue against the restored version first. The Event Log work is paused, not considered accepted or complete.
