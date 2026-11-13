@@ -669,24 +669,49 @@ body.h871-export{margin:0!important;padding:24px!important;background:#fff!impor
     Object.entries(config).forEach(([key,value])=>{if(value)parsed[key]=parseA1Range(value);});
     if(!parsed.start) throw new Error('Please specify a Start Time range, for example C2:C15.');
     if(!parsed.duration&&!parsed.end) throw new Error('Please specify at least a Duration or End Time range.');
+
+    // Scan the longest configured range. A blank row in the middle must not
+    // terminate the scan or shift the relationship between mapped columns.
     const active=Object.values(parsed);
-    const count=Math.min(...active.map(r=>r.length));
-    const valueAt=(range,index)=>{if(!range||index>=range.length)return null;return matrix[range.start+index]?.[range.col]??null;};
-    const records=[];
+    const count=Math.max(...active.map(range=>range.length));
+    const valueAt=(range,index)=>!range||index>=range.length?null:(matrix[range.start+index]?.[range.col]??null);
+    const hasValue=value=>{
+      if(value===null||value===undefined)return false;
+      return typeof value==='string'?value.trim()!=='':true;
+    };
+    const records=[],invalidRows=[],skippedBlankRows=[];
     for(let i=0;i<count;i++){
-      const start=numericCell(valueAt(parsed.start,i));
-      let duration=numericCell(valueAt(parsed.duration,i));
-      let end=numericCell(valueAt(parsed.end,i));
-      if(start===null) continue;
+      const values=Object.fromEntries(Object.entries(parsed).map(([key,range])=>[key,valueAt(range,i)]));
+      // Skip only rows where every mapped field is empty. Partially populated
+      // rows are data-quality issues and should be reported, not silently lost.
+      if(!Object.values(values).some(hasValue)){
+        skippedBlankRows.push(parsed.start.start+i+1);
+        continue;
+      }
+      const sourceRow=parsed.start.start+i+1;
+      const start=numericCell(values.start);
+      let duration=numericCell(values.duration);
+      let end=numericCell(values.end);
+      if(start===null){
+        invalidRows.push(sourceRow);
+        continue;
+      }
       if(end===null&&duration!==null)end=start+duration;
       if(duration===null&&end!==null)duration=end-start;
-      if(end===null||duration===null||duration<0||end<start)continue;
-      const mechanism=String(valueAt(parsed.cluster,i)??'').trim()||'Unassigned';
-      const operation=String(valueAt(parsed.operation,i)??'').trim()||('Operation '+(i+1));
-      records.push({mechanism,operation,start,end,duration,sourceRow:parsed.start.start+i+1,remark:String(valueAt(parsed.remark,i)??'').trim()});
+      if(end===null||duration===null||duration<0||end<start){
+        invalidRows.push(sourceRow);
+        continue;
+      }
+      const mechanism=String(values.cluster??'').trim()||'Unassigned';
+      const operation=String(values.operation??'').trim()||('Operation '+(records.length+1));
+      records.push({mechanism,operation,start,end,duration,sourceRow,remark:String(values.remark??'').trim()});
     }
-    if(active.some(r=>r.length!==count)) document.getElementById('range-status').textContent='Note: selected ranges have different row counts. Only the first '+count+' aligned rows will be used.';
-    else document.getElementById('range-status').textContent='Using '+count+' aligned worksheet rows from the configured ranges.';
+    const messages=[];
+    if(active.some(range=>range.length!==count))messages.push('Configured ranges have different lengths; scanning the longest range and treating missing cells as empty.');
+    if(skippedBlankRows.length)messages.push('Skipped '+skippedBlankRows.length+' completely blank row(s).');
+    if(invalidRows.length)messages.push('Found '+invalidRows.length+' partially filled or invalid row(s) at Excel row(s): '+invalidRows.join(', ')+'. Check Start Time and Duration/End Time.');
+    messages.push('Recognized '+records.length+' valid operation(s) from top to bottom.');
+    document.getElementById('range-status').textContent=messages.join(' ');
     return records;
   }
   function colorForMechanism(name) {
