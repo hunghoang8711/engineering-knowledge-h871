@@ -527,9 +527,17 @@ body[data-start-tab]:not([data-start-tab="overview"]):not([data-start-tab="searc
 }
 .brand-copy{margin-left:62px;}
 
-.project-cycle-chart-actions{display:flex;align-items:center;gap:8px;flex:0 0 auto;flex-wrap:wrap}
-.project-cycle-chart-actions .project-open{flex:0 0 auto}
-.project-chart-delete{display:inline-flex;align-items:center;justify-content:center;min-height:36px;padding:8px 13px;border:1px solid #7f3543;border-radius:9px;background:#351923;color:#fecdd3;font:inherit;font-size:12px;font-weight:700;white-space:nowrap;cursor:pointer;transition:background .15s ease,border-color .15s ease}
-.project-chart-delete:hover:not(:disabled){background:#4a1f2b;border-color:#be5366}
-.project-chart-delete:disabled{opacity:.6;cursor:wait}
-@media(max-width:600px){.project-cycle-chart-actions{width:100%}.project-cycle-chart-actions>*{flex:1 1 auto}}
+.project-cycle-chart-item{position:relative;padding-right:58px;cursor:pointer;outline:none}
+.project-cycle-chart-item:focus-visible{border-color:#22a6c2;box-shadow:0 0 0 2px rgba(34,166,194,.2)}
+.project-cycle-chart-item>div.project-cycle-chart-info{min-width:0;flex:1}
+.project-cycle-chart-menu-wrap{position:absolute;top:10px;right:10px;z-index:5;flex:0 0 auto}
+.project-cycle-chart-menu-toggle{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border:1px solid #38516b;border-radius:9px;background:#101d30;color:#dbeafe;font:700 21px/1 inherit;cursor:pointer}
+.project-cycle-chart-menu-toggle:hover,.project-cycle-chart-menu-toggle[aria-expanded="true"]{background:#1b3550;border-color:#3b7893}
+.project-cycle-chart-menu{position:absolute;top:39px;right:0;min-width:174px;padding:5px;border:1px solid #38516b;border-radius:10px;background:#101d30;box-shadow:0 12px 30px rgba(0,0,0,.38)}
+.project-cycle-chart-menu[hidden]{display:none}
+.project-cycle-chart-menu-item{display:block;width:100%;padding:9px 10px;border:0;border-radius:7px;background:transparent;color:#dbeafe;text-align:left;font:inherit;font-size:12px;cursor:pointer}
+.project-cycle-chart-menu-item:hover:not(:disabled){background:#1d3550}
+.project-cycle-chart-menu-item.danger{color:#fda4af}
+.project-cycle-chart-menu-item.danger:hover:not(:disabled){background:#451f2a}
+.project-cycle-chart-menu-item:disabled{opacity:.55;cursor:wait}
+@media(max-width:600px){.project-cycle-chart-item{padding-right:54px}.project-cycle-chart-menu-wrap{top:8px;right:8px}}
