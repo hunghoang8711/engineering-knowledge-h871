@@ -1049,6 +1049,6 @@ Time Chart-specific lessons:
 - **Keyboard accessibility:** Pressing Escape also closes the menu and returns focus to its three-dot toggle.
 - **Interaction compatibility:** Opening another Time Chart menu still closes the previously open menu. Copy and Delete actions explicitly close the menu before continuing; Delete retains its confirmation prompt.
 - **Scope/data safety:** Only `frontend/navigation.js` and this history document were changed. No chart data, project data, Supabase records, database schema, migrations, or RLS policies were modified.
-- **Code commit:** `ec7354eade89cafd6dd0b45f180556f3ba8d0f7b`.
+- **Code commits:** `ec7354eade89cafd6dd0b45f180556f3ba8d0f7b` (outside-click and Escape dismissal); `0f3601b1236e415d412e0407e018c796651962fa` (clean up any previously open menu listeners when switching between Time Chart menus).
 - **Validation:** Re-fetched the committed navigation source and confirmed the outside-click listener, Escape-key handler, listener cleanup, and explicit menu closure before Copy/Delete. Actual browser interaction has not yet been manually tested.
 - **Next check:** After GitHub Pages deployment, open a Project detail page, open the three-dot menu, click an unrelated area of the page, and confirm the menu closes. Also verify clicking Copy/Delete still works and Escape closes the menu.
