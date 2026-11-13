@@ -617,6 +617,7 @@ body.h871-export{margin:0!important;padding:24px!important;background:#fff!impor
   let simulationResult = null;
   let cycleBoundarySelection = { startSourceRow:null, endSourceRow:null };
   let operationIdentityState = { version:1, records:[] };
+  let operationIdentityWarnings = [];
   let simulationVisibleClusters = null;
   let cycleLogic={entrySourceRow:null,completionSourceRow:null,layoutDirection:'TB',dependencies:[],resources:{}};
   // Shared event contract: both sequential repeat and future resource-constrained overlap
@@ -837,12 +838,13 @@ body.h871-export{margin:0!important;padding:24px!important;background:#fff!impor
     if(!oldRecords.length)return;
     const oldByRow=new Map(oldRecords.map(x=>[x.sourceRow,x.id]));
     const newById=new Map(newRecords.map(x=>[x.id,x.sourceRow]));
-    const remap=row=>{if(!Number.isInteger(row))return row;if(!oldByRow.has(row))return row;const id=oldByRow.get(row);return id&&newById.has(id)?newById.get(id):null;};
+    operationIdentityWarnings=[];
+    const remap=(row,preserveMissing=false)=>{if(!Number.isInteger(row))return row;if(!oldByRow.has(row))return row;const id=oldByRow.get(row);if(id&&newById.has(id))return newById.get(id);operationIdentityWarnings.push('Workflow reference to the removed Operation formerly at Excel row '+row+' needs review.');return preserveMissing?-Math.abs(row):null;};
     cycleBoundarySelection={startSourceRow:remap(cycleBoundarySelection.startSourceRow),endSourceRow:remap(cycleBoundarySelection.endSourceRow)};
     cycleLogic.entrySourceRow=remap(cycleLogic.entrySourceRow);
     cycleLogic.completionSourceRow=remap(cycleLogic.completionSourceRow);
-    cycleLogic.dependencies=cycleLogic.dependencies.map(d=>({...d,from:remap(d.from),to:remap(d.to)}));
-    const remapKeyedObject=source=>Object.fromEntries(Object.entries(source||{}).map(([key,value])=>[String(remap(Number(key))),value]));
+    cycleLogic.dependencies=cycleLogic.dependencies.map(d=>({...d,from:remap(d.from,true),to:remap(d.to,true)}));
+    const remapKeyedObject=source=>Object.fromEntries(Object.entries(source||{}).map(([key,value])=>[String(remap(Number(key),true)),value]));
     cycleLogic.resources=remapKeyedObject(cycleLogic.resources);
     cycleLogic.nodePositions=remapKeyedObject(cycleLogic.nodePositions);
     if(Number.isInteger(flowSelectedRow))flowSelectedRow=remap(flowSelectedRow);
@@ -869,6 +871,7 @@ body.h871-export{margin:0!important;padding:24px!important;background:#fff!impor
     records.forEach(record=>{if(!record.operationId)record.operationId=operationIdentityId();});
     remapLegacyOperationReferences(previous,records.map((record,index)=>({id:record.operationId,sourceRow:record.sourceRow})));
     operationIdentityState={version:1,records:records.map((record,index)=>({id:record.operationId,sourceRow:record.sourceRow,...keys[index]}))};
+    if(operationIdentityWarnings.length){const status=document.getElementById('range-status');if(status)status.textContent+=' '+[...new Set(operationIdentityWarnings)].join(' ');}
     return records;
   }
   function selectedLogicRecords(){try{return getSelectedCycleRecords().records;}catch(_){return [];}}
