@@ -188,6 +188,33 @@ body.h871-export{margin:0!important;padding:24px!important;background:#fff!impor
 </div>
 <script>
 (() => {
+  const app = document.getElementById('app');
+  const status = document.getElementById('uv-status');
+  const report = (message) => {
+    if (app) {
+      app.textContent = message;
+      app.style.cssText = 'padding:24px;white-space:pre-wrap;overflow-wrap:anywhere;font:14px/1.5 system-ui;color:#991b1b;background:#fff;height:100%;box-sizing:border-box';
+    }
+    if (status) { status.textContent = message; status.classList.add('error'); }
+  };
+  if (app) {
+    const hint = app.querySelector('p');
+    if (hint) hint.textContent = 'Starting Time Chart JavaScript…';
+  }
+  if (status) status.textContent = 'Starting Time Chart JavaScript…';
+  window.addEventListener('error', event => {
+    report('Time Chart JavaScript error: ' + (event.message || 'Unknown script error') +
+      (event.filename ? '\\nFile: ' + event.filename : '') +
+      (event.lineno ? '\\nLine: ' + event.lineno : ''));
+  });
+  window.addEventListener('unhandledrejection', event => {
+    const reason = event.reason;
+    report('Time Chart startup promise failed: ' + (reason?.stack || reason?.message || String(reason)));
+  });
+})();
+</script>
+<script>
+(() => {
   const statusEl = document.getElementById('uv-status');
   const params = new URLSearchParams(location.search);
   const projectId = params.get('project_id') || params.get('project') || '';
