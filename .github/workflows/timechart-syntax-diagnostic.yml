@@ -4,6 +4,7 @@ on:
     branches: [main]
     paths:
       - ".github/workflows/timechart-syntax-diagnostic.yml"
+      - "frontend/cycle-time-univer.html"
   workflow_dispatch:
 permissions:
   contents: write
