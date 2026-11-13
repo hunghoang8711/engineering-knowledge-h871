@@ -837,7 +837,7 @@ body.h871-export{margin:0!important;padding:24px!important;background:#fff!impor
     if(!oldRecords.length)return;
     const oldByRow=new Map(oldRecords.map(x=>[x.sourceRow,x.id]));
     const newById=new Map(newRecords.map(x=>[x.id,x.sourceRow]));
-    const remap=row=>{if(!Number.isInteger(row))return row;const id=oldByRow.get(row);return id&&newById.has(id)?newById.get(id):row;};
+    const remap=row=>{if(!Number.isInteger(row))return row;if(!oldByRow.has(row))return row;const id=oldByRow.get(row);return id&&newById.has(id)?newById.get(id):null;};
     cycleBoundarySelection={startSourceRow:remap(cycleBoundarySelection.startSourceRow),endSourceRow:remap(cycleBoundarySelection.endSourceRow)};
     cycleLogic.entrySourceRow=remap(cycleLogic.entrySourceRow);
     cycleLogic.completionSourceRow=remap(cycleLogic.completionSourceRow);
@@ -856,7 +856,7 @@ body.h871-export{margin:0!important;padding:24px!important;background:#fff!impor
     const takeMatch=(predicate)=>{
       for(let i=0;i<records.length;i++){
         if(records[i].operationId)continue;
-        const candidates=[...unmatched].filter(j=>predicate(previous[j],keys[i]));
+        const candidates=[...unmatched].filter(j=>predicate(previous[j],keys[i],records[i]));
         if(!candidates.length)continue;
         candidates.sort((a,b)=>Math.abs(previous[a].sourceRow-records[i].sourceRow)-Math.abs(previous[b].sourceRow-records[i].sourceRow)||previous[a].sourceRow-previous[b].sourceRow);
         const j=candidates[0];records[i].operationId=previous[j].id;unmatched.delete(j);assigned.add(i);
@@ -865,7 +865,7 @@ body.h871-export{margin:0!important;padding:24px!important;background:#fff!impor
     takeMatch((old,key)=>old.fingerprint===key.fingerprint);
     takeMatch((old,key)=>old.semantic===key.semantic);
     takeMatch((old,key)=>old.timing===key.timing);
-    takeMatch((old,key)=>old.sourceRow===records.find(r=>!r.operationId)?.sourceRow);
+    takeMatch((old,key,record)=>old.sourceRow===record.sourceRow);
     records.forEach(record=>{if(!record.operationId)record.operationId=operationIdentityId();});
     remapLegacyOperationReferences(previous,records.map((record,index)=>({id:record.operationId,sourceRow:record.sourceRow})));
     operationIdentityState={version:1,records:records.map((record,index)=>({id:record.operationId,sourceRow:record.sourceRow,...keys[index]}))};
