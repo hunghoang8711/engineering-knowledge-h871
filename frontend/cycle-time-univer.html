@@ -677,11 +677,11 @@ body.h871-export{margin:0!important;padding:24px!important;background:#fff!impor
   }
   function buildFormulaDependencies(records,snapshot,parsed){
     const sheetId=snapshot.sheetOrder?.[0]||Object.keys(snapshot.sheets||{})[0],sheet=snapshot.sheets?.[sheetId],cells=sheet?.cellData||{};
-    const endCellMap=new Map(records.map(r=>[r.endCell.row+':'+r.endCell.col,r]));
+    const endCellMap=new Map(records.filter(r=>r.endCell).map(r=>[r.endCell.row+':'+r.endCell.col,r]));
     const edges=[],seen=new Set();
     records.forEach(target=>{
-      const startCell=cells[target.startCell.row]?.[target.startCell.col]||{},endCell=cells[target.endCell.row]?.[target.endCell.col]||{};
-      const formulas=[{formula:startCell.f,kind:'start-formula',address:target.startCell.address},{formula:endCell.f,kind:'end-formula',address:target.endCell.address}].filter(x=>x.formula);
+      const startCell=cells[target.startCell.row]?.[target.startCell.col]||{},endCell=target.endCell?(cells[target.endCell.row]?.[target.endCell.col]||{}):{};
+      const formulas=[{formula:startCell.f,kind:'start-formula',address:target.startCell.address},...(target.endCell?[{formula:endCell.f,kind:'end-formula',address:target.endCell.address}]:[])].filter(x=>x.formula);
       formulas.forEach(item=>parseFormulaCellReferences(item.formula).forEach(ref=>{
         if(ref.sheet&&sheet?.name&&ref.sheet!==sheet.name)return;
         const source=endCellMap.get(ref.row+':'+ref.col);
@@ -749,8 +749,7 @@ body.h871-export{margin:0!important;padding:24px!important;background:#fff!impor
       }
       const sourceRow=parsed.start.start+i+1;
       const startCell={row:parsed.start.start+i,col:parsed.start.col,address:columnName(parsed.start.col)+(parsed.start.start+i+1)};
-      const endRange=parsed.end||parsed.duration;
-      const endCell={row:endRange.start+i,col:endRange.col,address:columnName(endRange.col)+(endRange.start+i+1)};
+      const endCell=parsed.end?{row:parsed.end.start+i,col:parsed.end.col,address:columnName(parsed.end.col)+(parsed.end.start+i+1)}:null;
       const start=numericCell(values.start);
       let duration=numericCell(values.duration);
       let end=numericCell(values.end);
