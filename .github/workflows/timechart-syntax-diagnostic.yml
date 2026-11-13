@@ -1,0 +1,32 @@
+name: Temporary Time Chart Syntax Diagnostic
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/timechart-syntax-diagnostic.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Extract and syntax-check inline scripts
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          const html = fs.readFileSync('frontend/cycle-time-univer.html', 'utf8');
+          const scripts = [...html.matchAll(/<script>([\\s\\S]*?)<\\/script>/gi)].map(x => x[1]).filter(x => x.trim());
+          console.log('inline scripts:', scripts.length);
+          scripts.forEach((source, i) => {
+            const file = '/tmp/timechart-inline-' + (i + 1) + '.js';
+            fs.writeFileSync(file, source);
+            const cp = require('child_process').spawnSync(process.execPath, ['--check', file], {encoding:'utf8'});
+            console.log('SCRIPT', i + 1, 'length', source.length, 'exit', cp.status);
+            if (cp.stdout) console.log(cp.stdout);
+            if (cp.stderr) console.log(cp.stderr);
+            if (cp.status !== 0) process.exitCode = 1;
+          });
+          NODE
