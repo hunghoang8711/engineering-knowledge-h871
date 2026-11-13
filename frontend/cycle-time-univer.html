@@ -253,23 +253,38 @@ body.h871-export{margin:0!important;padding:24px!important;background:#fff!impor
     '@univerjs/sheets-formula-ui@1.4.0/lib/umd/locale/en-US.js',
     '@univerjs/sheets-numfmt-ui@1.4.0/lib/umd/locale/en-US.js'
   ];
+  function showLoaderMessage(message) {
+    const hint = app.querySelector('p');
+    if (hint) hint.textContent = message;
+    setStatus(message);
+  }
   async function loadResource(path, tag = 'script') {
-    for (const base of cdnBases) {
+    let lastError = null;
+    for (let index = 0; index < cdnBases.length; index++) {
+      const base = cdnBases[index];
       const element = document.createElement(tag);
       const url = /^https?:\/\//i.test(path) ? path : base + path;
+      showLoaderMessage('Loading Univer resource: ' + path + ' (' + (index + 1) + '/2 CDN)');
       element.crossOrigin = 'anonymous';
       if (tag === 'link') { element.rel = 'stylesheet'; element.href = url; }
       else element.src = url;
       try {
         await new Promise((resolve, reject) => {
-          element.onload = resolve;
-          element.onerror = () => reject(new Error(url));
+          const timeout = setTimeout(() => {
+            element.remove();
+            reject(new Error('Timed out after 12 seconds: ' + url));
+          }, 12000);
+          element.onload = () => { clearTimeout(timeout); resolve(); };
+          element.onerror = () => { clearTimeout(timeout); reject(new Error('Network or HTTP load error: ' + url)); };
           document.head.appendChild(element);
         });
         return;
-      } catch (_) { element.remove(); }
+      } catch (error) {
+        lastError = error;
+        element.remove();
+      }
     }
-    throw new Error('Could not load ' + path + ' from jsDelivr or unpkg.');
+    throw new Error('Could not load Univer resource "' + path + '". ' + (lastError?.message || 'Both CDNs failed.'));
   }
   function columnName(index) { let n=index+1, out=''; while(n){const r=(n-1)%26;out=String.fromCharCode(65+r)+out;n=Math.floor((n-1)/26);}return out; }
   function sampleData() {
