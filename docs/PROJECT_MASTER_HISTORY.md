@@ -1130,3 +1130,14 @@ Time Chart-specific lessons:
 - **Code commit:** `6db10fbbc3a9041c2c91da7291f99fe65313f007`.
 - **Validation:** Re-fetched the latest frontend before editing and confirmed the exact loader block existed. The replacement was applied with a guarded exact-text match and source-level checks confirmed both the timeout and progress diagnostics are present. No browser runtime, CDN network, Supabase session, or saved-chart read has been tested in this turn.
 - **Next diagnostic step:** After GitHub Pages deploys, reopen the same project Time Chart. If loading continues, the page should now identify the exact Univer asset and CDN attempt, or show a terminal error. Capture that visible message plus the first red Console error. If the spreadsheet appears but the saved chart is missing, capture the status message and the failed Supabase request instead; then investigate session, project access, chart query, and RLS separately. Do not modify or migrate database data as part of this diagnosis.
+
+
+### 2026-11-13 — Early JavaScript startup diagnostics for persistent initial loader
+
+- **User report:** Even after the CDN timeout/progress diagnostic commit was deployed successfully, the page still displayed the original static text `Loading Univer spreadsheet engine…` with no visible change.
+- **Interpretation:** The normal loader diagnostic is called only after the main inline script begins executing and reaches its first CDN load. If the original static placeholder remains unchanged, the main script may fail to parse/execute, an earlier startup error may occur, or the browser may still be serving a stale page. This does not yet prove a CDN or Supabase failure.
+- **Change:** Added a small independent preflight script before the main Time Chart script. It immediately changes the placeholder to `Starting Time Chart JavaScript…` and listens for global JavaScript errors and unhandled promise rejections, rendering the diagnostic directly in the workspace and status line. The main loader's 12-second CDN timeout remains in place.
+- **Data safety:** No Supabase query, chart payload, database schema, or saved project data was changed.
+- **Code commit:** `56a26648ca9f7f81765d917817906b406d9f8200`.
+- **Validation:** Latest frontend SHA was fetched before editing; the exact main-script marker was verified; preflight insertion was guarded and source-level checks confirmed the startup and error messages. Browser execution and live Pages verification remain untested.
+- **Next check:** After Pages deployment, the workspace should at minimum change to `Starting Time Chart JavaScript…`. If it changes to an error, use the full visible error text to fix the precise line. If it still shows the old static placeholder after a hard refresh, verify the exact page URL and cache/service-worker behavior because the preflight script itself is not being served/executed.
