@@ -1040,3 +1040,15 @@ Time Chart-specific lessons:
 - **Code commits:** `7652be118595bc1d72f799cccef7e5f49afdfd12` (card navigation and menu actions); `af1c869acbb58354e1b573a442cac859dc7c2746` (card and menu styling).
 - **Validation:** Re-fetched both changed files from the default branch and confirmed the card click handler, absence of the Open chart button, Copy and Delete menu entries, chart-data copy path, and corresponding menu CSS. Actual browser interaction, Supabase insert permissions, and opening/editing a copied chart have not yet been tested manually.
 - **Next check:** After GitHub Pages deployment, open a Project detail page, click a Time Chart card, use the three-dot menu to create a copy, open the copy, and verify that its spreadsheet, Process Flow, Dependency Links, and settings match the source. Edit and save the copy, then reopen the original to confirm it remains unchanged.
+
+
+### 2026-11-13 — Dismiss Time Chart Options Menu on Outside Click
+
+- **User request:** When the three-dot Time Chart options menu is open, clicking elsewhere on the page should dismiss it without selecting an option.
+- **Implementation:** Added a document-level outside-click handler while the menu is open. Clicks inside the menu/card controls do not trigger the outside handler; clicking outside the menu closes it and resets `aria-expanded`. The handler is removed when the menu closes, avoiding a permanently active document listener.
+- **Keyboard accessibility:** Pressing Escape also closes the menu and returns focus to its three-dot toggle.
+- **Interaction compatibility:** Opening another Time Chart menu still closes the previously open menu. Copy and Delete actions explicitly close the menu before continuing; Delete retains its confirmation prompt.
+- **Scope/data safety:** Only `frontend/navigation.js` and this history document were changed. No chart data, project data, Supabase records, database schema, migrations, or RLS policies were modified.
+- **Code commit:** `ec7354eade89cafd6dd0b45f180556f3ba8d0f7b`.
+- **Validation:** Re-fetched the committed navigation source and confirmed the outside-click listener, Escape-key handler, listener cleanup, and explicit menu closure before Copy/Delete. Actual browser interaction has not yet been manually tested.
+- **Next check:** After GitHub Pages deployment, open a Project detail page, open the three-dot menu, click an unrelated area of the page, and confirm the menu closes. Also verify clicking Copy/Delete still works and Escape closes the menu.
