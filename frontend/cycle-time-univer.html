@@ -700,22 +700,25 @@ body.h871-export{margin:0!important;padding:24px!important;background:#fff!impor
     return [...map.values()];
   }
   function serializeStableWorkflowReferences(){
+    if(!operationIdentityState.records.length)return null;
     const rowToId=new Map(operationIdentityState.records.map(r=>[r.sourceRow,r.id]));
     const keyObject=source=>Object.fromEntries(Object.entries(source||{}).flatMap(([row,value])=>rowToId.has(Number(row))?[[rowToId.get(Number(row)),value]]:[]));
-    const dep=cycleLogic.dependencies.flatMap(d=>rowToId.has(d.from)&&rowToId.has(d.to)?[{fromOperationId:rowToId.get(d.from),toOperationId:rowToId.get(d.to),delay:d.delay,fromPort:d.fromPort,toPort:d.toPort}]:[]);
+    const dep=cycleLogic.dependencies.map(d=>({fromOperationId:rowToId.get(d.from)||null,toOperationId:rowToId.get(d.to)||null,legacyFrom:rowToId.has(d.from)?null:d.from,legacyTo:rowToId.has(d.to)?null:d.to,delay:d.delay,fromPort:d.fromPort,toPort:d.toPort}));
     return {version:1,entryOperationId:rowToId.get(cycleLogic.entrySourceRow)||null,completionOperationId:rowToId.get(cycleLogic.completionSourceRow)||null,dependencies:dep,resources:keyObject(cycleLogic.resources),nodePositions:keyObject(cycleLogic.nodePositions),cycleStartOperationId:rowToId.get(cycleBoundarySelection.startSourceRow)||null,cycleEndOperationId:rowToId.get(cycleBoundarySelection.endSourceRow)||null};
   }
   function restoreStableWorkflowReferences(value,identity){
     if(!value||value.version!==1)return;
     const idToRow=new Map(normalizeOperationIdentity(identity).records.map(r=>[r.id,r.sourceRow]));
     const row=id=>idToRow.has(id)?idToRow.get(id):null;
-    cycleLogic.entrySourceRow=row(value.entryOperationId);
-    cycleLogic.completionSourceRow=row(value.completionOperationId);
-    cycleLogic.dependencies=(Array.isArray(value.dependencies)?value.dependencies:[]).map(d=>({from:row(d.fromOperationId)??-1,to:row(d.toOperationId)??-1,delay:Math.max(0,Number(d.delay)||0),fromPort:FLOW_PORTS.includes(d.fromPort)?d.fromPort:'right',toPort:FLOW_PORTS.includes(d.toPort)?d.toPort:'left'}));
-    const restoreKeyed=source=>Object.fromEntries(Object.entries(source||{}).map(([id,v])=>[String(row(id)??-1),v]));
-    cycleLogic.resources=restoreKeyed(value.resources);
-    cycleLogic.nodePositions=restoreKeyed(value.nodePositions);
-    cycleBoundarySelection={startSourceRow:row(value.cycleStartOperationId),endSourceRow:row(value.cycleEndOperationId)};
+    cycleLogic.entrySourceRow=row(value.entryOperationId)??cycleLogic.entrySourceRow;
+    cycleLogic.completionSourceRow=row(value.completionOperationId)??cycleLogic.completionSourceRow;
+    const unresolvedDependencies=cycleLogic.dependencies.filter(d=>d.from<0||d.to<0);
+    const stableDependencies=(Array.isArray(value.dependencies)?value.dependencies:[]).map(d=>({from:row(d.fromOperationId)??(Number.isInteger(d.legacyFrom)?d.legacyFrom:-1),to:row(d.toOperationId)??(Number.isInteger(d.legacyTo)?d.legacyTo:-1),delay:Math.max(0,Number(d.delay)||0),fromPort:FLOW_PORTS.includes(d.fromPort)?d.fromPort:'right',toPort:FLOW_PORTS.includes(d.toPort)?d.toPort:'left'}));
+    cycleLogic.dependencies=[...stableDependencies,...unresolvedDependencies];
+    const restoreKeyed=(source,legacy)=>{const mapped=Object.fromEntries(Object.entries(source||{}).flatMap(([id,v])=>row(id)!==null?[[String(row(id)),v]]:[]));Object.entries(legacy||{}).forEach(([key,v])=>{if(Number(key)<0)mapped[key]=v;});return mapped;};
+    cycleLogic.resources=restoreKeyed(value.resources,cycleLogic.resources);
+    cycleLogic.nodePositions=restoreKeyed(value.nodePositions,cycleLogic.nodePositions);
+    cycleBoundarySelection={startSourceRow:row(value.cycleStartOperationId)??cycleBoundarySelection.startSourceRow,endSourceRow:row(value.cycleEndOperationId)??cycleBoundarySelection.endSourceRow};
   }
   function readWorksheetRecords() {
     if (!workbook) throw new Error('Worksheet is not ready.');
