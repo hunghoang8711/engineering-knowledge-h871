@@ -416,6 +416,7 @@ body.h871-export{margin:0!important;padding:24px!important;background:#fff!impor
     setRangeInputs(payload.dataRangeConfig||{});
     clusterColors=payload.clusterColors&&typeof payload.clusterColors==='object'?{...payload.clusterColors}:{};
     cycleLogic=normalizeCycleLogic(payload.cycleLogic);
+    operationIdentityState=normalizeOperationIdentity(payload.operationIdentity);
     const savedCycle=payload.cycleDefinition||{};
     cycleBoundarySelection={startSourceRow:Number.isInteger(savedCycle.startSourceRow)?savedCycle.startSourceRow:null,endSourceRow:Number.isInteger(savedCycle.endSourceRow)?savedCycle.endSourceRow:null};
     resetFlowHistory();
@@ -449,7 +450,7 @@ body.h871-export{margin:0!important;padding:24px!important;background:#fff!impor
     currentChartTitle=document.getElementById('chart-title').value.trim()||projectName+' · Time Chart';
     const snapshot=workbook.save();
     const compat=makeLegacyCompatibility(snapshot);
-    const payload={version:8,engine:'univer',engineVersion:'1.4.0',chartId,chartTitle:currentChartTitle,projectName,projectDescription:'Univer-powered project Time Chart',univerSnapshot:snapshot,dataRangeConfig:getRangeConfigFromInputs(),clusterColors:{...clusterColors},cycleLogic:normalizeCycleLogic(cycleLogic),cycleDefinition:{...cycleBoundarySelection},...compat,univerUpdatedAt:new Date().toISOString()};
+    const payload={version:9,engine:'univer',engineVersion:'1.4.0',chartId,chartTitle:currentChartTitle,projectName,projectDescription:'Univer-powered project Time Chart',univerSnapshot:snapshot,dataRangeConfig:getRangeConfigFromInputs(),clusterColors:{...clusterColors},operationIdentity:normalizeOperationIdentity(operationIdentityState),cycleLogic:normalizeCycleLogic(cycleLogic),cycleDefinition:{...cycleBoundarySelection},...compat,univerUpdatedAt:new Date().toISOString()};
     const record={title:currentChartTitle||projectName+' · Time Chart',chart_data:payload};
     let result;
     if(chartId) result=await supa.from('project_cycle_time_charts').update(record).eq('id',chartId).eq('project_id',projectId);
@@ -615,6 +616,7 @@ body.h871-export{margin:0!important;padding:24px!important;background:#fff!impor
   let lastBaselineRecords = [];
   let simulationResult = null;
   let cycleBoundarySelection = { startSourceRow:null, endSourceRow:null };
+  let operationIdentityState = { version:1, records:[] };
   let simulationVisibleClusters = null;
   let cycleLogic={entrySourceRow:null,completionSourceRow:null,layoutDirection:'TB',dependencies:[],resources:{}};
   // Shared event contract: both sequential repeat and future resource-constrained overlap
@@ -712,7 +714,7 @@ body.h871-export{margin:0!important;padding:24px!important;background:#fff!impor
     if(invalidRows.length)messages.push('Found '+invalidRows.length+' partially filled or invalid row(s) at Excel row(s): '+invalidRows.join(', ')+'. Check Start Time and Duration/End Time.');
     messages.push('Recognized '+records.length+' valid operation(s) from top to bottom.');
     document.getElementById('range-status').textContent=messages.join(' ');
-    return records;
+    return reconcileOperationIdentities(records);
   }
   function colorForMechanism(name) {
     if(/^#[0-9a-f]{6}$/i.test(clusterColors[name]||'')) return clusterColors[name];
@@ -816,6 +818,59 @@ body.h871-export{margin:0!important;padding:24px!important;background:#fff!impor
   }
 
   function normalizeCycleLogic(value){const v=value&&typeof value==='object'?value:{};return {entrySourceRow:Number.isInteger(v.entrySourceRow)?v.entrySourceRow:null,completionSourceRow:Number.isInteger(v.completionSourceRow)?v.completionSourceRow:null,layoutDirection:v.layoutDirection==='LR'?'LR':'TB',dependencies:Array.isArray(v.dependencies)?v.dependencies.filter(d=>d&&Number.isInteger(d.from)&&Number.isInteger(d.to)&&d.from!==d.to).map(d=>({from:d.from,to:d.to,delay:Math.max(0,Number(d.delay)||0),fromPort:['left','right','top','bottom'].includes(d.fromPort)?d.fromPort:'right',toPort:['left','right','top','bottom'].includes(d.toPort)?d.toPort:'left'})):[],resources:v.resources&&typeof v.resources==='object'?Object.fromEntries(Object.entries(v.resources).map(([k,x])=>[k,String(x||'').trim()])):{},nodePositions:v.nodePositions&&typeof v.nodePositions==='object'?Object.fromEntries(Object.entries(v.nodePositions).map(([k,p])=>[k,{x:Math.max(20,Number(p?.x)||20),y:Math.max(20,Number(p?.y)||20)}])):{}};}
+  function normalizeOperationIdentity(value){
+    const records=Array.isArray(value?.records)?value.records.filter(x=>x&&typeof x.id==='string'&&x.id&&Number.isInteger(x.sourceRow)).map(x=>({id:x.id,sourceRow:x.sourceRow,fingerprint:String(x.fingerprint||''),semantic:String(x.semantic||''),timing:String(x.timing||'')})):[];
+    return {version:1,records};
+  }
+  function operationIdentityId(){
+    if(globalThis.crypto?.randomUUID)return 'op-'+globalThis.crypto.randomUUID();
+    return 'op-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,12);
+  }
+  function operationIdentityKeys(record){
+    const norm=value=>String(value??'').trim().toLocaleLowerCase().replace(/\\s+/g,' ');
+    const timing=JSON.stringify([Number(record.start.toFixed(6)),Number(record.end.toFixed(6)),Number(record.duration.toFixed(6))]);
+    const semantic=JSON.stringify([norm(record.mechanism),norm(record.operation)]);
+    const fingerprint=JSON.stringify([semantic,timing,norm(record.remark)]);
+    return {fingerprint,semantic,timing};
+  }
+  function remapLegacyOperationReferences(oldRecords,newRecords){
+    if(!oldRecords.length)return;
+    const oldByRow=new Map(oldRecords.map(x=>[x.sourceRow,x.id]));
+    const newById=new Map(newRecords.map(x=>[x.id,x.sourceRow]));
+    const remap=row=>{if(!Number.isInteger(row))return row;const id=oldByRow.get(row);return id&&newById.has(id)?newById.get(id):row;};
+    cycleBoundarySelection={startSourceRow:remap(cycleBoundarySelection.startSourceRow),endSourceRow:remap(cycleBoundarySelection.endSourceRow)};
+    cycleLogic.entrySourceRow=remap(cycleLogic.entrySourceRow);
+    cycleLogic.completionSourceRow=remap(cycleLogic.completionSourceRow);
+    cycleLogic.dependencies=cycleLogic.dependencies.map(d=>({...d,from:remap(d.from),to:remap(d.to)}));
+    const remapKeyedObject=source=>Object.fromEntries(Object.entries(source||{}).map(([key,value])=>[String(remap(Number(key))),value]));
+    cycleLogic.resources=remapKeyedObject(cycleLogic.resources);
+    cycleLogic.nodePositions=remapKeyedObject(cycleLogic.nodePositions);
+    if(Number.isInteger(flowSelectedRow))flowSelectedRow=remap(flowSelectedRow);
+    if(flowSelectedRows?.size){const next=[...flowSelectedRows].map(remap);flowSelectedRows.clear();next.forEach(row=>flowSelectedRows.add(row));}
+  }
+  function reconcileOperationIdentities(records){
+    const previous=normalizeOperationIdentity(operationIdentityState).records;
+    const unmatched=new Set(previous.map((_,index)=>index));
+    const keys=records.map(operationIdentityKeys);
+    const assigned=new Set();
+    const takeMatch=(predicate)=>{
+      for(let i=0;i<records.length;i++){
+        if(records[i].operationId)continue;
+        const candidates=[...unmatched].filter(j=>predicate(previous[j],keys[i]));
+        if(!candidates.length)continue;
+        candidates.sort((a,b)=>Math.abs(previous[a].sourceRow-records[i].sourceRow)-Math.abs(previous[b].sourceRow-records[i].sourceRow)||previous[a].sourceRow-previous[b].sourceRow);
+        const j=candidates[0];records[i].operationId=previous[j].id;unmatched.delete(j);assigned.add(i);
+      }
+    };
+    takeMatch((old,key)=>old.fingerprint===key.fingerprint);
+    takeMatch((old,key)=>old.semantic===key.semantic);
+    takeMatch((old,key)=>old.timing===key.timing);
+    takeMatch((old,key)=>old.sourceRow===records.find(r=>!r.operationId)?.sourceRow);
+    records.forEach(record=>{if(!record.operationId)record.operationId=operationIdentityId();});
+    remapLegacyOperationReferences(previous,records.map((record,index)=>({id:record.operationId,sourceRow:record.sourceRow})));
+    operationIdentityState={version:1,records:records.map((record,index)=>({id:record.operationId,sourceRow:record.sourceRow,...keys[index]}))};
+    return records;
+  }
   function selectedLogicRecords(){try{return getSelectedCycleRecords().records;}catch(_){return [];}}
 
   const FLOW_HISTORY_LIMIT=100;
