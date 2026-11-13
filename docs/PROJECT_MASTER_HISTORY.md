@@ -1141,3 +1141,16 @@ Time Chart-specific lessons:
 - **Code commit:** `56a26648ca9f7f81765d917817906b406d9f8200`.
 - **Validation:** Latest frontend SHA was fetched before editing; the exact main-script marker was verified; preflight insertion was guarded and source-level checks confirmed the startup and error messages. Browser execution and live Pages verification remain untested.
 - **Next check:** After Pages deployment, the workspace should at minimum change to `Starting Time Chart JavaScript…`. If it changes to an error, use the full visible error text to fix the precise line. If it still shows the old static placeholder after a hard refresh, verify the exact page URL and cache/service-worker behavior because the preflight script itself is not being served/executed.
+
+
+### 2026-11-13 — Fix Time Chart JavaScript syntax error blocking Univer startup
+
+- **User-reported browser error:** `Time Chart JavaScript error: Uncaught SyntaxError: missing ) after argument list`, reported at line 740 of the deployed `cycle-time-univer.html`. This parse error prevented the main Time Chart script from executing, so Univer initialization and saved chart loading never started.
+- **Root cause isolated with CI parser:** Added a temporary GitHub Actions diagnostic to extract both inline scripts and run Node.js `--check`. The main script failed at extracted line 525 (HTML line 740): the manual-dependency `Map.set` key expression had an extra apostrophe after `d.to` (`d.from+'>'+d.to'`), making the entire main script invalid JavaScript.
+- **Fix:** Removed the stray apostrophe so the map key is the intended concatenation `d.from + '>' + d.to`. No workflow semantics, formula-derived dependency behavior, stable Operation identity, Process Flow state, or chart payload fields were changed.
+- **Validation:** GitHub Actions re-ran the syntax diagnostic against the corrected frontend. Both inline scripts passed Node.js syntax validation; main script length 127,394 characters. This validates parsing only; it does not yet prove live browser initialization, CDN loading, Supabase authentication/query, or saved chart rendering.
+- **Data safety:** No Supabase schema, migration, RLS policy, database row, or Storage object was modified.
+- **Code commit:** `9f828499dd86ed4c11524bee3621d354b3bf1667`.
+- **Diagnostic validation commit:** `93907d5f2699074cd2c7e9bccf670114f51a6fae`.
+- **Cleanup:** Temporary syntax-diagnostic workflow and generated diagnostic output are being removed after validation; the permanent project workflow set remains unchanged.
+- **Next acceptance test:** Reopen the same Project Time Chart URL after GitHub Pages deployment and hard-refresh. Confirm the Univer spreadsheet appears and the saved `chart_id` content is loaded. If the spreadsheet opens but chart data is absent, inspect Supabase query/auth/RLS separately; do not alter or overwrite the saved chart during diagnosis.
