@@ -1052,3 +1052,14 @@ Time Chart-specific lessons:
 - **Code commits:** `ec7354eade89cafd6dd0b45f180556f3ba8d0f7b` (outside-click and Escape dismissal); `0f3601b1236e415d412e0407e018c796651962fa` (clean up any previously open menu listeners when switching between Time Chart menus).
 - **Validation:** Re-fetched the committed navigation source and confirmed the outside-click listener, Escape-key handler, listener cleanup, and explicit menu closure before Copy/Delete. Actual browser interaction has not yet been manually tested.
 - **Next check:** After GitHub Pages deployment, open a Project detail page, open the three-dot menu, click an unrelated area of the page, and confirm the menu closes. Also verify clicking Copy/Delete still works and Escape closes the menu.
+
+
+### 2026-11-13 — Time Chart: Scan Worksheet Rows and Skip Blank Rows
+
+- **User requirement:** When blank rows are removed from the middle of an Excel table, the Time Chart should continue recognizing the remaining operations in top-to-bottom order instead of relying on a fixed number of aligned rows.
+- **Implementation:** Updated `readWorksheetRecords()` in `frontend/cycle-time-univer.html` to scan the longest configured data range rather than truncating all columns to the shortest range. Each row is read by its relative position across the configured columns. Rows where every mapped field is empty are skipped; scanning continues below them. The original Excel row number is retained in `sourceRow` for compatibility with the existing Process Flow and Cycle Logic implementation.
+- **Data-quality handling:** Rows containing some mapped data but missing an interpretable Start Time or a valid Duration/End Time are counted and reported with their Excel row numbers in the range status. They are not silently treated as blank rows. Unequal configured range lengths are also reported; missing cells beyond a shorter range are treated as empty.
+- **Compatibility and scope:** This is Phase 1 only. No Operation ID migration, Dependency/Resource key changes, Cycle Boundary changes, JSON format changes, database schema, migration, RLS, or Supabase records were modified. Existing `sourceRow` references remain unchanged for the next phase.
+- **Code commit:** 8bd95031f571e9ebfd1807bcc43a3a52484a74b4.
+- **Validation:** Source-level replacement was applied against the latest fetched file and the commit was created. Browser testing has not yet been performed. Verify a table with blank rows in the middle, a partially populated row, unequal configured range lengths, and a final populated row below a blank gap.
+- **Next phase:** Introduce stable Operation IDs and reconcile existing Process Flow references independently of Excel row numbers.
