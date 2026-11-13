@@ -1018,20 +1018,48 @@ body.h871-export{margin:0!important;padding:24px!important;background:#fff!impor
   }
   function flowNodePosition(row,index){return cycleLogic.nodePositions?.[row]||{x:40+(index%3)*245,y:40+Math.floor(index/3)*150};}
   const FLOW_PORTS=['left','right','top','bottom'];
-  function flowPortPoint(p,side){if(side==='left')return{x:p.x,y:p.y+49};if(side==='right')return{x:p.x+194,y:p.y+49};if(side==='top')return{x:p.x+97,y:p.y};return{x:p.x+97,y:p.y+98};}
-  function flowEdgeGeometry(p1,p2){
-    // Orthogonal (90-degree) routing keeps dependency lines visually aligned.
-    const dx=p2.x-p1.x,dy=p2.y-p1.y;
-    const horizontal=Math.abs(dx)>=Math.abs(dy);
-    const mid=horizontal?{x:(p1.x+p2.x)/2,y:(p1.y+p2.y)/2}:{x:(p1.x+p2.x)/2,y:(p1.y+p2.y)/2};
-    const points=horizontal?[p1,{x:mid.x,y:p1.y},{x:mid.x,y:p2.y},p2]:[p1,{x:p1.x,y:mid.y},{x:p2.x,y:mid.y},p2];
-    const compact=points.filter((p,i)=>!i||p.x!==points[i-1].x||p.y!==points[i-1].y);
-    const path=compact.map((p,i)=>(i?'L ':'M ')+p.x+' '+p.y).join(' ');
-    let a=compact[Math.max(0,Math.floor((compact.length-2)/2))],b=compact[Math.min(compact.length-1,Math.ceil((compact.length-1)/2))];
-    if(a.x===b.x&&a.y===b.y){a=compact[0];b=compact[compact.length-1];}
-    const len=Math.max(1,Math.hypot(b.x-a.x,b.y-a.y)),ux=(b.x-a.x)/len,uy=(b.y-a.y)/len,nx=-uy,ny=ux;
-    const m={x:(a.x+b.x)/2,y:(a.y+b.y)/2},tip={x:m.x+8*ux,y:m.y+8*uy},base={x:m.x-5*ux,y:m.y-5*uy};
-    return{path,mid:m,triangle:tip.x+','+tip.y+' '+(base.x+4*nx)+','+(base.y+4*ny)+' '+(base.x-4*nx)+','+(base.y-4*ny)};
+  function flowNodeSize(row){
+    const el=document.querySelector('[data-flow-node="'+row+'"]');
+    return {width:194,height:el?Math.max(98,el.offsetHeight):114};
+  }
+  function flowPortPoint(p,side,size={width:194,height:114}){
+    if(side==='left')return{x:p.x,y:p.y+size.height/2};
+    if(side==='right')return{x:p.x+size.width,y:p.y+size.height/2};
+    if(side==='top')return{x:p.x+size.width/2,y:p.y};
+    return{x:p.x+size.width/2,y:p.y+size.height};
+  }
+  function nearestFlowPortToPoint(p,target,size){
+    return FLOW_PORTS.map(side=>({side,point:flowPortPoint(p,side,size)})).sort((a,b)=>Math.abs(a.point.x-target.x)+Math.abs(a.point.y-target.y)-(Math.abs(b.point.x-target.x)+Math.abs(b.point.y-target.y)))[0];
+  }
+  function shortestFlowPortPair(fromPos,toPos,fromSize,toSize){
+    let best=null;
+    FLOW_PORTS.forEach(fromSide=>FLOW_PORTS.forEach(toSide=>{
+      const from=flowPortPoint(fromPos,fromSide,fromSize),to=flowPortPoint(toPos,toSide,toSize);
+      const distance=Math.abs(to.x-from.x)+Math.abs(to.y-from.y);
+      const horizontal=(fromSide==='left'||fromSide==='right')&&(toSide==='left'||toSide==='right');
+      const vertical=(fromSide==='top'||fromSide==='bottom')&&(toSide==='top'||toSide==='bottom');
+      const alignmentPenalty=horizontal&&Math.abs(to.y-from.y)<1||vertical&&Math.abs(to.x-from.x)<1?0:0.01;
+      const score=distance+alignmentPenalty;
+      if(!best||score<best.score)best={fromSide,toSide,from,to,score,distance};
+    }));
+    return best;
+  }
+  function flowEdgeGeometry(p1,p2,fromSide=null,toSide=null){
+    // Route from the selected ports with short outward stubs, then use the shorter orthogonal path.
+    const stub=18,offset=(point,side,amount)=>side==='left'?{x:point.x-amount,y:point.y}:side==='right'?{x:point.x+amount,y:point.y}:side==='top'?{x:point.x,y:point.y-amount}:side==='bottom'?{x:point.x,y:point.y+amount}:{x:point.x,y:point.y};
+    const start=fromSide?offset(p1,fromSide,stub):p1,end=toSide?offset(p2,toSide,stub):p2;
+    const candidates=[
+      [p1,start,{x:end.x,y:start.y},end,p2],
+      [p1,start,{x:start.x,y:end.y},end,p2]
+    ];
+    const compactPath=points=>points.filter((p,i)=>!i||p.x!==points[i-1].x||p.y!==points[i-1].y).filter((p,i,a)=>i===0||i===a.length-1||!((a[i-1].x===p.x&&p.x===a[i+1].x)||(a[i-1].y===p.y&&p.y===a[i+1].y)));
+    const measure=points=>{let length=0;for(let i=1;i<points.length;i++)length+=Math.abs(points[i].x-points[i-1].x)+Math.abs(points[i].y-points[i-1].y);return length;};
+    const paths=candidates.map(compactPath),points=paths.sort((a,b)=>measure(a)-measure(b)||a.length-b.length)[0];
+    const path=points.map((p,i)=>(i?'L ':'M ')+p.x+' '+p.y).join(' ');
+    const total=measure(points),half=total/2;let walked=0,a=points[0],b=points[1],m={x:a.x,y:a.y};
+    for(let i=1;i<points.length;i++){a=points[i-1];b=points[i];const segment=Math.abs(b.x-a.x)+Math.abs(b.y-a.y);if(walked+segment>=half){const t=segment?(half-walked)/segment:0;m={x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t};break;}walked+=segment;}
+    const len=Math.max(1,Math.hypot(b.x-a.x,b.y-a.y)),ux=(b.x-a.x)/len,uy=(b.y-a.y)/len,nx=-uy,ny=ux,tip={x:m.x+8*ux,y:m.y+8*uy},base={x:m.x-5*ux,y:m.y-5*uy};
+    return{path,mid:m,triangle:tip.x+','+tip.y+' '+(base.x+4*nx)+','+(base.y+4*ny)+' '+(base.x-4*nx)+','+(base.y-4*ny),length:total};
   }
   function renderProcessFlowCanvas(records){
     const canvas=document.getElementById('cycle-flow-canvas');if(!canvas)return;if(!records.length){canvas.innerHTML='<div class="tc-logic-help">Select Cycle Start and Cycle End first.</div>';return;}
@@ -1044,12 +1072,21 @@ body.h871-export{margin:0!important;padding:24px!important;background:#fff!impor
     const width=Math.max(760,...[...pos.values()].map(p=>p.x+230),...[...gatePos.values()].map(p=>p.x+48)),height=Math.max(340,...[...pos.values()].map(p=>p.y+140),...[...gatePos.values()].map(p=>p.y+50));
     const paths=[],labels=[];
     dependencies.filter(d=>pos.has(d.from)&&pos.has(d.to)).forEach(d=>{
-      const from=flowPortPoint(pos.get(d.from),d.fromPort||'right'),gate=gatePos.get(d.to),to=gate?{x:gate.x+16,y:gate.y+16}:flowPortPoint(pos.get(d.to),d.toPort||'left'),g=flowEdgeGeometry(from,to),idx=Number.isInteger(d.manualIndex)?d.manualIndex:-1;
+      const fromPos=pos.get(d.from),toPos=pos.get(d.to),fromSize=flowNodeSize(d.from),toSize=flowNodeSize(d.to),gate=gatePos.get(d.to);
+      let from,to,g;
+      if(gate){
+        const gateCenter={x:gate.x+16,y:gate.y+16},port=nearestFlowPortToPoint(fromPos,gateCenter,fromSize);
+        from=port.point;to=gateCenter;g=flowEdgeGeometry(from,to,port.side,null);
+      }else{
+        const pair=shortestFlowPortPair(fromPos,toPos,fromSize,toSize);
+        from=pair.from;to=pair.to;g=flowEdgeGeometry(from,to,pair.fromSide,pair.toSide);
+      }
+      const idx=Number.isInteger(d.manualIndex)?d.manualIndex:-1;
       const isFormula=String(d.type||'').includes('formula');
       paths.push((isFormula?'':'<path class="tc-flow-edge-hit" d="'+g.path+'" data-flow-remove="'+idx+'" tabindex="0" role="button" aria-label="Remove dependency"/>')+'<path class="tc-flow-edge '+(isFormula?'tc-flow-edge-formula':'')+'" d="'+g.path+'"/><polygon class="tc-flow-arrow-mid '+(isFormula?'tc-flow-arrow-formula':'')+'" points="'+g.triangle+'"/>');
       if(d.delay)labels.push('<text class="tc-flow-edge-label" x="'+g.mid.x+'" y="'+(g.mid.y-8)+'">'+d.delay+'s</text>');
     });
-    const joinMarkup=joins.map(row=>{const p=gatePos.get(row),target=pos.get(row),side=gateSide.get(row),end=flowPortPoint(target,side),g=flowEdgeGeometry({x:p.x+16,y:p.y+16},end);return '<path class="tc-flow-edge" d="'+g.path+'"/><polygon class="tc-flow-arrow-mid" points="'+g.triangle+'"/><g class="tc-flow-and-gate" transform="translate('+p.x+' '+p.y+')"><path d="M16 0 L32 16 L16 32 L0 16 Z"/><text x="16" y="19">AND</text></g>';}).join('');
+    const joinMarkup=joins.map(row=>{const p=gatePos.get(row),target=pos.get(row),gateCenter={x:p.x+16,y:p.y+16},port=nearestFlowPortToPoint(target,gateCenter,flowNodeSize(row)),end=port.point,g=flowEdgeGeometry(gateCenter,end,null,port.side);return '<path class="tc-flow-edge" d="'+g.path+'"/><polygon class="tc-flow-arrow-mid" points="'+g.triangle+'"/><g class="tc-flow-and-gate" transform="translate('+p.x+' '+p.y+')"><path d="M16 0 L32 16 L16 32 L0 16 Z"/><text x="16" y="19">AND</text></g>';}).join('');
     const nodes=records.map(r=>{const p=pos.get(r.sourceRow),n=incoming.get(r.sourceRow).length,play=simulationNodeState(r.sourceRow,simulationPlaybackTime),state=play?play.state:'',tag=r.sourceRow===cycleLogic.entrySourceRow?'<i class="entry">ENTRY</i>':r.sourceRow===cycleLogic.completionSourceRow?'<i class="release">RELEASE</i>':'';const ports=FLOW_PORTS.map(side=>'<button class="tc-flow-port '+side+'" type="button" data-flow-port="'+side+'" data-flow-row="'+r.sourceRow+'" aria-label="Operation '+escapeHtml(r.operation)+' '+side+' connection port" title="'+side+' · drag to connect"></button>').join('');return '<div class="tc-flow-node '+(flowSelectedRow===r.sourceRow?'selected':'')+(flowSelectedRows.has(r.sourceRow)?' multi-selected':'')+(state?' sim-'+state:'')+'" data-flow-node="'+r.sourceRow+'" style="left:'+p.x+'px;top:'+p.y+'px"><div class="tc-flow-node-head" data-flow-drag="'+r.sourceRow+'"><span>OPERATION · ROW '+r.sourceRow+'</span>'+tag+'</div><button class="tc-flow-node-select" type="button" data-flow-select="'+r.sourceRow+'"><strong>'+escapeHtml(r.operation)+'</strong><small>'+escapeHtml(r.mechanism)+'</small><em>'+(play?state.replace(/-/g,' ').toUpperCase()+' · '+play.event.cycleId:(n>1?'AND JOIN · '+n+' prerequisites':n+' prerequisite'+(n===1?'':'s')) )+'</em></button>'+ports+'</div>';}).join('');
     canvas.style.width=width+'px';canvas.style.height=height+'px';canvas.innerHTML='<svg class="tc-flow-svg" width="'+width+'" height="'+height+'">'+paths.join('')+joinMarkup+labels.join('')+'</svg>'+nodes+(flowMarquee?'<div class="tc-flow-marquee" style="left:'+flowMarquee.x+'px;top:'+flowMarquee.y+'px;width:'+flowMarquee.w+'px;height:'+flowMarquee.h+'px"></div>':'');
     const direction=cycleLogic.layoutDirection==='TB'?'Top → Bottom':'Left → Right';document.getElementById('tc-flow-layout-direction').textContent='Layout: '+direction;const count=document.getElementById('tc-flow-selection-count');if(count)count.textContent=flowSelectedRows.size+' selected';
