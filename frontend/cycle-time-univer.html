@@ -1582,7 +1582,6 @@ body.h871-export{margin:0!important;padding:24px!important;background:#fff!impor
   document.getElementById('run-cycle-simulation').addEventListener('click',()=>{
     try{runCycleSimulation();}catch(error){setStatus('Simulation failed: '+error.message,true);document.getElementById('sim-interval-hint').textContent=error.message;}
   });
-  document.getElementById('sim-display-limit').addEventListener('change',()=>{if(simulationResult)renderCycleSimulation(simulationResult);});
   document.getElementById('clear-cycle-simulation').addEventListener('click',()=>{
     simulationResult=null;renderCycleSimulation(null);setStatus('Simulation results cleared. Source worksheet and Time Chart are unchanged.');
   });
