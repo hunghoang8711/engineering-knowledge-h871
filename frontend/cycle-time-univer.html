@@ -449,6 +449,7 @@ body.h871-export{margin:0!important;padding:24px!important;background:#fff!impor
     if(userError) throw userError;
     if(!userData?.user) throw new Error('Your H871 session has expired. Sign in again.');
     currentChartTitle=document.getElementById('chart-title').value.trim()||projectName+' · Time Chart';
+    if(getRangeConfigFromInputs().start)readWorksheetRecords();
     const snapshot=workbook.save();
     const compat=makeLegacyCompatibility(snapshot);
     const payload={version:10,engine:'univer',engineVersion:'1.4.0',chartId,chartTitle:currentChartTitle,projectName,projectDescription:'Univer-powered project Time Chart',univerSnapshot:snapshot,dataRangeConfig:getRangeConfigFromInputs(),clusterColors:{...clusterColors},operationIdentity:normalizeOperationIdentity(operationIdentityState),workflowReferencesByOperationId:serializeStableWorkflowReferences(),cycleLogic:normalizeCycleLogic(cycleLogic),cycleDefinition:{...cycleBoundarySelection},...compat,univerUpdatedAt:new Date().toISOString()};
@@ -693,7 +694,7 @@ body.h871-export{margin:0!important;padding:24px!important;background:#fff!impor
   }
   function allFlowDependencies(records){
     const valid=new Set(records.map(r=>r.sourceRow)),map=new Map();
-    cycleLogic.dependencies.forEach(d=>{if(valid.has(d.from)&&valid.has(d.to))map.set(d.from+'>'+d.to,{...d,type:'manual'});});
+    cycleLogic.dependencies.forEach((d,index)=>{if(valid.has(d.from)&&valid.has(d.to))map.set(d.from+'>'+d.to',{...d,type:'manual',manualIndex:index});});
     formulaDependencies.forEach(d=>{if(valid.has(d.from)&&valid.has(d.to)){const key=d.from+'>'+d.to,existing=map.get(key);map.set(key,existing?{...existing,type:'formula+manual'}:d);}});
     return [...map.values()];
   }
@@ -743,9 +744,9 @@ body.h871-export{margin:0!important;padding:24px!important;background:#fff!impor
         continue;
       }
       const sourceRow=parsed.start.start+i+1;
-      const startCell={row:parsed.start.start+i,col:parsed.start.col,address:columnName(parsed.start.col+1)+(parsed.start.start+i+1)};
+      const startCell={row:parsed.start.start+i,col:parsed.start.col,address:columnName(parsed.start.col)+(parsed.start.start+i+1)};
       const endRange=parsed.end||parsed.duration;
-      const endCell={row:endRange.start+i,col:endRange.col,address:columnName(endRange.col+1)+(endRange.start+i+1)};
+      const endCell={row:endRange.start+i,col:endRange.col,address:columnName(endRange.col)+(endRange.start+i+1)};
       const start=numericCell(values.start);
       let duration=numericCell(values.duration);
       let end=numericCell(values.end);
@@ -992,7 +993,7 @@ body.h871-export{margin:0!important;padding:24px!important;background:#fff!impor
     const width=Math.max(760,...[...pos.values()].map(p=>p.x+230),...[...gatePos.values()].map(p=>p.x+48)),height=Math.max(340,...[...pos.values()].map(p=>p.y+140),...[...gatePos.values()].map(p=>p.y+50));
     const paths=[],labels=[];
     dependencies.filter(d=>pos.has(d.from)&&pos.has(d.to)).forEach(d=>{
-      const from=flowPortPoint(pos.get(d.from),d.fromPort||'right'),gate=gatePos.get(d.to),to=gate?{x:gate.x+16,y:gate.y+16}:flowPortPoint(pos.get(d.to),d.toPort||'left'),g=flowEdgeGeometry(from,to),idx=cycleLogic.dependencies.indexOf(d);
+      const from=flowPortPoint(pos.get(d.from),d.fromPort||'right'),gate=gatePos.get(d.to),to=gate?{x:gate.x+16,y:gate.y+16}:flowPortPoint(pos.get(d.to),d.toPort||'left'),g=flowEdgeGeometry(from,to),idx=Number.isInteger(d.manualIndex)?d.manualIndex:-1;
       const isFormula=String(d.type||'').includes('formula');
       paths.push((isFormula?'':'<path class="tc-flow-edge-hit" d="'+g.path+'" data-flow-remove="'+idx+'" tabindex="0" role="button" aria-label="Remove dependency"/>')+'<path class="tc-flow-edge '+(isFormula?'tc-flow-edge-formula':'')+'" d="'+g.path+'"/><polygon class="tc-flow-arrow-mid '+(isFormula?'tc-flow-arrow-formula':'')+'" points="'+g.triangle+'"/>');
       if(d.delay)labels.push('<text class="tc-flow-edge-label" x="'+g.mid.x+'" y="'+(g.mid.y-8)+'">'+d.delay+'s</text>');
@@ -1031,8 +1032,10 @@ body.h871-export{margin:0!important;padding:24px!important;background:#fff!impor
     entry.value=String(cycleLogic.entrySourceRow);completion.value=String(cycleLogic.completionSourceRow);
     if(!flowSelectedRow||!records.some(r=>r.sourceRow===flowSelectedRow))flowSelectedRow=records[0].sourceRow;const selected=records.find(r=>r.sourceRow===flowSelectedRow);list.innerHTML='<div class="tc-logic-op"><div><strong>'+escapeHtml(selected.operation)+'</strong><small>'+escapeHtml(selected.mechanism)+' · row '+selected.sourceRow+'</small></div><div class="tc-logic-resource"><label>Exclusive Resource ID(s)</label><input data-logic-resource="'+selected.sourceRow+'" value="'+escapeHtml(cycleLogic.resources[selected.sourceRow]||'')+'" placeholder="Cobot-01, Gripper-01"><small>Comma-separated; all must be free.</small></div></div>';renderProcessFlowCanvas(records);
     const names=new Map(records.map(r=>[r.sourceRow,r.operation]));
-    deps.innerHTML=cycleLogic.dependencies.length?'<table class="tc-logic-table"><thead><tr><th>Predecessor</th><th>Successor</th><th>Delay</th><th></th></tr></thead><tbody>'+cycleLogic.dependencies.map((d,i)=>'<tr><td>'+escapeHtml(names.get(d.from)||('Row '+d.from))+'</td><td>'+escapeHtml(names.get(d.to)||('Row '+d.to))+'</td><td>'+d.delay.toFixed(3)+' s</td><td><button type="button" class="uv-btn" data-logic-remove="'+i+'">Remove</button></td></tr>').join('')+'</tbody></table>':'<p class="tc-logic-help">No explicit dependencies configured.</p>';
-    document.getElementById('logic-add-dependency').disabled=records.length<2;status.textContent='Cycle gates define cross-cycle flow. Multiple prerequisites are AND conditions. Resource IDs are shared across cycles.';
+    const manualHtml=cycleLogic.dependencies.length?'<table class="tc-logic-table"><thead><tr><th>Manual predecessor</th><th>Successor</th><th>Delay</th><th></th></tr></thead><tbody>'+cycleLogic.dependencies.map((d,i)=>'<tr><td>'+escapeHtml(names.get(d.from)||('Row '+d.from))+'</td><td>'+escapeHtml(names.get(d.to)||('Row '+d.to))+'</td><td>'+d.delay.toFixed(3)+' s</td><td><button type="button" class="uv-btn" data-logic-remove="'+i+'">Remove</button></td></tr>').join('')+'</tbody></table>':'<p class="tc-logic-help">No manual dependencies configured.</p>';
+    const formulaHtml=formulaDependencies.length?'<p class="tc-logic-help">Automatic links from spreadsheet formulas</p><table class="tc-logic-table"><thead><tr><th>Predecessor</th><th>Successor</th><th>Formula source</th></tr></thead><tbody>'+formulaDependencies.map(d=>'<tr><td>'+escapeHtml(names.get(d.from)||d.fromOperationId)+'</td><td>'+escapeHtml(names.get(d.to)||d.toOperationId)+'</td><td>'+escapeHtml(d.formulaCell+' = '+d.formula)+'</td></tr>').join('')+'</tbody></table>':'';
+    deps.innerHTML=manualHtml+formulaHtml;
+    document.getElementById('logic-add-dependency').disabled=records.length<2;status.textContent='Cycle gates define cross-cycle flow. Multiple prerequisites are AND conditions. Resource IDs are shared across cycles.'+(formulaDependencies.length?' '+formulaDependencies.length+' automatic formula link(s) are active.':'');
   }
   function validateCycleLogic(records){
     const rows=new Set(records.map(r=>r.sourceRow));if(!rows.has(cycleLogic.entrySourceRow)||!rows.has(cycleLogic.completionSourceRow))throw new Error('Entry Gate and Completion Gate must reference operations inside the selected cycle.');
@@ -1367,6 +1370,20 @@ body.h871-export{margin:0!important;padding:24px!important;background:#fff!impor
     setStatus('Standalone Process Flow HTML exported. It can be opened in Chrome/Edge and printed to PDF.');
   }
 
+  let worksheetChangeTimer=null;
+  function bindWorksheetAutoRefresh(){
+    const eventType=univerAPI?.Event?.SheetValueChanged;
+    if(!eventType||typeof univerAPI.addEvent!=='function')return;
+    univerAPI.addEvent(eventType,()=>{
+      if(worksheetChangeTimer!==null)clearTimeout(worksheetChangeTimer);
+      worksheetChangeTimer=setTimeout(()=>{
+        worksheetChangeTimer=null;
+        if(!getRangeConfigFromInputs().start)return;
+        try{simulationResult=null;renderCycleSimulation(null);renderTimeChart();setStatus('Spreadsheet changed. Time Chart and formula-driven Process Flow links were refreshed. Save to project to persist the changes.');}
+        catch(error){setStatus('Spreadsheet changed, but automatic Time Chart refresh needs attention: '+error.message,true);}
+      },250);
+    });
+  }
   async function init() {
     for (const path of styles) await loadResource(path, 'link');
     for (const path of reactScripts) await loadResource(path);
@@ -1409,6 +1426,7 @@ body.h871-export{margin:0!important;padding:24px!important;background:#fff!impor
     univerAPI = FUniver.newAPI(univer);
     await initSupabase();
     await loadProjectChart();
+    bindWorksheetAutoRefresh();
   }
   document.getElementById('auto-detect-ranges').addEventListener('click',()=>{if(!workbook){setStatus('Spreadsheet is not ready. Resolve the Univer initialization error first.',true);return;}try{detectDataRanges();}catch(error){document.getElementById('range-status').textContent=error.message;setStatus('Could not detect ranges: '+error.message,true);}});
   document.getElementById('apply-data-ranges').addEventListener('click',()=>{if(!workbook){setStatus('Spreadsheet is not ready. Resolve the Univer initialization error first.',true);return;}try{dataRangeConfig=getRangeConfigFromInputs();simulationResult=null;renderCycleSimulation(null);renderTimeChart();}catch(error){document.getElementById('range-status').textContent=error.message;setStatus('Could not build Time Chart: '+error.message,true);}});
