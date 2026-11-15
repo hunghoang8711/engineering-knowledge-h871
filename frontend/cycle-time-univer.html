@@ -23,7 +23,7 @@ html,body{min-height:100%;} .uv-page{display:grid;gap:16px;min-width:0}.uv-head{
 /* Time Chart inspection enhancements: fixed values, precision grid, cursor and tooltip */
 .tc-chart{position:relative;gap:0;overflow:auto;isolation:isolate}
 /* Time Chart dependency arrows mirrored from Process Flow */
-.tc-dependency-overlay{position:absolute;left:0;top:0;z-index:5;overflow:visible;pointer-events:none}.tc-dependency-path{fill:none;stroke:#91a4b7;stroke-width:1.2;stroke-linecap:round;stroke-linejoin:round;opacity:.72}.tc-dependency-path.formula{stroke-dasharray:4 4;stroke:#67b9d8;opacity:.78}.tc-dependency-path.detour{opacity:.56;stroke-width:1.1}.tc-axis,.tc-row{grid-template-columns:minmax(155px,205px) 72px 76px 72px minmax(300px,1fr);gap:8px;min-width:900px}.tc-axis{position:sticky;top:0;z-index:3;background:#101d2e;padding:8px 0}.tc-axis-track{position:relative;display:block;height:18px}.tc-axis-track .tc-tick-label{position:absolute;top:0;transform:translateX(-50%);white-space:nowrap;font-variant-numeric:tabular-nums}.tc-axis-track .tc-tick-label.zero{color:#fbbf24;font-weight:800}.tc-axis-track .tc-tick-label.major{color:#e2e8f0;font-weight:700}.tc-axis-operation{color:#9fb3c9}.tc-col-heading{font-size:10px;color:#9fb3c9;text-align:right}.tc-row{padding:3px 0;border-bottom:1px solid rgba(56,81,107,.35)}.tc-value{font-size:11px;text-align:right;color:#dceafa;font-variant-numeric:tabular-nums;white-space:nowrap}.tc-value.duration{color:#a7f3d0;font-weight:700}.tc-track{background:#14243a;overflow:visible;border:1px solid #30435b}.tc-gridline{position:absolute;z-index:0;top:-1px;bottom:-1px;width:1px;background:rgba(148,163,184,.26);pointer-events:none}.tc-gridline.major{background:rgba(203,213,225,.42);width:1px}.tc-gridline.zero{background:#fbbf24;width:2px;opacity:.9}.tc-bar{z-index:1;cursor:crosshair;outline-offset:2px}.tc-bar:focus-visible{outline:2px solid #f8fafc}.tc-cursor-line{position:absolute;z-index:4;top:0;bottom:0;width:1px;background:#f8fafc;box-shadow:0 0 0 1px rgba(15,23,42,.45);pointer-events:none;display:none}.tc-cursor-line::before{content:attr(data-time);position:sticky;top:4px;display:block;transform:translate(-50%,0);width:max-content;padding:3px 6px;border-radius:5px;background:#f8fafc;color:#0f172a;font-size:10px;font-weight:800;font-variant-numeric:tabular-nums}.tc-smart-tooltip{position:fixed;z-index:20000;display:none;min-width:190px;max-width:280px;padding:11px 13px;border:1px solid #55708e;border-radius:9px;background:#081525;color:#e5edf7;box-shadow:0 12px 32px rgba(0,0,0,.42);pointer-events:none;font-size:11px;line-height:1.5}.tc-smart-tooltip strong{display:block;font-size:13px;color:#fff;margin-bottom:7px}.tc-tooltip-grid{display:grid;grid-template-columns:1fr auto;gap:3px 12px}.tc-tooltip-grid span:nth-child(odd){color:#91a8c1}.tc-tooltip-grid span:nth-child(even){text-align:right;font-variant-numeric:tabular-nums;color:#e2e8f0}.tc-tooltip-remark{border-top:1px solid #30435b;margin-top:7px;padding-top:7px;color:#cbd5e1;white-space:pre-wrap;overflow-wrap:anywhere}.tc-tooltip-source{margin-top:5px;color:#fbbf24;font-size:10px}
+.tc-dependency-overlay{position:absolute;left:0;top:0;z-index:5;overflow:visible;pointer-events:none}.tc-dependency-path{fill:none;stroke:#91a4b7;stroke-width:1.25;stroke-linecap:round;stroke-linejoin:round;opacity:.82}.tc-dependency-path.formula{stroke-dasharray:4 4;stroke:#67b9d8;opacity:.86}.tc-axis,.tc-row{grid-template-columns:minmax(155px,205px) 72px 76px 72px minmax(300px,1fr);gap:8px;min-width:900px}.tc-axis{position:sticky;top:0;z-index:3;background:#101d2e;padding:8px 0}.tc-axis-track{position:relative;display:block;height:18px}.tc-axis-track .tc-tick-label{position:absolute;top:0;transform:translateX(-50%);white-space:nowrap;font-variant-numeric:tabular-nums}.tc-axis-track .tc-tick-label.zero{color:#fbbf24;font-weight:800}.tc-axis-track .tc-tick-label.major{color:#e2e8f0;font-weight:700}.tc-axis-operation{color:#9fb3c9}.tc-col-heading{font-size:10px;color:#9fb3c9;text-align:right}.tc-row{padding:3px 0;border-bottom:1px solid rgba(56,81,107,.35)}.tc-value{font-size:11px;text-align:right;color:#dceafa;font-variant-numeric:tabular-nums;white-space:nowrap}.tc-value.duration{color:#a7f3d0;font-weight:700}.tc-track{background:#14243a;overflow:visible;border:1px solid #30435b}.tc-gridline{position:absolute;z-index:0;top:-1px;bottom:-1px;width:1px;background:rgba(148,163,184,.26);pointer-events:none}.tc-gridline.major{background:rgba(203,213,225,.42);width:1px}.tc-gridline.zero{background:#fbbf24;width:2px;opacity:.9}.tc-bar{z-index:1;cursor:crosshair;outline-offset:2px}.tc-bar:focus-visible{outline:2px solid #f8fafc}.tc-cursor-line{position:absolute;z-index:4;top:0;bottom:0;width:1px;background:#f8fafc;box-shadow:0 0 0 1px rgba(15,23,42,.45);pointer-events:none;display:none}.tc-cursor-line::before{content:attr(data-time);position:sticky;top:4px;display:block;transform:translate(-50%,0);width:max-content;padding:3px 6px;border-radius:5px;background:#f8fafc;color:#0f172a;font-size:10px;font-weight:800;font-variant-numeric:tabular-nums}.tc-smart-tooltip{position:fixed;z-index:20000;display:none;min-width:190px;max-width:280px;padding:11px 13px;border:1px solid #55708e;border-radius:9px;background:#081525;color:#e5edf7;box-shadow:0 12px 32px rgba(0,0,0,.42);pointer-events:none;font-size:11px;line-height:1.5}.tc-smart-tooltip strong{display:block;font-size:13px;color:#fff;margin-bottom:7px}.tc-tooltip-grid{display:grid;grid-template-columns:1fr auto;gap:3px 12px}.tc-tooltip-grid span:nth-child(odd){color:#91a8c1}.tc-tooltip-grid span:nth-child(even){text-align:right;font-variant-numeric:tabular-nums;color:#e2e8f0}.tc-tooltip-remark{border-top:1px solid #30435b;margin-top:7px;padding-top:7px;color:#cbd5e1;white-space:pre-wrap;overflow-wrap:anywhere}.tc-tooltip-source{margin-top:5px;color:#fbbf24;font-size:10px}
 @media(max-width:760px){.tc-axis,.tc-row{grid-template-columns:145px 64px 68px 64px minmax(260px,1fr);min-width:760px}}
 
 /* Per-cluster idle-gap inspection */
@@ -1412,63 +1412,75 @@ body.h871-export{margin:0!important;padding:24px!important;background:#fff!impor
     const chart=document.getElementById('tc-chart-viewport');
     if(!chart)return;
     chart.querySelector('.tc-dependency-overlay')?.remove();
+    chart.style.paddingBottom='';
     const rows=[...chart.querySelectorAll('.tc-row[data-source-row]')];
     const rowBySource=new Map(rows.map((row,index)=>[Number(row.dataset.sourceRow),{row,index}]));
     const edges=allFlowDependencies(records).filter(edge=>rowBySource.has(Number(edge.from))&&rowBySource.has(Number(edge.to)));
-    if(!edges.length){chart.style.paddingBottom='';return;}
+    if(!edges.length)return;
     const chartRect=chart.getBoundingClientRect();
-    const rowInfo=new Map(rows.map(row=>{
+    const infos=new Map();
+    rows.forEach(row=>{
       const bar=row.querySelector('.tc-bar'),track=row.querySelector('.tc-track');
-      if(!bar||!track)return[Number(row.dataset.sourceRow),null];
-      const br=bar.getBoundingClientRect(),tr=track.getBoundingClientRect();
-      return[Number(row.dataset.sourceRow),{
-        index:rowBySource.get(Number(row.dataset.sourceRow)).index,
-        x1:br.right-chartRect.left+chart.scrollLeft,
-        x2:br.left-chartRect.left+chart.scrollLeft,
+      if(!bar||!track)return;
+      const br=bar.getBoundingClientRect(),tr=track.getBoundingClientRect(),key=Number(row.dataset.sourceRow);
+      infos.set(key,{
+        index:rowBySource.get(key).index,
+        left:br.left-chartRect.left+chart.scrollLeft,
+        right:br.right-chartRect.left+chart.scrollLeft,
+        center:(br.left+br.right)/2-chartRect.left+chart.scrollLeft,
         y:(br.top+br.bottom)/2-chartRect.top+chart.scrollTop,
         trackLeft:tr.left-chartRect.left+chart.scrollLeft,
-        trackRight:tr.right-chartRect.left+chart.scrollLeft,
-        top:br.top-chartRect.top+chart.scrollTop,
-        bottom:br.bottom-chartRect.top+chart.scrollTop
-      }];
-    }));
-    const prepared=edges.map(edge=>({edge,from:rowInfo.get(Number(edge.from)),to:rowInfo.get(Number(edge.to))})).filter(x=>x.from&&x.to);
-    const fallbackCount=prepared.filter(x=>Math.abs(x.to.y-x.from.y)>2&&x.from.x1>=x.to.x2-12).length;
-    chart.style.paddingBottom=fallbackCount?(fallbackCount*11+14)+'px':'';
-    const height=Math.max(chart.scrollHeight,chart.clientHeight),width=Math.max(chart.scrollWidth,chart.clientWidth);
-    const usedLanes=[],paths=[];
-    prepared.forEach(({edge,from,to},edgeIndex)=>{
-      let d='',detour=false;
-      if(Math.abs(to.y-from.y)<2){
-        d='M '+from.x1+' '+from.y+' H '+to.x2;
-      }else if(from.x1<to.x2-12){
-        const low=Math.min(from.index,to.index),high=Math.max(from.index,to.index);
-        const obstacles=rows.slice(low+1,high).map(row=>row.querySelector('.tc-bar')?.getBoundingClientRect()).filter(Boolean).map(r=>({left:r.left-chartRect.left+chart.scrollLeft,right:r.right-chartRect.left+chart.scrollLeft}));
-        const minX=from.x1+12,maxX=to.x2-12,candidates=[(minX+maxX)/2,minX,maxX];
-        obstacles.forEach(o=>{candidates.push(o.left-9,o.right+9);});
-        const valid=candidates.filter(x=>x>=minX&&x<=maxX&&!obstacles.some(o=>x>o.left-3&&x<o.right+3));
-        let laneX=null,best=-Infinity;
-        valid.forEach(x=>{
-          const clearance=obstacles.length?Math.min(...obstacles.flatMap(o=>[Math.abs(x-o.left),Math.abs(x-o.right)])):1000;
-          const laneSpacing=usedLanes.length?Math.min(...usedLanes.map(v=>Math.abs(x-v))):1000;
-          const score=Math.min(clearance,laneSpacing*.8+4);
-          if(score>best){best=score;laneX=x;}
-        });
-        if(laneX!==null){
-          usedLanes.push(laneX);
-          const gapY=(from.y+to.y)/2;
-          d='M '+from.x1+' '+from.y+' H '+laneX+' V '+to.y+' H '+to.x2;
-        }else detour=true;
-      }else detour=true;
-      if(detour){
-        const laneIndex=paths.filter(p=>p.detour).length;
-        const yRail=Math.max(...rows.map(row=>row.getBoundingClientRect().bottom-chartRect.top+chart.scrollTop))+8+laneIndex*11;
-        d='M '+from.x1+' '+from.y+' H '+from.trackRight+' V '+yRail+' H '+to.trackLeft+' V '+to.y+' H '+to.x2;
-      }
-      const formula=edge.type==='formula';
-      paths.push({detour,html:'<path class="tc-dependency-path'+(formula?' formula':'')+(detour?' detour':'')+'" d="'+d+'" marker-end="url(#tc-dependency-arrow)" data-from="'+edge.from+'" data-to="'+edge.to+'"></path>'});
+        trackRight:tr.right-chartRect.left+chart.scrollLeft
+      });
     });
-    chart.insertAdjacentHTML('beforeend','<svg class="tc-dependency-overlay" width="'+width+'" height="'+height+'" viewBox="0 0 '+width+' '+height+'" aria-hidden="true"><defs><marker id="tc-dependency-arrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L6,3 L0,6 Z" fill="#9aafc2"></path></marker></defs>'+paths.map(p=>p.html).join('')+'</svg>');
+    const track=chart.querySelector('.tc-track');
+    const trackRect=track?.getBoundingClientRect();
+    if(!trackRect)return;
+    const trackLeft=trackRect.left-chartRect.left+chart.scrollLeft;
+    const trackRight=trackRect.right-chartRect.left+chart.scrollLeft;
+    const allBars=rows.map(row=>{
+      const bar=row.querySelector('.tc-bar');
+      if(!bar)return null;
+      const r=bar.getBoundingClientRect();
+      return{left:r.left-chartRect.left+chart.scrollLeft,right:r.right-chartRect.left+chart.scrollLeft};
+    });
+    const prepared=edges.map(edge=>{
+      const from=infos.get(Number(edge.from)),to=infos.get(Number(edge.to));
+      if(!from||!to)return null;
+      const forward=to.center>=from.center;
+      return{edge,from,to,sourceX:forward?from.right:from.left,targetX:forward?to.left:to.right};
+    }).filter(Boolean);
+    const usedChannels=[],paths=[];
+    prepared.forEach(({edge,from,to,sourceX,targetX})=>{
+      const low=Math.min(from.index,to.index),high=Math.max(from.index,to.index);
+      const obstacles=allBars.slice(low+1,high).filter(Boolean);
+      const minX=Math.min(sourceX,targetX),maxX=Math.max(sourceX,targetX);
+      const candidates=[(sourceX+targetX)/2,sourceX,targetX,trackLeft+8,trackRight-8];
+      obstacles.forEach(o=>candidates.push(o.left-7,o.right+7));
+      const valid=[...new Set(candidates.map(x=>Math.round(x*10)/10))].filter(x=>
+        x>=trackLeft+3&&x<=trackRight-3&&
+        !obstacles.some(o=>x>o.left-4&&x<o.right+4)
+      );
+      let channel=null,best=Infinity;
+      valid.forEach(x=>{
+        const travel=Math.abs(sourceX-x)+Math.abs(targetX-x);
+        const congestion=usedChannels.reduce((sum,v)=>sum+Math.max(0,16-Math.abs(v-x))*2,0);
+        const score=travel+congestion;
+        if(score<best){best=score;channel=x;}
+      });
+      if(channel===null){
+        const leftCost=Math.abs(sourceX-(trackLeft-7))+Math.abs(targetX-(trackLeft-7));
+        const rightCost=Math.abs(sourceX-(trackRight+7))+Math.abs(targetX-(trackRight+7));
+        channel=leftCost<=rightCost?trackLeft-7:trackRight+7;
+      }
+      usedChannels.push(channel);
+      const d='M '+sourceX+' '+from.y+' H '+channel+' V '+to.y+' H '+targetX;
+      const formula=edge.type==='formula';
+      paths.push('<path class="tc-dependency-path'+(formula?' formula':'')+'" d="'+d+'" marker-end="url(#tc-dependency-arrow)" data-from="'+edge.from+'" data-to="'+edge.to+'"></path>');
+    });
+    const width=Math.max(chart.scrollWidth,chart.clientWidth,trackRight+12);
+    const height=Math.max(chart.scrollHeight,chart.clientHeight);
+    chart.insertAdjacentHTML('beforeend','<svg class="tc-dependency-overlay" width="'+width+'" height="'+height+'" viewBox="0 0 '+width+' '+height+'" aria-hidden="true"><defs><marker id="tc-dependency-arrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L6,3 L0,6 Z" fill="#91a4b7"></path></marker></defs>'+paths.join('')+'</svg>');
   }
   function renderTimeChart() {
     const target=document.getElementById('time-chart-output');
