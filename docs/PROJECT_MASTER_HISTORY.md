@@ -1246,3 +1246,14 @@ Time Chart-specific lessons:
 - **Code commit:** `cf1ff9c071142898b58f9becd77d988a7ac71b31`; frontend blob SHA: `70d8f3bd03c59cf2e2b51d82f429bcda9e232fb1`.
 - **Validation:** Both inline JavaScript blocks passed syntax parsing (2/2) before commit. Live browser appearance, scroll behavior, and dense-graph routing have not yet been visually verified.
 - **Next verification:** Test chain, fork, merge, overlapping time bars, reversed source/target time order, dense dependencies, cluster filtering, horizontal/vertical scrolling, and chart resize. Inspect bottom detour lanes for sufficient padding and no clipping.
+
+### 2026-11-15 — Fix Misrouted Time Chart Arrows (Screenshot Feedback)
+
+- **User-reported defect:** The arrows appeared chaotic. The supplied screenshot showed long horizontal rails running across the lower part of the chart. This came from the previous fallback route, which sent connectors from a bar to the far track edge, then across the full track below all rows.
+- **Root cause:** The fallback route used `trackRight` and `trackLeft` as mandatory waypoints and added bottom padding/lanes. This created large U-shaped connectors rather than local dependency paths.
+- **Fix:** Removed the full-width bottom detour routing and its artificial bottom padding. Connectors now choose the source/target bar sides based on their relative time positions, then route through a vertical channel selected from candidate x-coordinates. Candidate channels are rejected if they intersect bars in the intermediate visible rows. Channel selection minimizes horizontal travel and penalizes crowding with previously routed links.
+- **Fallback:** If no safe channel exists inside the timeline track, route via the nearer outer edge of the track rather than across the bottom of the chart.
+- **Preserved:** Links still come only from `allFlowDependencies(records)`; no second link store, schema change, formula change, or Process Flow behavior change.
+- **Code commit:** `c8c80f8a2df22c386888aa35d442c6b294adfcd6`; frontend blob SHA: `94e98f2da97cca74cd9946d9404a9675dabe22b7`.
+- **Validation:** Both inline JavaScript blocks passed syntax parsing (2/2). The uploaded screenshot was inspected and used to identify the full-width bottom-rail failure. A live browser visual regression test has not yet been run.
+- **Next QA:** Verify a simple chain, fork, merge, reversed-time dependency, overlapping bars, dense graph with no free vertical channel, filtered rows, scroll, and resize. If several links share a narrow channel, consider a more formal lane allocator.
