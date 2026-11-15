@@ -86,3 +86,13 @@ Build and maintain an editable cycle-time tool where spreadsheet data is the sou
 - Use thin, muted solid arrows for manual dependencies and quieter dashed cyan arrows for formula suggestions.
 - Keep this renderer read-only and derive all edges from `allFlowDependencies(records)`.
 - Visual QA remains mandatory: dense branch/merge, overlapping bars, reversed time, filtered rows, chart scrolling, resize, and bottom-lane clipping.
+
+ 
+## Screenshot-driven arrow routing correction (2026-11-15)
+- The previous bottom-detour fallback caused long horizontal rails across the chart. Do not route fallback paths along `trackRight` then across to `trackLeft` beneath every row.
+- Select source and target bar sides according to their relative time centers (right-to-left for forward time, left-to-right for reverse time).
+- Route through a vertical x-channel between the endpoint rows. Generate candidate channels from the endpoint midpoint, endpoint x positions, track margins, and intermediate bar edges ± clearance.
+- Reject channels intersecting any intermediate visible Operation bar. Score remaining channels by total horizontal travel and penalize reuse/crowding of already allocated channels.
+- If no safe internal channel exists, use the nearer outer track edge. Avoid full-width bottom rails and artificial bottom padding.
+- Keep the renderer read-only and derive edges exclusively from `allFlowDependencies(records)`.
+- Validate with screenshot/browser tests; syntax checks alone do not establish visual correctness.
