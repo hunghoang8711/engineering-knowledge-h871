@@ -48,3 +48,18 @@ The design avoids paid services as a requirement, but free-tier limits and servi
 ## Status
 
 Bootstrap commit: documentation and starter frontend only. Database, authentication, ingestion, and deployment are not configured yet.
+
+
+---
+
+## Current project knowledge and continuation guide
+
+The project has progressed well beyond the initial bootstrap described in the historical status text above. For the current product context, implementation constraints, debugging lessons, and handover procedure, start with the **[H871 Engineering Knowledge & Skills Package](knowledge-skills/README.md)**.
+
+Recommended reading order:
+1. [Start Here](knowledge-skills/START_HERE.md)
+2. [Project Context](knowledge-skills/PROJECT_CONTEXT.md)
+3. [Skill Index](knowledge-skills/SKILL_INDEX.md)
+4. [Project Master History](docs/PROJECT_MASTER_HISTORY.md)
+
+The skills package is curated from retained project conversations, project memory, repository documentation, and commit evidence. It is not a verbatim transcript archive. Always inspect current source, deployment, and backend state before implementation.
