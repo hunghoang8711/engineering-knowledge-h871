@@ -68,3 +68,12 @@ Build and maintain an editable cycle-time tool where spreadsheet data is the sou
 - Shortest connection ports: `a347614`.
 - Dismissible formula suggestions: `a40e626`; pointer hit-testing fix: `263f693`.
 - Full chronology and exact caveats: `docs/PROJECT_MASTER_HISTORY.md`.
+
+ 
+## Time Chart dependency-arrow projection (2026-11-15)
+- Render Time Chart arrows from `allFlowDependencies(records)`; do not create a second link store or infer links from bar timing.
+- Keep Process Flow as the single source of truth. The renderer must respect formula suggestion suppression, manual links, and formula+manual same-pair merging already handled by `allFlowDependencies`.
+- Anchor each arrow at the source bar end and target bar start; use orthogonal SVG paths and arrowheads. Respect visible Operation rows after cluster filtering.
+- Rebuild the overlay after the Time Chart DOM is rendered. Do not mutate workbook formulas, manual dependency records, stable Operation IDs, or simulation state from the renderer.
+- Initial midpoint routing is not obstacle-aware. Verify fork/merge and dense/crossing graphs in a real browser before attempting more advanced lane allocation.
+- Regression: chain, fork, merge, multiple branches, same-pair formula+manual, dismissed/restored suggestion, cluster filter, earlier target time, chart scroll, window resize, save/reload.
