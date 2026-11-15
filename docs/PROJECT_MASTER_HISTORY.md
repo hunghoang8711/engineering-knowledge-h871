@@ -3,7 +3,7 @@
 > **Purpose:** This is the canonical handover/context file for future H871 work. Read it before starting a new task or a new ChatGPT conversation. After every implementation, correction, configuration change, migration, deployment, or meaningful decision, append a dated entry to **Development log** and update the relevant status sections.
 >
 > **Timezone:** Asia/Ho_Chi_Minh (UTC+07:00). Record timestamps with timezone.
-> **Last consolidated:** 2026-11-08 01:32 +07:00.
+> **Last consolidated:** 2026-11-15 11:37 +07:00.
 > **Repository:** https://github.com/hunghoang8711/engineering-knowledge-h871
 > **Live site:** https://hunghoang8711.github.io/engineering-knowledge-h871/
 >
@@ -1211,3 +1211,16 @@ Time Chart-specific lessons:
 - **Source validation:** Re-fetched committed frontend from `main`; both inline JavaScript scripts passed syntax parsing (2/2). Confirmed SVG pointer targeting, hit-path pointer targeting, dismissal handler, and marquee exclusion are present.
 - **Not yet verified:** No live browser click test was performed in this turn. User should retest by clicking directly on a dashed line, including near its middle; verify it disappears, persists after Save/reload, and can be restored. If it still fails, inspect actual browser DOM hit-testing and console rather than changing dependency logic.
 - **No database changes:** Existing `chart_data` persistence is reused; no migration, schema, RLS, or source Spreadsheet change.
+
+
+---
+
+## 2026-11-15 — Portable Engineering Knowledge & Skills Package
+
+- **User goal:** Consolidate durable engineering experience, implementation skills, requirements, debugging lessons, and continuation instructions from H871 project work and prior ChatGPT project conversations into one GitHub folder, so a new conversation can continue even if the current chat is unavailable.
+- **Package added:** `knowledge-skills/` with entry point, new-session protocol, project context, skill index, Time Chart/Univer/Process Flow skill, GitHub/Supabase/Gemini worker skill, Creo Elements/Direct Lisp skill, known-failure catalogue, feature-delivery playbook, and new-chat handover prompt.
+- **Source coverage:** Curated from retained project memories and conversation summaries, this existing master history, and inspected GitHub commit evidence through 2026-11-14. This is not a verbatim export of every historical ChatGPT message; unavailable transcripts are not fabricated. Future recovered details should be added with evidence labels.
+- **Important project-specific lessons preserved:** Univer imported-workbook versus visible-workbook mismatch; invalid Start Time masking as engine startup error; syntax errors blocking the Time Chart loader; CDN/preflight diagnostics; formula-derived Process Flow suggestions versus manual links; SVG pointer-events and marquee-selection conflict; stable Operation IDs; Excel row-order and blank-row resilience; Creo Lisp undefined helper and host-window embedding failures; result-list selection versus actual host selection.
+- **Maintenance policy:** Routine updates go to `main` (no branch per small change); append to this master history and update the relevant skill after every meaningful implementation, failure, changed requirement, or verification. Keep confidential data and secrets out of this public repository.
+- **Validation status:** All package files were committed successfully to `main`. This is a documentation-only change; no frontend code, Supabase schema, RLS, Storage objects, or customer/project records were modified.
+- **Follow-up:** Link the package from the repository root README and verify every package path and the latest `main` head after commit.
