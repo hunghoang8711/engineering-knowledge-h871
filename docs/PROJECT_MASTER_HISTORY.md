@@ -1236,3 +1236,13 @@ Time Chart-specific lessons:
 - **Source validation:** Both inline JavaScript blocks passed `new Function(...)` syntax parsing (2/2) before commit. The frontend file was updated on `main`.
 - **Not yet verified:** No live browser test has yet confirmed connector placement and layering on the user's saved chart. Test a simple chain, fork, merge, multiple crossing links, links where target time is earlier than source end, cluster filtering, and edits to Process Flow followed by Time Chart refresh. Confirm arrows do not obstruct bar labels or the Cycle boundary controls. Dense graphs may still have overlapping connector routes; current routing is a simple orthogonal midpoint route, not global lane allocation or obstacle avoidance.
 - **Next step:** Browser-test the deployed Time Chart and refine connector lane routing only if real chart examples show collisions or visual ambiguity.
+
+### 2026-11-15 — Refine Time Chart Dependency Arrow Routing
+
+- **User feedback:** The first arrows were visible but the chart looked visually poor because the direct midpoint connector could overlap bars and create confusing crossings.
+- **Changes:** Replaced the simple midpoint connector with a routing pass that uses free horizontal time-axis space between source and target bars, checks intermediate Operation bars for obstruction, and selects a clear vertical routing channel. When no safe channel exists (including overlapping/reversed time intervals), the connector takes a separate bottom detour lane outside the Operation rows.
+- **Visual refinement:** Reduced line weight and opacity, softened the solid-link color, retained a quieter dashed cyan treatment for formula suggestions, and reduced arrowhead size. The renderer remains a read-only projection of `allFlowDependencies(records)`.
+- **Preserved behavior:** No new dependency data, schema, RLS, workbook edits, formula changes, or simulation changes. Cluster filtering still hides links whose endpoints are not both visible.
+- **Code commit:** `cf1ff9c071142898b58f9becd77d988a7ac71b31`; frontend blob SHA: `70d8f3bd03c59cf2e2b51d82f429bcda9e232fb1`.
+- **Validation:** Both inline JavaScript blocks passed syntax parsing (2/2) before commit. Live browser appearance, scroll behavior, and dense-graph routing have not yet been visually verified.
+- **Next verification:** Test chain, fork, merge, overlapping time bars, reversed source/target time order, dense dependencies, cluster filtering, horizontal/vertical scrolling, and chart resize. Inspect bottom detour lanes for sufficient padding and no clipping.
