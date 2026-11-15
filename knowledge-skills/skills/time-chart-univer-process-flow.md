@@ -77,3 +77,12 @@ Build and maintain an editable cycle-time tool where spreadsheet data is the sou
 - Rebuild the overlay after the Time Chart DOM is rendered. Do not mutate workbook formulas, manual dependency records, stable Operation IDs, or simulation state from the renderer.
 - Initial midpoint routing is not obstacle-aware. Verify fork/merge and dense/crossing graphs in a real browser before attempting more advanced lane allocation.
 - Regression: chain, fork, merge, multiple branches, same-pair formula+manual, dismissed/restored suggestion, cluster filter, earlier target time, chart scroll, window resize, save/reload.
+
+ 
+## Dependency-arrow routing refinement (2026-11-15)
+- Avoid the original direct midpoint route: it can cross unrelated bars and looks noisy.
+- For a source/target pair with a positive time gap, route through a candidate vertical channel between source-bar end and target-bar start. Reject candidate channels that intersect any intermediate Operation bar; prefer channels with clearance from bars and already-used channels.
+- When there is no safe time-axis gap (overlapping or reversed time positions), route around the bottom of the timeline in a dedicated lane. Add bottom padding proportional to the number of detours so the SVG is not clipped.
+- Use thin, muted solid arrows for manual dependencies and quieter dashed cyan arrows for formula suggestions.
+- Keep this renderer read-only and derive all edges from `allFlowDependencies(records)`.
+- Visual QA remains mandatory: dense branch/merge, overlapping bars, reversed time, filtered rows, chart scrolling, resize, and bottom-lane clipping.
